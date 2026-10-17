@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,11 +50,17 @@ import com.movievortex.android.ui.components.VortexIcons
 import com.movievortex.android.ui.theme.VortexColors
 import com.movievortex.android.ui.theme.TextMuted
 import com.movievortex.android.ui.theme.TextSecondary
+import java.util.Locale
 
 @Composable
 fun SettingsScreen(
     settingsController: SettingsController,
     onOpenDnsSetup: () -> Unit,
+    onOpenWatchlist: () -> Unit = {},
+    onOpenHistory: () -> Unit = {},
+    onRequireAuth: (String) -> Unit = {},
+    isLoggedIn: Boolean = false,
+    userName: String = "Alex Vortex",
     modifier: Modifier = Modifier
 ) {
     val state by settingsController.uiState.collectAsState()
@@ -146,36 +153,56 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "Alex Vortex",
+                    text = if (isLoggedIn) userName else "Guest Explorer",
                     color = Color.White,
                     fontSize = 19.sp,
+                    fontFamily = FontFamily.SansSerif,
                     fontWeight = FontWeight.Bold
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
-                    text = "alex@movievortex.app",
+                    text = if (isLoggedIn) "${userName.lowercase().replace(" ", "")}@movievortex.app" else "Guest Mode Active",
                     color = VortexColors.TextMuted,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.SansSerif
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Vortex VIP Gradient Badge
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0x33EF2F62))
-                        .border(1.dp, VortexColors.NeonCrimson, RoundedCornerShape(12.dp))
-                        .padding(horizontal = 14.dp, vertical = 5.dp)
-                ) {
-                    Text(
-                        text = "👑 Vortex VIP",
-                        color = VortexColors.NeonCrimson,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                if (isLoggedIn) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0x33EF2F62))
+                            .border(1.dp, VortexColors.NeonCrimson, RoundedCornerShape(12.dp))
+                            .padding(horizontal = 14.dp, vertical = 5.dp)
+                    ) {
+                        Text(
+                            text = "👑 Vortex VIP",
+                            color = VortexColors.NeonCrimson,
+                            fontSize = 11.sp,
+                            fontFamily = FontFamily.SansSerif,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(VortexColors.NeonCrimson)
+                            .clickable { onRequireAuth("Sign in to sync your Watchlist and stream in VIP mode.") }
+                            .padding(horizontal = 16.dp, vertical = 7.dp)
+                    ) {
+                        Text(
+                            text = "✦ Sign In / Register",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            fontFamily = FontFamily.SansSerif,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -239,14 +266,14 @@ fun SettingsScreen(
         ) {
             SettingsActionRow(
                 icon = VortexIcons.Bookmark,
-                title = "My Watchlist (24)",
-                onClick = { Toast.makeText(context, "Opening Watchlist...", Toast.LENGTH_SHORT).show() }
+                title = "My Watchlist",
+                onClick = onOpenWatchlist
             )
             SettingsDivider()
             SettingsActionRow(
                 icon = VortexIcons.Refresh,
                 title = "Watch History",
-                onClick = { Toast.makeText(context, "Opening History...", Toast.LENGTH_SHORT).show() }
+                onClick = onOpenHistory
             )
         }
 
@@ -582,8 +609,70 @@ fun SettingsScreen(
             }
         }
 
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // 5. Device & Hardware Information (Requirement 6)
+        Text(
+            text = "Device & Hardware Information",
+            color = Color.White,
+            fontSize = 16.sp,
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        val deviceBrand = android.os.Build.MANUFACTURER.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
+        val deviceModel = android.os.Build.MODEL
+        val androidVersion = "Android ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})"
+        val hardwarePlatform = android.os.Build.HARDWARE
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(VortexColors.GlassSurfaceDark)
+                .border(1.dp, VortexColors.GlassBorder, RoundedCornerShape(16.dp))
+                .padding(horizontal = 16.dp, vertical = 6.dp)
+        ) {
+            DeviceInfoRow(label = "Brand / Manufacturer", value = deviceBrand)
+            SettingsDivider()
+            DeviceInfoRow(label = "Device Model", value = deviceModel)
+            SettingsDivider()
+            DeviceInfoRow(label = "Android OS Version", value = androidVersion)
+            SettingsDivider()
+            DeviceInfoRow(label = "Hardware / Chipset", value = hardwarePlatform)
+            SettingsDivider()
+            DeviceInfoRow(label = "Streaming Engine", value = "CloudStream 3 Core / ExoPlayer")
+        }
+
         Spacer(modifier = Modifier.height(40.dp))
     }
+
+@Composable
+private fun DeviceInfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            color = VortexColors.TextMuted,
+            fontSize = 13.sp,
+            fontFamily = FontFamily.SansSerif
+        )
+        Text(
+            text = value,
+            color = Color.White,
+            fontSize = 13.sp,
+            fontFamily = FontFamily.SansSerif,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
 
 @Composable
 private fun SettingsActionCard(

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -26,7 +27,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -72,7 +75,35 @@ fun PosterCard(
                     PosterSkeleton(cornerRadius = 12.dp)
                 },
                 error = {
-                    PosterSkeleton(cornerRadius = 12.dp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(VortexColors.CardSurfaceElevated)
+                            .padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = VortexIcons.Movie,
+                                contentDescription = null,
+                                tint = VortexColors.TextMuted,
+                                modifier = Modifier.size(26.dp)
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = media.title,
+                                color = VortexColors.TextMuted,
+                                fontSize = 10.sp,
+                                fontFamily = FontFamily.SansSerif,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 }
             )
 

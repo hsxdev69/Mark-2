@@ -50,6 +50,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.movievortex.android.controller.ContentRow
 import com.movievortex.android.controller.HomeController
+import com.movievortex.android.model.MediaType
 import com.movievortex.android.model.MovieVortexMedia
 import com.movievortex.android.model.StreamingPlatform
 import com.movievortex.android.ui.components.PosterCard
@@ -70,11 +72,47 @@ fun HomeScreen(
     onMediaClick: (MovieVortexMedia) -> Unit,
     onPlayClick: (MovieVortexMedia) -> Unit,
     onPlatformClick: (StreamingPlatform) -> Unit,
+    onRequireAuth: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val state by homeController.uiState.collectAsState()
     val scrollState = rememberLazyListState()
-    var selectedCategory by remember { mutableStateOf("Movies") }
+    var selectedCategory by remember { mutableStateOf("All") }
+
+    // Dynamic filtering based on active category chip (Requirement 2)
+    val filteredRows = remember(selectedCategory, state.rows) {
+        when (selectedCategory) {
+            "All" -> state.rows
+            "Movies" -> state.rows.mapNotNull { row ->
+                val movies = row.items.filter { it.type == MediaType.Movie || it.title.contains("Movie", ignoreCase = true) || !it.title.contains("Season", ignoreCase = true) }
+                if (movies.isNotEmpty()) row.copy(title = if (row.title.contains("Movie", ignoreCase = true)) row.title else "Movies • ${row.title}", items = movies) else null
+            }.ifEmpty { state.rows }
+            "Series" -> state.rows.mapNotNull { row ->
+                val series = row.items.filter { it.type == MediaType.TvSeries || it.title.contains("Season", ignoreCase = true) || it.title.contains("Series", ignoreCase = true) }
+                if (series.isNotEmpty()) row.copy(title = if (row.title.contains("Series", ignoreCase = true)) row.title else "Series • ${row.title}", items = series) else null
+            }.ifEmpty { state.rows }
+            "Anime" -> state.rows.mapNotNull { row ->
+                val anime = row.items.filter { it.type == MediaType.Anime || it.title.contains("Anime", ignoreCase = true) }
+                if (anime.isNotEmpty()) row.copy(title = "Anime • ${row.title}", items = anime) else null
+            }.ifEmpty { state.rows }
+            "Netflix" -> state.rows.mapNotNull { row ->
+                val netflix = row.items.filter { it.providerApiName.contains("netflix", ignoreCase = true) || row.title.contains("Netflix", ignoreCase = true) }
+                if (netflix.isNotEmpty()) row.copy(items = netflix) else null
+            }.ifEmpty { state.rows }
+            "Disney+" -> state.rows.mapNotNull { row ->
+                val disney = row.items.filter { it.providerApiName.contains("disney", ignoreCase = true) || row.title.contains("Disney", ignoreCase = true) }
+                if (disney.isNotEmpty()) row.copy(items = disney) else null
+            }.ifEmpty { state.rows }
+            else -> state.rows
+        }
+    }
+
+    val filteredHero = remember(selectedCategory, state.heroItems, filteredRows) {
+        when (selectedCategory) {
+            "All" -> state.heroItems
+            else -> filteredRows.firstOrNull()?.items?.take(5)?.ifEmpty { null } ?: state.heroItems
+        }
+    }
 
     if (state.isLoading) {
         Box(
@@ -116,12 +154,15 @@ fun HomeScreen(
         }
 
         // 1. Featured Cinematic Hero
-        if (state.heroItems.isNotEmpty()) {
+        if (filteredHero.isNotEmpty()) {
             item {
                 FeaturedHero(
-                    items = state.heroItems,
+                    items = filteredHero,
                     onMediaClick = onMediaClick,
-                    onPlayClick = onPlayClick
+                    onPlayClick = onPlayClick,
+                    onMyListClick = { item ->
+                        onRequireAuth("Sign in to save '${item.title}' to your personal Watchlist.")
+                    }
                 )
             }
         }
@@ -150,7 +191,7 @@ fun HomeScreen(
         }
 
         // 4. Curated Content Rows
-        items(state.rows) { row ->
+        items(filteredRows) { row ->
             Spacer(modifier = Modifier.height(24.dp))
             ContentRowSection(
                 row = row,
@@ -278,6 +319,7 @@ fun FeaturedHero(
     items: List<MovieVortexMedia>,
     onMediaClick: (MovieVortexMedia) -> Unit,
     onPlayClick: (MovieVortexMedia) -> Unit,
+    onMyListClick: (MovieVortexMedia) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var currentIndex by remember { mutableIntStateOf(0) }
@@ -450,7 +492,7 @@ fun FeaturedHero(
                             .clip(RoundedCornerShape(24.dp))
                             .background(VortexColors.GlassSurfaceDark)
                             .border(1.dp, VortexColors.GlassBorder, RoundedCornerShape(24.dp))
-                            .clickable { onMediaClick(activeItem) }
+                            .clickable { onMyListClick(activeItem) }
                             .padding(horizontal = 16.dp, vertical = 10.dp),
                         contentAlignment = Alignment.Center
                     ) {

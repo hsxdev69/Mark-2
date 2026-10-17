@@ -104,6 +104,7 @@ fun MovieVortexTopBar(
                 text = "MovieVortex",
                 color = Color.White,
                 fontSize = 18.sp,
+                fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.5.sp
             )
@@ -259,6 +260,7 @@ private fun BottomNavIslandItem(
                 text = title,
                 color = Color.White,
                 fontSize = 12.sp,
+                fontFamily = FontFamily.SansSerif,
                 fontWeight = FontWeight.Bold
             )
         }

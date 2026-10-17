@@ -37,12 +37,15 @@ import com.movievortex.android.model.StreamingPlatform
 import com.movievortex.android.ui.anime.AnimeScreen
 import com.movievortex.android.ui.catalog.PlatformCatalogScreen
 import com.movievortex.android.ui.components.MainDestination
+import com.movievortex.android.ui.components.AuthModal
 import com.movievortex.android.ui.components.MovieVortexBottomBar
 import com.movievortex.android.ui.components.MovieVortexTopBar
 import com.movievortex.android.ui.detail.DetailScreen
 import com.movievortex.android.ui.dns.DnsIntroScreen
 import com.movievortex.android.ui.downloads.DownloadsScreen
 import com.movievortex.android.ui.home.HomeScreen
+import com.movievortex.android.ui.library.HistoryScreen
+import com.movievortex.android.ui.library.WatchlistScreen
 import com.movievortex.android.ui.player.MovieVortexPlayerScreen
 import com.movievortex.android.ui.search.SearchScreen
 import com.movievortex.android.ui.settings.SettingsScreen
@@ -54,6 +57,8 @@ sealed class AppScreen {
     object DnsIntro : AppScreen()
     object Main : AppScreen()
     object Search : AppScreen()
+    object Watchlist : AppScreen()
+    object History : AppScreen()
     data class PlatformCatalog(val platform: StreamingPlatform) : AppScreen()
     data class Detail(val media: MovieVortexMedia) : AppScreen()
     data class Player(val media: MovieVortexMedia, val episode: MediaEpisode? = null, val offlinePath: String? = null) : AppScreen()
@@ -130,6 +135,10 @@ fun MovieVortexNavGraph(
     val context = LocalContext.current
     var currentScreen by remember { mutableStateOf<AppScreen>(AppScreen.Splash) }
     var currentDestination by remember(initialDestination) { mutableStateOf(initialDestination) }
+    var isLoggedIn by remember { mutableStateOf(false) }
+    var userName by remember { mutableStateOf("Alex Vortex") }
+    var showAuthModal by remember { mutableStateOf(false) }
+    var authModalReason by remember { mutableStateOf("Sign in to sync your Watchlist and continue watching.") }
 
     androidx.compose.runtime.LaunchedEffect(initialDestination) {
         currentDestination = initialDestination
@@ -197,6 +206,10 @@ fun MovieVortexNavGraph(
                                         },
                                         onPlatformClick = { platform ->
                                             currentScreen = AppScreen.PlatformCatalog(platform)
+                                        },
+                                        onRequireAuth = { reason ->
+                                            authModalReason = reason
+                                            showAuthModal = true
                                         }
                                     )
                                 }
@@ -225,7 +238,15 @@ fun MovieVortexNavGraph(
                                 MainDestination.Me -> {
                                     SettingsScreen(
                                         settingsController = settingsController,
-                                        onOpenDnsSetup = { currentScreen = AppScreen.DnsIntro }
+                                        onOpenDnsSetup = { currentScreen = AppScreen.DnsIntro },
+                                        onOpenWatchlist = { currentScreen = AppScreen.Watchlist },
+                                        onOpenHistory = { currentScreen = AppScreen.History },
+                                        onRequireAuth = { reason ->
+                                            authModalReason = reason
+                                            showAuthModal = true
+                                        },
+                                        isLoggedIn = isLoggedIn,
+                                        userName = userName
                                     )
                                 }
                             }
@@ -276,10 +297,43 @@ fun MovieVortexNavGraph(
                 )
             }
 
+            is AppScreen.Watchlist -> {
+                WatchlistScreen(
+                    libraryController = libraryController,
+                    onMediaClick = { media ->
+                        detailController.loadMediaDetail(media.rawUrl, media.providerApiName, media)
+                        currentScreen = AppScreen.Detail(media)
+                    },
+                    onBackClick = { currentScreen = AppScreen.Main }
+                )
+            }
+
+            is AppScreen.History -> {
+                HistoryScreen(
+                    onMediaClick = { media ->
+                        detailController.loadMediaDetail(media.rawUrl, media.providerApiName, media)
+                        currentScreen = AppScreen.Detail(media)
+                    },
+                    onBackClick = { currentScreen = AppScreen.Main }
+                )
+            }
+
             is AppScreen.Player -> {
                 launchCloudStreamPlayer(context, screen.media, screen.episode)
                 currentScreen = AppScreen.Main
             }
         }
+    }
+
+    if (showAuthModal) {
+        AuthModal(
+            actionReason = authModalReason,
+            onDismiss = { showAuthModal = false },
+            onLoginSuccess = { user ->
+                isLoggedIn = true
+                userName = user
+                showAuthModal = false
+            }
+        )
     }
 }
