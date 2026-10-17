@@ -70,6 +70,10 @@ class SearchController : ViewModel() {
         )
     }
 
+    fun clearRecentQueries() {
+        _uiState.value = _uiState.value.copy(recentQueries = emptyList())
+    }
+
     fun performSearch(query: String) {
         if (query.isBlank()) return
 

@@ -47,6 +47,8 @@ import androidx.compose.ui.unit.sp
 import com.movievortex.android.controller.SettingsController
 import com.movievortex.android.ui.components.VortexIcons
 import com.movievortex.android.ui.theme.VortexColors
+import com.movievortex.android.ui.theme.TextMuted
+import com.movievortex.android.ui.theme.TextSecondary
 
 @Composable
 fun SettingsScreen(
@@ -582,7 +584,6 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(40.dp))
     }
-}
 
 @Composable
 private fun SettingsActionCard(

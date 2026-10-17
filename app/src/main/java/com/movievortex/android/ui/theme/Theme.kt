@@ -20,6 +20,9 @@ object VortexColors {
     val PrimaryText = Color(0xFFFFFFFF)
     val SecondaryText = Color(0xFFB5B5C3)
     val MutedText = Color(0xFF8E8E9A)
+    val TextPrimary = PrimaryText
+    val TextSecondary = SecondaryText
+    val TextMuted = MutedText
 
     // MovieVortex 2.0 Cyber-Spatial Design Tokens
     val NeonCrimson = Color(0xFFEF2F62)
@@ -126,3 +129,18 @@ fun MovieVortexTheme(
         content = content
     )
 }
+
+val TextPrimary = VortexColors.PrimaryText
+val TextSecondary = VortexColors.SecondaryText
+val TextMuted = VortexColors.MutedText
+val PrimaryText = VortexColors.PrimaryText
+val SecondaryText = VortexColors.SecondaryText
+val MutedText = VortexColors.MutedText
+val NeonCrimson = VortexColors.NeonCrimson
+val BackgroundOled = VortexColors.BackgroundOled
+val GlassSurfaceDark = VortexColors.GlassSurfaceDark
+val GlassSurfaceLight = VortexColors.GlassSurfaceLight
+val GlassBorder = VortexColors.GlassBorder
+val AccentGold = VortexColors.AccentGold
+val VerifiedGreen = VortexColors.VerifiedGreen
+val PureBlack = VortexColors.PureBlack

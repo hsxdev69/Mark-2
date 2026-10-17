@@ -397,7 +397,7 @@ fun FeaturedHero(
                     fontSize = 13.sp
                 )
                 Text(
-                    text = "★ %.1f".format(if (activeItem.rating > 0f) activeItem.rating else 8.9f),
+                    text = "★ %.1f".format(activeItem.rating?.takeIf { it > 0f } ?: 8.9f),
                     color = VortexColors.AccentGold,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
