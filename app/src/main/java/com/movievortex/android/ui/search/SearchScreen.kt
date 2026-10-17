@@ -66,7 +66,7 @@ fun SearchScreen(
             .background(VortexColors.PureBlack)
             .padding(top = 12.dp)
     ) {
-        // Search Input Bar
+        // Cyber-Glow Search Input Bar (from ui_search.png)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -81,16 +81,16 @@ fun SearchScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
 
-            // Dark Search Field
+            // Cyber-Glow Frosted Search Field with Neon Crimson Glow Ring
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(VortexColors.CardSurface)
-                    .border(1.dp, VortexColors.BorderSubtle, RoundedCornerShape(12.dp))
+                    .height(52.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(VortexColors.GlassSurfaceDark)
+                    .border(1.5.dp, VortexColors.NeonCrimsonGlow, RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -101,7 +101,7 @@ fun SearchScreen(
                     Icon(
                         imageVector = VortexIcons.Search,
                         contentDescription = "Search",
-                        tint = VortexColors.MutedText,
+                        tint = VortexColors.NeonCrimson,
                         modifier = Modifier.size(20.dp)
                     )
 
@@ -120,7 +120,7 @@ fun SearchScreen(
                             value = state.query,
                             onValueChange = { searchController.onQueryChange(it) },
                             singleLine = true,
-                            cursorBrush = SolidColor(VortexColors.CinematicRed),
+                            cursorBrush = SolidColor(VortexColors.NeonCrimson),
                             textStyle = TextStyle(
                                 color = VortexColors.PrimaryText,
                                 fontSize = 14.sp,
@@ -159,39 +159,101 @@ fun SearchScreen(
         // Search Content States
         when (state.status) {
             SearchStatus.Idle -> {
-                // Suggestions & Recent Searches
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    // 1. Top Genre Chips (ui_search.png)
                     Text(
-                        text = "Trending Searches",
+                        text = "Top Genres",
                         color = VortexColors.PrimaryText,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    state.recentQueries.forEach { suggestion ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable {
-                                    searchController.performSearch(suggestion)
-                                }
-                                .padding(vertical = 12.dp, horizontal = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = VortexIcons.Search,
-                                contentDescription = null,
-                                tint = VortexColors.MutedText,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text(
-                                text = suggestion,
-                                color = VortexColors.SecondaryText,
-                                fontSize = 14.sp
-                            )
+                    val topGenres = listOf("Sci-Fi", "Cyberpunk", "Anime", "Action", "Thriller")
+                    androidx.compose.foundation.lazy.LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(topGenres) { genre ->
+                            val isCrimson = genre == "Sci-Fi"
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(if (isCrimson) VortexColors.NeonCrimson else VortexColors.GlassSurfaceLight)
+                                    .border(
+                                        1.dp,
+                                        if (isCrimson) Color(0x66FFFFFF) else VortexColors.GlassBorder,
+                                        RoundedCornerShape(18.dp)
+                                    )
+                                    .clickable {
+                                        searchController.onQueryChange(genre)
+                                        searchController.performSearch(genre)
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                Text(
+                                    text = genre,
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isCrimson) FontWeight.Bold else FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // 2. Recent Searches (ui_search.png)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Recent Searches",
+                            color = VortexColors.PrimaryText,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Clear All",
+                            color = VortexColors.NeonCrimson,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { searchController.clearRecentQueries() }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    val recentChips = if (state.recentQueries.isNotEmpty()) {
+                        state.recentQueries
+                    } else {
+                        listOf("Interstellar", "Severance", "Solo Leveling")
+                    }
+
+                    androidx.compose.foundation.lazy.LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(recentChips) { query ->
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(VortexColors.GlassSurfaceDark)
+                                    .border(1.dp, VortexColors.NeonCrimsonGlow, RoundedCornerShape(16.dp))
+                                    .clickable {
+                                        searchController.onQueryChange(query)
+                                        searchController.performSearch(query)
+                                    }
+                                    .padding(horizontal = 14.dp, vertical = 7.dp)
+                            ) {
+                                Text(
+                                    text = query,
+                                    color = VortexColors.SecondaryText,
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     }
                 }

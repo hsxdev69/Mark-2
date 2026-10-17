@@ -165,8 +165,8 @@ fun MovieVortexNavGraph(
                 Scaffold(
                     topBar = {
                         MovieVortexTopBar(
-                            onSearchClick = { currentScreen = AppScreen.Search },
-                            isTransparent = currentDestination == MainDestination.MoviesTv || currentDestination == MainDestination.Anime
+                            onSearchClick = { currentDestination = MainDestination.Search },
+                            isTransparent = currentDestination == MainDestination.Home
                         )
                     },
                     bottomBar = {
@@ -176,7 +176,7 @@ fun MovieVortexNavGraph(
                             activeDownloadCount = downloadState.activeDownloadsCount
                         )
                     },
-                    containerColor = VortexColors.PureBlack
+                    containerColor = VortexColors.BackgroundOled
                 ) { innerPadding ->
                     Box(
                         modifier = Modifier
@@ -185,7 +185,7 @@ fun MovieVortexNavGraph(
                     ) {
                         Crossfade(targetState = currentDestination, label = "tab_crossfade") { dest ->
                             when (dest) {
-                                MainDestination.MoviesTv -> {
+                                MainDestination.Home -> {
                                     HomeScreen(
                                         homeController = homeController,
                                         onMediaClick = { media ->
@@ -201,30 +201,28 @@ fun MovieVortexNavGraph(
                                     )
                                 }
 
-                                MainDestination.Anime -> {
-                                    AnimeScreen(
-                                        animeController = animeController,
+                                MainDestination.Search -> {
+                                    SearchScreen(
+                                        searchController = searchController,
                                         onMediaClick = { media ->
                                             detailController.loadMediaDetail(media.rawUrl, media.providerApiName, media)
                                             currentScreen = AppScreen.Detail(media)
                                         },
-                                        onPlayClick = { media ->
-                                            launchCloudStreamPlayer(context, media, null)
-                                        }
+                                        onBackClick = { currentDestination = MainDestination.Home }
                                     )
                                 }
 
                                 MainDestination.Downloads -> {
                                     DownloadsScreen(
                                         downloadController = downloadController,
-                                        onBrowseClick = { currentDestination = MainDestination.MoviesTv },
+                                        onBrowseClick = { currentDestination = MainDestination.Home },
                                         onPlayOffline = { item ->
                                             launchOfflinePlayer(context, item.localFilePath, item.title)
                                         }
                                     )
                                 }
 
-                                MainDestination.Settings -> {
+                                MainDestination.Me -> {
                                     SettingsScreen(
                                         settingsController = settingsController,
                                         onOpenDnsSetup = { currentScreen = AppScreen.DnsIntro }

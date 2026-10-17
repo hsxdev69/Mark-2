@@ -230,7 +230,7 @@ fun CategoryPillsRow(
     onCategorySelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val categories = listOf("Movies", "Sports", "TV Shows", "News")
+    val categories = listOf("All", "Movies", "Series", "Anime", "Netflix", "Disney+")
     LazyRow(
         modifier = modifier
             .fillMaxWidth()
@@ -241,12 +241,12 @@ fun CategoryPillsRow(
     ) {
         items(categories) { category ->
             val isSelected = category == selectedCategory
-            val bgColor = if (isSelected) VortexColors.GoldenAmber else Color(0x33252528)
-            val textColor = if (isSelected) Color.Black else Color(0xFFE2E2E6)
+            val bgColor = if (isSelected) VortexColors.NeonCrimson else VortexColors.GlassSurfaceLight
+            val textColor = Color.White
             val borderModifier = if (isSelected) {
-                Modifier
+                Modifier.border(1.dp, Color(0x66FFFFFF), RoundedCornerShape(20.dp))
             } else {
-                Modifier.border(1.dp, Color(0x2EFFFFFF), RoundedCornerShape(20.dp))
+                Modifier.border(1.dp, VortexColors.GlassBorder, RoundedCornerShape(20.dp))
             }
 
             Box(
@@ -311,7 +311,7 @@ fun FeaturedHero(
             )
         }
 
-        // Gradient Masking for absolute readability
+        // Gradient Masking for absolute readability fading to OLED black
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -321,7 +321,7 @@ fun FeaturedHero(
                             Color.Transparent,
                             Color(0x33000000),
                             Color(0xAA000000),
-                            Color(0xF00A0A0C)
+                            VortexColors.BackgroundOled
                         )
                     )
                 )
@@ -342,12 +342,12 @@ fun FeaturedHero(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
-                        .background(VortexColors.GoldenAmber)
+                        .background(VortexColors.NeonCrimson)
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = "VORTEX ORIGINAL",
-                        color = Color.Black,
+                        color = Color.White,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Black
                     )
@@ -356,7 +356,8 @@ fun FeaturedHero(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0x33FFFFFF))
+                        .background(VortexColors.GlassSurfaceLight)
+                        .border(1.dp, VortexColors.GlassBorder, RoundedCornerShape(6.dp))
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
@@ -382,7 +383,7 @@ fun FeaturedHero(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Year and Rating: 2026 • ★ 8.2 • Trending
+            // Year and Rating: 2026 • ★ 8.9 • Trending
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "${activeItem.year ?: 2026}",
@@ -396,13 +397,13 @@ fun FeaturedHero(
                     fontSize = 13.sp
                 )
                 Text(
-                    text = "★ %.1f".format(activeItem.rating ?: 8.2f),
-                    color = VortexColors.GoldenAmber,
+                    text = "★ %.1f".format(if (activeItem.rating > 0f) activeItem.rating else 8.9f),
+                    color = VortexColors.AccentGold,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "  •  Trending",
+                    text = "  •  Sci-Fi / Thriller",
                     color = Color(0xFFAAAAAA),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Normal
@@ -411,7 +412,7 @@ fun FeaturedHero(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Hero Actions (Golden Amber Watch Now button + My List + Indicator)
+            // Hero Actions (Neon Crimson Watch Now button + Frosted Glass + My List + Indicator)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -421,44 +422,53 @@ fun FeaturedHero(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Golden Amber Watch Now button (Figma Screenshot_20261015_194137.jpg)
+                    // Neon Crimson Watch Now button (from ui_home.png)
                     Button(
                         onClick = { onPlayClick(activeItem) },
-                        colors = ButtonDefaults.buttonColors(containerColor = VortexColors.GoldenAmber),
+                        colors = ButtonDefaults.buttonColors(containerColor = VortexColors.NeonCrimson),
                         shape = RoundedCornerShape(24.dp),
                         contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
                     ) {
                         Icon(
                             imageVector = VortexIcons.Play,
                             contentDescription = "Watch Now",
-                            tint = Color.Black,
+                            tint = Color.White,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Watch Now",
-                            color = Color.Black,
+                            color = Color.White,
                             fontWeight = FontWeight.Black,
                             fontSize = 14.sp
                         )
                     }
 
-                    // My List Button
+                    // Frosted Glass + My List Button (from ui_home.png)
                     Box(
                         modifier = Modifier
-                            .clip(CircleShape)
-                            .background(Color(0x33252528))
-                            .border(1.dp, Color(0x30FFFFFF), CircleShape)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(VortexColors.GlassSurfaceDark)
+                            .border(1.dp, VortexColors.GlassBorder, RoundedCornerShape(24.dp))
                             .clickable { onMediaClick(activeItem) }
-                            .padding(10.dp),
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = VortexIcons.BookmarkBorder,
-                            contentDescription = "My List",
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = VortexIcons.Add,
+                                contentDescription = "My List",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "My List",
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp
+                            )
+                        }
                     }
                 }
 
@@ -474,7 +484,7 @@ fun FeaturedHero(
                                 .width(if (isIndicatorActive) 16.dp else 6.dp)
                                 .height(6.dp)
                                 .clip(RoundedCornerShape(3.dp))
-                                .background(if (isIndicatorActive) VortexColors.GoldenAmber else Color(0x66FFFFFF))
+                                .background(if (isIndicatorActive) VortexColors.NeonCrimson else Color(0x66FFFFFF))
                         )
                     }
                 }

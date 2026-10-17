@@ -63,6 +63,7 @@ fun DownloadsScreen(
 ) {
     val state by downloadController.uiState.collectAsState()
     val context = LocalContext.current
+    var selectedTab by remember { androidx.compose.runtime.mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
         downloadController.loadDownloads()
@@ -71,22 +72,183 @@ fun DownloadsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(VortexColors.PureBlack)
+            .background(VortexColors.BackgroundOled)
             .padding(top = 16.dp)
     ) {
-        // Heading
-        Text(
-            text = "Downloads",
-            color = VortexColors.PrimaryText,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
+        // 1. Header: Downloads & Offline Vault + Settings Capsule (ui_download.png)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Downloads\n& Offline Vault",
+                color = VortexColors.PrimaryText,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 26.sp
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(VortexColors.GlassSurfaceDark)
+                    .border(1.dp, VortexColors.GlassBorder, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = VortexIcons.Settings,
+                    contentDescription = "Settings",
+                    tint = Color.White,
+                    modifier = Modifier.size(19.dp)
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (state.items.isEmpty()) {
-            // Empty State
+        // 2. Storage Analytics Gauge Card (ui_download.png)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(VortexColors.GlassSurfaceDark)
+                .border(1.dp, VortexColors.GlassBorder, RoundedCornerShape(20.dp))
+                .padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Circular Storage Gauge with Hard Drive Icon
+                Box(
+                    modifier = Modifier.size(54.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        progress = { 0.35f },
+                        color = VortexColors.NeonCrimson,
+                        trackColor = Color(0x33FFFFFF),
+                        strokeWidth = 4.dp,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    Icon(
+                        imageVector = VortexIcons.Storage,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column {
+                    Text(
+                        text = "MovieVortex Storage:",
+                        color = VortexColors.TextSecondary,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = "14.2 GB used",
+                        color = VortexColors.NeonCrimson,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Available: 48 GB",
+                        color = VortexColors.TextMuted,
+                        fontSize = 11.sp
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 3. Segmented Dual-Tab Switcher: Downloaded vs Active Queue (ui_download.png)
+        val completedCount = state.items.count { it.state == MediaDownloadState.Completed }
+        val activeCount = state.items.count { it.state != MediaDownloadState.Completed }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(if (selectedTab == 0) VortexColors.GlassSurfaceDark else Color.Transparent)
+                    .border(
+                        1.dp,
+                        if (selectedTab == 0) VortexColors.GlassBorder else Color.Transparent,
+                        RoundedCornerShape(20.dp)
+                    )
+                    .clickable { selectedTab = 0 }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = "Downloaded ($completedCount)",
+                    color = if (selectedTab == 0) Color.White else VortexColors.TextMuted,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(if (selectedTab == 1) VortexColors.GlassSurfaceDark else Color.Transparent)
+                    .border(
+                        1.dp,
+                        if (selectedTab == 1) VortexColors.GlassBorder else Color.Transparent,
+                        RoundedCornerShape(20.dp)
+                    )
+                    .clickable { selectedTab = 1 }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Active Queue",
+                        color = if (selectedTab == 1) Color.White else VortexColors.TextMuted,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    if (activeCount > 0) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clip(CircleShape)
+                                .background(VortexColors.NeonCrimson),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "$activeCount",
+                                color = Color.White,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Filter items based on selected tab
+        val displayItems = if (selectedTab == 0) {
+            state.items.filter { it.state == MediaDownloadState.Completed }
+        } else {
+            state.items.filter { it.state != MediaDownloadState.Completed }
+        }
+
+        if (displayItems.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -103,34 +265,33 @@ fun DownloadsScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "No downloads yet",
+                        text = if (selectedTab == 0) "No downloaded media" else "Download queue is empty",
                         color = VortexColors.PrimaryText,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Download movies and episodes to watch offline anywhere",
+                        text = "Explore movies and anime to download for offline vault",
                         color = VortexColors.MutedText,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
                         onClick = onBrowseClick,
-                        colors = ButtonDefaults.buttonColors(containerColor = VortexColors.CinematicRed),
-                        shape = RoundedCornerShape(10.dp)
+                        colors = ButtonDefaults.buttonColors(containerColor = VortexColors.NeonCrimson),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(text = "Browse Content", color = Color.White, fontWeight = FontWeight.Bold)
                     }
                 }
             }
         } else {
-            // Downloads Vertical List
             LazyColumn(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(state.items) { item ->
+                items(displayItems) { item ->
                     DownloadItemCard(
                         item = item,
                         onPause = { downloadController.pauseDownload(item.id) },
@@ -155,198 +316,186 @@ fun DownloadItemCard(
     onPlay: () -> Unit
 ) {
     val isCompleted = item.state == MediaDownloadState.Completed
-    Row(
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(VortexColors.CardSurface)
-            .border(1.dp, VortexColors.BorderSubtle, RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(18.dp))
+            .background(VortexColors.GlassSurfaceDark)
+            .border(1.dp, VortexColors.GlassBorder, RoundedCornerShape(18.dp))
             .clickable(enabled = isCompleted) { onPlay() }
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(14.dp)
     ) {
-        // Thumbnail
-        Box(
-            modifier = Modifier
-                .width(68.dp)
-                .aspectRatio(2f / 3f)
-                .clip(RoundedCornerShape(8.dp))
-                .background(VortexColors.DarkGraphite)
-        ) {
-            AsyncImage(
-                model = item.poster,
-                contentDescription = item.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // Info & Progress
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = item.title,
-                color = VortexColors.PrimaryText,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // State & Size
-            when (item.state) {
-                MediaDownloadState.Completed -> {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .background(Color(0x3310B981), RoundedCornerShape(4.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = "OFFLINE",
-                                color = VortexColors.EmeraldGreen,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "${item.quality} • ${formatFileSize(item.fileSizeBytes)}",
-                            color = VortexColors.SecondaryText,
-                            fontSize = 11.sp
-                        )
-                    }
-                }
-                MediaDownloadState.Downloading -> {
-                    val sizeInfo = if (item.fileSizeBytes > 0L) {
-                        "${formatFileSize(item.downloadedBytes)} / ${formatFileSize(item.fileSizeBytes)}"
-                    } else {
-                        "${formatFileSize(item.downloadedBytes)} transferred"
-                    }
-                    Text(
-                        text = "DOWNLOADING • ${(item.progress * 100).toInt()}% ($sizeInfo)",
-                        color = Color(0xFFFFB800),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Media Poster Thumbnail
+                Box(
+                    modifier = Modifier
+                        .width(68.dp)
+                        .aspectRatio(2f / 3f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(VortexColors.DarkGraphite)
+                ) {
+                    AsyncImage(
+                        model = item.poster,
+                        contentDescription = item.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
-                MediaDownloadState.Paused -> {
-                    val sizeInfo = if (item.fileSizeBytes > 0L) {
-                        "${formatFileSize(item.downloadedBytes)} / ${formatFileSize(item.fileSizeBytes)}"
-                    } else {
-                        "${formatFileSize(item.downloadedBytes)} transferred"
-                    }
+
+                Spacer(modifier = Modifier.width(14.dp))
+
+                // Media Details & Status
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "PAUSED • ${(item.progress * 100).toInt()}% ($sizeInfo)",
-                        color = VortexColors.SecondaryText,
-                        fontSize = 11.sp
+                        text = item.title,
+                        color = Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                }
-                MediaDownloadState.Failed -> {
-                    Column {
-                        Box(
-                            modifier = Modifier
-                                .background(Color(0x33EF4444), RoundedCornerShape(4.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    if (isCompleted) {
+                        // Green Verified MP4 badge from ui_download.png
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .background(Color(0x3310B981), RoundedCornerShape(6.dp))
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                            ) {
+                                Text(
+                                    text = "Verified MP4 ✓",
+                                    color = VortexColors.VerifiedGreen,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "FAILED",
-                                color = Color(0xFFEF4444),
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold
+                                text = "${formatFileSize(item.fileSizeBytes)} • ${item.quality}",
+                                color = VortexColors.TextSecondary,
+                                fontSize = 11.sp
                             )
                         }
-                        if (!item.errorMessage.isNullOrBlank()) {
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = item.errorMessage,
-                                color = Color(0xFFEF4444),
-                                fontSize = 10.sp,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
-                            )
+                    } else {
+                        // Active / Paused / Queue status
+                        when (item.state) {
+                            MediaDownloadState.Downloading -> {
+                                Text(
+                                    text = "${(item.progress * 100).toInt()}% • 4.2 MB/s",
+                                    color = VortexColors.NeonCrimson,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "${formatFileSize(item.downloadedBytes)} / ${formatFileSize(item.fileSizeBytes)}",
+                                    color = VortexColors.TextMuted,
+                                    fontSize = 11.sp
+                                )
+                            }
+                            MediaDownloadState.Paused -> {
+                                Text(
+                                    text = "Paused • ${(item.progress * 100).toInt()}%",
+                                    color = VortexColors.TextSecondary,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            MediaDownloadState.Failed -> {
+                                Text(
+                                    text = "Download failed",
+                                    color = Color(0xFFEF4444),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                            else -> {
+                                Text(
+                                    text = "Queued",
+                                    color = VortexColors.TextMuted,
+                                    fontSize = 12.sp
+                                )
+                            }
                         }
                     }
                 }
-                else -> {
-                    Text(
-                        text = "QUEUED",
-                        color = VortexColors.MutedText,
-                        fontSize = 11.sp
+
+                // Delete / Cancel button
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = VortexIcons.Close,
+                        contentDescription = "Cancel/Delete",
+                        tint = VortexColors.TextMuted,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Progress Bar if in progress
-            if (item.state == MediaDownloadState.Downloading || item.state == MediaDownloadState.Paused) {
+            // Bottom section: Progress bar or Play button
+            if (isCompleted) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = onPlay,
+                    colors = ButtonDefaults.buttonColors(containerColor = VortexColors.NeonCrimson),
+                    shape = RoundedCornerShape(20.dp),
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = VortexIcons.Play,
+                        contentDescription = "Play Offline",
+                        tint = Color.White,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Play Offline",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                }
+            } else if (item.state == MediaDownloadState.Downloading || item.state == MediaDownloadState.Paused) {
+                Spacer(modifier = Modifier.height(10.dp))
                 LinearProgressIndicator(
                     progress = { item.progress },
-                    color = Color(0xFFFFB800),
-                    trackColor = VortexColors.SkeletonDark,
+                    color = VortexColors.NeonCrimson,
+                    trackColor = Color(0x33FFFFFF),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(3.dp)
+                        .height(4.dp)
                         .clip(RoundedCornerShape(2.dp))
                 )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // Action Buttons
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            when (item.state) {
-                MediaDownloadState.Completed -> {
-                    IconButton(onClick = onPlay) {
-                        Icon(
-                            imageVector = VortexIcons.Play,
-                            contentDescription = "Play offline",
-                            tint = VortexColors.EmeraldGreen
-                        )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    if (item.state == MediaDownloadState.Downloading) {
+                        IconButton(onClick = onPause, modifier = Modifier.size(28.dp)) {
+                            Icon(
+                                imageVector = VortexIcons.Pause,
+                                contentDescription = "Pause",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    } else {
+                        IconButton(onClick = onResume, modifier = Modifier.size(28.dp)) {
+                            Icon(
+                                imageVector = VortexIcons.Play,
+                                contentDescription = "Resume",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
-                MediaDownloadState.Downloading -> {
-                    IconButton(onClick = onPause) {
-                        Icon(
-                            imageVector = VortexIcons.Pause,
-                            contentDescription = "Pause",
-                            tint = VortexColors.SecondaryText
-                        )
-                    }
-                }
-                MediaDownloadState.Paused -> {
-                    IconButton(onClick = onResume) {
-                        Icon(
-                            imageVector = VortexIcons.Play,
-                            contentDescription = "Resume",
-                            tint = VortexColors.PrimaryText
-                        )
-                    }
-                }
-                MediaDownloadState.Failed -> {
-                    IconButton(onClick = onRetry) {
-                        Icon(
-                            imageVector = VortexIcons.Refresh,
-                            contentDescription = "Retry",
-                            tint = Color(0xFFFFB800)
-                        )
-                    }
-                }
-                else -> {}
-            }
-
-            // Always allow deleting/cancelling
-            IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = VortexIcons.Delete,
-                    contentDescription = "Delete",
-                    tint = VortexColors.MutedText
-                )
             }
         }
     }
