@@ -1,7 +1,7 @@
 package com.movievortex.android.ui.components
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -24,17 +24,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
 import coil3.compose.SubcomposeAsyncImage
 import com.movievortex.android.model.MediaType
 import com.movievortex.android.model.MovieVortexMedia
@@ -59,12 +56,14 @@ fun PosterCard(
                 onClick = onClick
             )
     ) {
+        // Poster Box with Flutter-identical 16dp rounding & glass border
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(2f / 3f)
-                .clip(RoundedCornerShape(12.dp))
-                .background(VortexColors.SkeletonDark)
+                .clip(RoundedCornerShape(16.dp))
+                .background(VortexColors.CardSurface)
+                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
         ) {
             SubcomposeAsyncImage(
                 model = media.poster ?: media.backdrop,
@@ -72,13 +71,13 @@ fun PosterCard(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
                 loading = {
-                    PosterSkeleton(cornerRadius = 12.dp)
+                    PosterSkeleton(cornerRadius = 16.dp)
                 },
                 error = {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(VortexColors.CardSurfaceElevated)
+                            .background(VortexColors.CardSurface)
                             .padding(8.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -89,15 +88,14 @@ fun PosterCard(
                             Icon(
                                 imageVector = VortexIcons.Movie,
                                 contentDescription = null,
-                                tint = VortexColors.TextMuted,
-                                modifier = Modifier.size(26.dp)
+                                tint = VortexColors.MutedText,
+                                modifier = Modifier.size(28.dp)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = media.title,
-                                color = VortexColors.TextMuted,
+                                color = VortexColors.MutedText,
                                 fontSize = 10.sp,
-                                fontFamily = FontFamily.SansSerif,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                                 textAlign = TextAlign.Center
@@ -107,123 +105,101 @@ fun PosterCard(
                 }
             )
 
-            // Bottom gradient overlay on poster for readability
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color(0x20000000),
-                                Color(0xCC000000)
-                            ),
-                            startY = 180f
-                        )
-                    )
-            )
-
-            // Top Badges Row (Type badge & Rating)
+            // Top Badges (4K UHD & Star Rating) matching Flutter MovieCard
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(6.dp),
+                    .padding(8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Media Type Tag
-                val typeLabel = when (media.type) {
-                    MediaType.Movie -> "MOVIE"
-                    MediaType.TvSeries -> "SERIES"
-                    MediaType.Anime -> "ANIME"
-                    else -> "HD"
-                }
+                // 4K UHD Badge
                 Box(
                     modifier = Modifier
-                        .background(
-                            color = Color(0xCC000000),
-                            shape = RoundedCornerShape(4.dp)
-                        )
-                        .padding(horizontal = 5.dp, vertical = 2.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color(0xC0000000))
+                        .border(0.8.dp, Color(0x4DFFFFFF), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
+                    val label = when (media.type) {
+                        MediaType.Anime -> "ANIME"
+                        MediaType.TvSeries -> "SERIES"
+                        else -> "4K UHD"
+                    }
                     Text(
-                        text = typeLabel,
-                        color = Color(0xFFDDDDDD),
+                        text = label,
+                        color = Color.White,
                         fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 0.4.sp
                     )
                 }
 
-                // Rating Pill (if available)
-                media.rating?.let { rating ->
-                    if (rating > 0f) {
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    color = Color(0xE616161C),
-                                    shape = RoundedCornerShape(4.dp)
-                                )
-                                .padding(horizontal = 5.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = "★ %.1f".format(rating),
-                                color = VortexColors.WarmAmber,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                // Star Rating Badge
+                val rating = media.rating ?: 0f
+                if (rating > 0f) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xC0000000))
+                            .border(0.8.dp, Color(0x4DFFFFFF), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "★ %.1f".format(rating),
+                            color = Color.White,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
 
-            // Bottom Progress bar (if watching)
+            // Watch Progress Bar (if watched)
             if (media.watchProgress > 0f) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(3.dp)
-                        .background(Color(0x66FFFFFF))
+                        .background(Color(0x33FFFFFF))
                         .align(Alignment.BottomStart)
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth(media.watchProgress.coerceIn(0.05f, 1f))
                             .height(3.dp)
-                            .background(VortexColors.CinematicRed)
+                            .background(Color.White)
                     )
                 }
             }
         }
 
         if (showDetails) {
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Title
+            // Title matching Flutter MovieCard (13sp, Bold, maxLines 1, ellipsis)
             Text(
                 text = media.title,
                 color = VortexColors.PrimaryText,
                 fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.2).sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
 
-            // Subtitle: Year & Genres
-            val subText = listOfNotNull(
-                media.year?.toString(),
-                media.genres.firstOrNull()
-            ).joinToString(" • ")
+            Spacer(modifier = Modifier.height(2.dp))
 
-            if (subText.isNotBlank()) {
-                Text(
-                    text = subText,
-                    color = VortexColors.MutedText,
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            // Subtitle: Year / 4K / Quality
+            val yearText = media.year?.let { "$it • 4K" } ?: "HD Streaming"
+            Text(
+                text = yearText,
+                color = VortexColors.MutedText,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

@@ -89,7 +89,7 @@ fun MovieVortexTopBar(
                     .size(36.dp)
                     .clip(CircleShape)
                     .background(Color.Black)
-                    .border(1.dp, VortexColors.NeonCrimsonGlow, CircleShape),
+                    .border(1.dp, Color(0x33FFFFFF), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 AsyncImage(
@@ -173,21 +173,23 @@ fun MovieVortexBottomBar(
         modifier = modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(start = 24.dp, end = 24.dp, bottom = 16.dp, top = 8.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Floating Frosted Glass Pill Capsule
+        // Floating Glassmorphic Pill Capsule matching Flutter FloatingNavBar
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(36.dp))
-                .background(VortexColors.GlassSurfaceDark)
-                .border(1.dp, VortexColors.GlassBorder, RoundedCornerShape(36.dp))
-                .padding(horizontal = 8.dp, vertical = 6.dp)
+                .height(64.dp)
+                .clip(RoundedCornerShape(32.dp))
+                .background(Color(0xDD0A0A0A))
+                .border(1.dp, Color(0x2EFFFFFF), RoundedCornerShape(32.dp))
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            contentAlignment = Alignment.Center
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround,
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 BottomNavIslandItem(
@@ -213,7 +215,7 @@ fun MovieVortexBottomBar(
                 )
 
                 BottomNavIslandItem(
-                    title = "Me",
+                    title = "Profile",
                     icon = VortexIcons.Person,
                     isSelected = currentDestination == MainDestination.Me,
                     onClick = { onDestinationSelected(MainDestination.Me) }
@@ -234,34 +236,32 @@ private fun BottomNavIslandItem(
     val interactionSource = remember { MutableInteractionSource() }
 
     if (isSelected) {
-        // Active Pill in MovieVortex 2.0: Glowing Neon Crimson Capsule
+        // Active Pill matching Flutter: Pure White Background, Black Text & Icon
         Row(
             modifier = Modifier
                 .clip(RoundedCornerShape(24.dp))
-                .background(VortexColors.CrimsonGradient)
-                .border(1.dp, Color(0x66FFFFFF), RoundedCornerShape(24.dp))
+                .background(Color.White)
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
                     onClick = onClick
                 )
-                .padding(horizontal = 14.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                tint = Color.White,
+                tint = Color.Black,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = title,
-                color = Color.White,
+                color = Color.Black,
                 fontSize = 12.sp,
-                fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.ExtraBold
             )
         }
     } else {
@@ -274,13 +274,13 @@ private fun BottomNavIslandItem(
                     indication = null,
                     onClick = onClick
                 )
-                .padding(horizontal = 14.dp, vertical = 8.dp),
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             contentAlignment = Alignment.TopEnd
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                tint = VortexColors.TextMuted,
+                tint = Color(0x99FFFFFF),
                 modifier = Modifier.size(20.dp)
             )
 
@@ -289,12 +289,12 @@ private fun BottomNavIslandItem(
                     modifier = Modifier
                         .size(12.dp)
                         .clip(CircleShape)
-                        .background(VortexColors.NeonCrimson),
+                        .background(Color.White),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = if (badgeCount > 9) "9+" else badgeCount.toString(),
-                        color = Color.White,
+                        color = Color.Black,
                         fontSize = 7.sp,
                         fontWeight = FontWeight.Bold
                     )

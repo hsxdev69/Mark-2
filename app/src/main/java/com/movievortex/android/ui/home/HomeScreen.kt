@@ -4,6 +4,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,23 +20,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.movievortex.android.ui.components.VortexIcons
-import com.movievortex.android.ui.components.OttLogoBadge
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -50,7 +43,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -63,6 +55,7 @@ import com.movievortex.android.model.MovieVortexMedia
 import com.movievortex.android.model.StreamingPlatform
 import com.movievortex.android.ui.components.PosterCard
 import com.movievortex.android.ui.components.PosterSkeleton
+import com.movievortex.android.ui.components.VortexIcons
 import com.movievortex.android.ui.theme.VortexColors
 import kotlinx.coroutines.delay
 
@@ -79,39 +72,29 @@ fun HomeScreen(
     val scrollState = rememberLazyListState()
     var selectedCategory by remember { mutableStateOf("All") }
 
-    // Dynamic filtering based on active category chip (Requirement 2)
+    val categories = listOf("All", "Movies", "Series", "Anime", "4K UHD", "Documentaries")
+
     val filteredRows = remember(selectedCategory, state.rows) {
         when (selectedCategory) {
             "All" -> state.rows
             "Movies" -> state.rows.mapNotNull { row ->
-                val movies = row.items.filter { it.type == MediaType.Movie || it.title.contains("Movie", ignoreCase = true) || !it.title.contains("Season", ignoreCase = true) }
-                if (movies.isNotEmpty()) row.copy(title = if (row.title.contains("Movie", ignoreCase = true)) row.title else "Movies • ${row.title}", items = movies) else null
+                val movies = row.items.filter { it.type == MediaType.Movie || it.title.contains("Movie", ignoreCase = true) }
+                if (movies.isNotEmpty()) row.copy(items = movies) else null
             }.ifEmpty { state.rows }
             "Series" -> state.rows.mapNotNull { row ->
                 val series = row.items.filter { it.type == MediaType.TvSeries || it.title.contains("Season", ignoreCase = true) || it.title.contains("Series", ignoreCase = true) }
-                if (series.isNotEmpty()) row.copy(title = if (row.title.contains("Series", ignoreCase = true)) row.title else "Series • ${row.title}", items = series) else null
+                if (series.isNotEmpty()) row.copy(items = series) else null
             }.ifEmpty { state.rows }
             "Anime" -> state.rows.mapNotNull { row ->
                 val anime = row.items.filter { it.type == MediaType.Anime || it.title.contains("Anime", ignoreCase = true) }
-                if (anime.isNotEmpty()) row.copy(title = "Anime • ${row.title}", items = anime) else null
-            }.ifEmpty { state.rows }
-            "Netflix" -> state.rows.mapNotNull { row ->
-                val netflix = row.items.filter { it.providerApiName.contains("netflix", ignoreCase = true) || row.title.contains("Netflix", ignoreCase = true) }
-                if (netflix.isNotEmpty()) row.copy(items = netflix) else null
-            }.ifEmpty { state.rows }
-            "Disney+" -> state.rows.mapNotNull { row ->
-                val disney = row.items.filter { it.providerApiName.contains("disney", ignoreCase = true) || row.title.contains("Disney", ignoreCase = true) }
-                if (disney.isNotEmpty()) row.copy(items = disney) else null
+                if (anime.isNotEmpty()) row.copy(items = anime) else null
             }.ifEmpty { state.rows }
             else -> state.rows
         }
     }
 
-    val filteredHero = remember(selectedCategory, state.heroItems, filteredRows) {
-        when (selectedCategory) {
-            "All" -> state.heroItems
-            else -> filteredRows.firstOrNull()?.items?.take(5)?.ifEmpty { null } ?: state.heroItems
-        }
+    val heroList = state.heroItems.ifEmpty {
+        filteredRows.firstOrNull()?.items?.take(5) ?: emptyList()
     }
 
     if (state.isLoading) {
@@ -123,9 +106,9 @@ fun HomeScreen(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CircularProgressIndicator(
-                    color = VortexColors.CinematicRed,
+                    color = Color.White,
                     strokeWidth = 3.dp,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(36.dp)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
@@ -143,72 +126,152 @@ fun HomeScreen(
         modifier = modifier
             .fillMaxSize()
             .background(VortexColors.PureBlack),
-        contentPadding = PaddingValues(bottom = 90.dp)
+        contentPadding = PaddingValues(bottom = 96.dp)
     ) {
-        // 0. Category Pills Row (Figma Screenshot_20261015_194137.jpg)
-        item {
-            CategoryPillsRow(
-                selectedCategory = selectedCategory,
-                onCategorySelected = { selectedCategory = it }
-            )
-        }
-
-        // 1. Featured Cinematic Hero
-        if (filteredHero.isNotEmpty()) {
+        // 1. Sleek Full-Bleed Hero Carousel (Matching Flutter hero_carousel.dart)
+        if (heroList.isNotEmpty()) {
             item {
-                FeaturedHero(
-                    items = filteredHero,
-                    onMediaClick = onMediaClick,
-                    onPlayClick = onPlayClick,
-                    onMyListClick = { item ->
+                FlutterStyleHeroCarousel(
+                    items = heroList,
+                    onTap = onMediaClick,
+                    onWatchNow = onPlayClick,
+                    onAddToList = { item ->
                         onRequireAuth("Sign in to save '${item.title}' to your personal Watchlist.")
                     }
                 )
             }
         }
 
-        // 2. Continue Watching (Home only)
+        // 2. Monochrome Category Tabs (Matching Flutter _buildCategoryTabs)
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                items(categories) { cat ->
+                    val isSelected = cat == selectedCategory
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(if (isSelected) Color.White else VortexColors.CardSurface)
+                            .border(
+                                1.dp,
+                                if (isSelected) Color.White else Color(0x22FFFFFF),
+                                RoundedCornerShape(20.dp)
+                            )
+                            .clickable { selectedCategory = cat }
+                            .padding(horizontal = 18.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = cat,
+                            color = if (isSelected) Color.Black else Color.White,
+                            fontSize = 12.sp,
+                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
+
+        // 3. Continue Watching Section (if any)
         if (state.continueWatching.isNotEmpty()) {
             item {
-                Spacer(modifier = Modifier.height(20.dp))
-                ContinueWatchingSection(
-                    items = state.continueWatching,
-                    onMediaClick = onMediaClick,
-                    onRemove = { homeController.removeContinueWatching(it) }
-                )
+                Spacer(modifier = Modifier.height(24.dp))
+                SectionHeader(title = "Continue Watching", icon = VortexIcons.Play)
+                Spacer(modifier = Modifier.height(12.dp))
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(state.continueWatching) { item ->
+                        PosterCard(
+                            media = item,
+                            onClick = { onPlayClick(item) },
+                            width = 140.dp
+                        )
+                    }
+                }
             }
         }
 
-        // 3. Streaming Platform Shortcuts (Home only)
-        if (state.platforms.isNotEmpty()) {
+        // 4. Trending Now Horizontal Section (Matching Flutter HomeScreen)
+        val trendingItems = filteredRows.firstOrNull()?.items ?: emptyList()
+        if (trendingItems.isNotEmpty()) {
             item {
                 Spacer(modifier = Modifier.height(24.dp))
-                PlatformShortcutsSection(
-                    platforms = state.platforms,
-                    onPlatformClick = onPlatformClick
-                )
+                SectionHeader(title = "Trending Now", icon = VortexIcons.TrendingUp)
+                Spacer(modifier = Modifier.height(12.dp))
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(trendingItems) { item ->
+                        PosterCard(
+                            media = item,
+                            onClick = { onMediaClick(item) },
+                            width = 135.dp
+                        )
+                    }
+                }
             }
         }
 
-        // 4. Curated Content Rows
-        items(filteredRows) { row ->
-            Spacer(modifier = Modifier.height(24.dp))
-            ContentRowSection(
-                row = row,
-                onMediaClick = onMediaClick
-            )
+        // 5. Blockbusters & Originals (Matching Flutter HomeScreen)
+        val blockbusterItems = filteredRows.getOrNull(1)?.items ?: heroList
+        if (blockbusterItems.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+                SectionHeader(title = "Blockbusters & Originals", icon = VortexIcons.Movie)
+                Spacer(modifier = Modifier.height(12.dp))
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(blockbusterItems) { item ->
+                        PosterCard(
+                            media = item,
+                            onClick = { onMediaClick(item) },
+                            width = 135.dp
+                        )
+                    }
+                }
+            }
         }
 
-        // 5. Explore More Grid Header
+        // 6. Remaining CloudStream Provider Rows
+        val remainingRows = filteredRows.drop(2)
+        items(remainingRows) { row ->
+            Spacer(modifier = Modifier.height(24.dp))
+            SectionHeader(title = row.title, icon = null)
+            Spacer(modifier = Modifier.height(12.dp))
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(row.items) { item ->
+                    PosterCard(
+                        media = item,
+                        onClick = { onMediaClick(item) },
+                        width = 135.dp
+                    )
+                }
+            }
+        }
+
+        // 7. Explore More Grid (3 columns chunked)
         if (state.exploreGrid.isNotEmpty()) {
             item {
                 Spacer(modifier = Modifier.height(28.dp))
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                     Text(
                         text = "Explore More",
-                        color = VortexColors.PrimaryText,
+                        color = Color.White,
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = (-0.3).sp
                     )
                     Text(
                         text = "Infinite catalog curated from global streaming networks",
@@ -219,7 +282,6 @@ fun HomeScreen(
                 }
             }
 
-            // Explore Grid Items (3 columns chunked)
             val chunked = state.exploreGrid.chunked(3)
             items(chunked) { rowItems ->
                 Row(
@@ -235,14 +297,12 @@ fun HomeScreen(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    // Fill remaining empty columns
                     repeat(3 - rowItems.size) {
                         Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
 
-            // Auto-load trigger near bottom
             item {
                 LaunchedEffect(Unit) {
                     homeController.loadMoreExplore()
@@ -255,7 +315,7 @@ fun HomeScreen(
                 ) {
                     if (state.isExploreLoading) {
                         CircularProgressIndicator(
-                            color = VortexColors.CinematicRed,
+                            color = Color.White,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -266,68 +326,18 @@ fun HomeScreen(
 }
 
 @Composable
-fun CategoryPillsRow(
-    selectedCategory: String,
-    onCategorySelected: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val categories = listOf("All", "Movies", "Series", "Anime", "Netflix", "Disney+")
-    LazyRow(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        items(categories) { category ->
-            val isSelected = category == selectedCategory
-            val bgColor = if (isSelected) VortexColors.NeonCrimson else VortexColors.GlassSurfaceLight
-            val textColor = Color.White
-            val borderModifier = if (isSelected) {
-                Modifier.border(1.dp, Color(0x66FFFFFF), RoundedCornerShape(20.dp))
-            } else {
-                Modifier.border(1.dp, VortexColors.GlassBorder, RoundedCornerShape(20.dp))
-            }
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .then(borderModifier)
-                    .background(bgColor)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { onCategorySelected(category) }
-                    )
-                    .padding(horizontal = 18.dp, vertical = 9.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = category,
-                    color = textColor,
-                    fontSize = 13.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun FeaturedHero(
+fun FlutterStyleHeroCarousel(
     items: List<MovieVortexMedia>,
-    onMediaClick: (MovieVortexMedia) -> Unit,
-    onPlayClick: (MovieVortexMedia) -> Unit,
-    onMyListClick: (MovieVortexMedia) -> Unit = {},
+    onTap: (MovieVortexMedia) -> Unit,
+    onWatchNow: (MovieVortexMedia) -> Unit,
+    onAddToList: (MovieVortexMedia) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var currentIndex by remember { mutableIntStateOf(0) }
 
-    // Auto-rotation every 7 seconds
     LaunchedEffect(items) {
         while (true) {
-            delay(7000)
+            delay(6000)
             if (items.isNotEmpty()) {
                 currentIndex = (currentIndex + 1) % items.size
             }
@@ -339,12 +349,11 @@ fun FeaturedHero(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, top = 4.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .height(430.dp)
-            .clickable { onMediaClick(activeItem) }
+            .height(440.dp)
+            .clickable { onTap(activeItem) }
     ) {
-        Crossfade(targetState = activeItem, label = "hero_crossfade") { item ->
+        // Full-bleed Backdrop Image
+        Crossfade(targetState = activeItem, label = "hero_slide") { item ->
             AsyncImage(
                 model = item.backdrop ?: item.poster,
                 contentDescription = item.title,
@@ -353,238 +362,177 @@ fun FeaturedHero(
             )
         }
 
-        // Gradient Masking for absolute readability fading to OLED black
+        // Ultra-Smooth Monochrome Gradient Overlays (Matching Flutter HeroCarousel)
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
+                            Color(0x80000000),
                             Color.Transparent,
-                            Color(0x33000000),
-                            Color(0xAA000000),
-                            VortexColors.BackgroundOled
-                        )
+                            Color(0xB3000000),
+                            VortexColors.PureBlack
+                        ),
+                        startY = 0f,
+                        endY = Float.POSITIVE_INFINITY
                     )
                 )
         )
 
-        // Hero Details Content at bottom
+        // Hero Content Overlay at Bottom
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomStart)
-                .padding(20.dp)
+                .padding(horizontal = 20.dp, vertical = 20.dp)
         ) {
-            // Category Tag / Badge
+            // Genre Tags / Rating Row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                // Premier 4K Badge
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
-                        .background(VortexColors.NeonCrimson)
+                        .background(Color.White)
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
-                        text = "VORTEX ORIGINAL",
-                        color = Color.White,
+                        text = "PREMIER 4K",
+                        color = Color.Black,
                         fontSize = 10.sp,
-                        fontWeight = FontWeight.Black
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 0.5.sp
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(VortexColors.GlassSurfaceLight)
-                        .border(1.dp, VortexColors.GlassBorder, RoundedCornerShape(6.dp))
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                ) {
+                // Star Rating
+                val rating = activeItem.rating ?: 0f
+                if (rating > 0f) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xCC000000))
+                            .border(0.8.dp, Color(0x4DFFFFFF), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = "★ %.1f".format(rating),
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    }
+                }
+
+                // Subtitle
+                val genresText = activeItem.genres.take(2).joinToString(" • ")
+                if (genresText.isNotBlank()) {
                     Text(
-                        text = "4K ULTRA HD",
-                        color = Color.White,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
+                        text = genresText,
+                        color = Color(0xFFCCCCCC),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Title
+            // Title (26sp, ExtraBold Manrope, letterSpacing -0.6)
             Text(
                 text = activeItem.title,
                 color = Color.White,
-                fontSize = 24.sp,
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Black,
+                letterSpacing = (-0.6).sp,
+                lineHeight = 30.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Year and Rating: 2026 • ★ 8.9 • Trending
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "${activeItem.year ?: 2026}",
-                    color = Color(0xFFDDDDDD),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = "  •  ",
-                    color = Color(0xFF888888),
-                    fontSize = 13.sp
-                )
-                Text(
-                    text = "★ %.1f".format(activeItem.rating?.takeIf { it > 0f } ?: 8.9f),
-                    color = VortexColors.AccentGold,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "  •  Sci-Fi / Thriller",
-                    color = Color(0xFFAAAAAA),
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Normal
-                )
-            }
-
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Hero Actions (Neon Crimson Watch Now button + Frosted Glass + My List + Indicator)
+            // Action Buttons: Watch Now & + My List
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // Watch Now Button (Pure White Pill, Black Play Icon + Text)
+                Button(
+                    onClick = { onWatchNow(activeItem) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = Color.Black
+                    ),
+                    shape = RoundedCornerShape(24.dp)
                 ) {
-                    // Neon Crimson Watch Now button (from ui_home.png)
-                    Button(
-                        onClick = { onPlayClick(activeItem) },
-                        colors = ButtonDefaults.buttonColors(containerColor = VortexColors.NeonCrimson),
-                        shape = RoundedCornerShape(24.dp),
-                        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 10.dp)
-                    ) {
+                    Icon(
+                        imageVector = VortexIcons.Play,
+                        contentDescription = "Watch Now",
+                        tint = Color.Black,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Watch Now",
+                        color = Color.Black,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
+
+                // + My List Button (Frosted Glass Pill)
+                Box(
+                    modifier = Modifier
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color(0x22FFFFFF))
+                        .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(24.dp))
+                        .clickable { onAddToList(activeItem) }
+                        .padding(horizontal = 18.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = VortexIcons.Play,
-                            contentDescription = "Watch Now",
+                            imageVector = VortexIcons.Add,
+                            contentDescription = "My List",
                             tint = Color.White,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Watch Now",
+                            text = "My List",
                             color = Color.White,
-                            fontWeight = FontWeight.Black,
-                            fontSize = 14.sp
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
+                }
+            }
 
-                    // Frosted Glass + My List Button (from ui_home.png)
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Capsule Page Indicator Dots
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                items.take(6).forEachIndexed { idx, _ ->
+                    val isSelected = idx == currentIndex
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(VortexColors.GlassSurfaceDark)
-                            .border(1.dp, VortexColors.GlassBorder, RoundedCornerShape(24.dp))
-                            .clickable { onMyListClick(activeItem) }
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = VortexIcons.Add,
-                                contentDescription = "My List",
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "My List",
-                                color = Color.White,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp
-                            )
-                        }
-                    }
-                }
-
-                // Page indicator dots
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    items.take(5).forEachIndexed { index, _ ->
-                        val isIndicatorActive = index == (currentIndex % 5)
-                        Box(
-                            modifier = Modifier
-                                .width(if (isIndicatorActive) 16.dp else 6.dp)
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp))
-                                .background(if (isIndicatorActive) VortexColors.NeonCrimson else Color(0x66FFFFFF))
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ContinueWatchingSection(
-    items: List<MovieVortexMedia>,
-    onMediaClick: (MovieVortexMedia) -> Unit,
-    onRemove: (MovieVortexMedia) -> Unit
-) {
-    Column {
-        Text(
-            text = "Continue Watching",
-            color = Color.White,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            items(items) { media ->
-                Box(
-                    modifier = Modifier
-                        .width(135.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .clickable { onMediaClick(media) }
-                ) {
-                    PosterCard(
-                        media = media,
-                        onClick = { onMediaClick(media) },
-                        showDetails = false
+                            .height(4.dp)
+                            .width(if (isSelected) 22.dp else 6.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(if (isSelected) Color.White else Color(0x40FFFFFF))
                     )
-
-                    // Remove button
-                    IconButton(
-                        onClick = { onRemove(media) },
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .size(26.dp)
-                            .padding(4.dp)
-                            .background(Color(0x99000000), CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = VortexIcons.Close,
-                            contentDescription = "Remove",
-                            tint = Color.White,
-                            modifier = Modifier.size(12.dp)
-                        )
-                    }
                 }
             }
         }
@@ -592,92 +540,42 @@ fun ContinueWatchingSection(
 }
 
 @Composable
-fun PlatformShortcutsSection(
-    platforms: List<StreamingPlatform>,
-    onPlatformClick: (StreamingPlatform) -> Unit
+private fun SectionHeader(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector?
 ) {
-    val ottPlatforms = listOf(
-        "Prime Video",
-        "Netflix",
-        "Sony LIV",
-        "Crunchyroll",
-        "JioHotstar",
-        "Zee5"
-    )
-
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        items(ottPlatforms) { name ->
-            Box(
-                modifier = Modifier
-                    .size(58.dp)
-                    .clip(CircleShape)
-                    .clickable {
-                        val matched = platforms.firstOrNull { it.name.contains(name, ignoreCase = true) }
-                            ?: StreamingPlatform(name.lowercase(), name, "", 0xFF000000L, "")
-                        onPlatformClick(matched)
-                    }
-            ) {
-                OttLogoBadge(name = name)
-            }
-        }
-    }
-}
-
-@Composable
-fun ContentRowSection(
-    row: ContentRow,
-    onMediaClick: (MovieVortexMedia) -> Unit
-) {
-    Column {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
             Text(
-                text = row.title,
+                text = title,
                 color = Color.White,
                 fontSize = 17.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = (-0.3).sp
             )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { /* More */ }
-            ) {
-                Text(
-                    text = "See All",
-                    color = VortexColors.GoldenAmber,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Icon(
-                    imageVector = VortexIcons.ChevronRight,
-                    contentDescription = "See All",
-                    tint = VortexColors.GoldenAmber,
-                    modifier = Modifier.size(14.dp)
-                )
-            }
         }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(row.items) { media ->
-                PosterCard(
-                    media = media,
-                    onClick = { onMediaClick(media) }
-                )
-            }
-        }
+        Text(
+            text = "See All",
+            color = VortexColors.MutedText,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
