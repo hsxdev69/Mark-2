@@ -31,7 +31,9 @@ import com.movievortex.android.controller.LibraryController
 import com.movievortex.android.controller.PlayerController
 import com.movievortex.android.controller.SearchController
 import com.movievortex.android.controller.SettingsController
+import com.movievortex.android.model.LiveChannel
 import com.movievortex.android.model.MediaEpisode
+import com.movievortex.android.model.MediaType
 import com.movievortex.android.model.MovieVortexMedia
 import com.movievortex.android.model.StreamingPlatform
 import com.movievortex.android.ui.anime.AnimeScreen
@@ -44,6 +46,7 @@ import com.movievortex.android.ui.detail.DetailScreen
 import com.movievortex.android.ui.dns.DnsIntroScreen
 import com.movievortex.android.ui.downloads.DownloadsScreen
 import com.movievortex.android.ui.home.HomeScreen
+import com.movievortex.android.ui.livetv.LiveTvScreen
 import com.movievortex.android.ui.library.HistoryScreen
 import com.movievortex.android.ui.library.WatchlistScreen
 import com.movievortex.android.ui.player.MovieVortexPlayerScreen
@@ -71,18 +74,38 @@ fun launchCloudStreamPlayer(
 ) {
     try {
         val intent = Intent(context, com.lagradost.cloudstream3.ui.player.DownloadedPlayerActivity::class.java).apply {
-            putExtra(com.lagradost.cloudstream3.MainActivity.API_NAME_EXTRA_KEY, media.providerApiName)
-            putExtra("CONTENT_URL", media.rawUrl)
-            putExtra("TITLE", media.title)
-            if (episode != null) {
-                putExtra("EPISODE", episode.episodeNumber)
-                putExtra("SEASON", episode.seasonNumber)
-                putExtra("EPISODE_DATA", episode.dataUrl)
+            if (media.type == MediaType.LiveStream || media.providerApiName == "LiveTV" || media.rawUrl.endsWith(".m3u8") || media.rawUrl.contains(".m3u8")) {
+                putExtra("DIRECT_URL", media.rawUrl)
+                putExtra("LIVE_URL", media.rawUrl)
+                putExtra("TITLE", media.title)
+            } else {
+                putExtra(com.lagradost.cloudstream3.MainActivity.API_NAME_EXTRA_KEY, media.providerApiName)
+                putExtra("CONTENT_URL", media.rawUrl)
+                putExtra("TITLE", media.title)
+                if (episode != null) {
+                    putExtra("EPISODE", episode.episodeNumber)
+                    putExtra("SEASON", episode.seasonNumber)
+                    putExtra("EPISODE_DATA", episode.dataUrl)
+                }
             }
         }
         context.startActivity(intent)
     } catch (e: Exception) {
         android.util.Log.e("MovieVortex", "Error launching player", e)
+    }
+}
+
+fun launchLiveStreamPlayer(context: Context, channel: LiveChannel) {
+    try {
+        val intent = Intent(context, com.lagradost.cloudstream3.ui.player.DownloadedPlayerActivity::class.java).apply {
+            putExtra("DIRECT_URL", channel.streamUrl)
+            putExtra("LIVE_URL", channel.streamUrl)
+            putExtra("TITLE", channel.name)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        android.util.Log.e("MovieVortex", "Error launching live player", e)
     }
 }
 
@@ -175,7 +198,7 @@ fun MovieVortexNavGraph(
                     topBar = {
                         MovieVortexTopBar(
                             onSearchClick = { currentDestination = MainDestination.Search },
-                            isTransparent = currentDestination == MainDestination.Home
+                            isTransparent = currentDestination == MainDestination.Home || currentDestination == MainDestination.LiveTv
                         )
                     },
                     bottomBar = {
@@ -210,6 +233,17 @@ fun MovieVortexNavGraph(
                                         onRequireAuth = { reason ->
                                             authModalReason = reason
                                             showAuthModal = true
+                                        },
+                                        onNavigateToLiveTv = {
+                                            currentDestination = MainDestination.LiveTv
+                                        }
+                                    )
+                                }
+
+                                MainDestination.LiveTv -> {
+                                    LiveTvScreen(
+                                        onChannelClick = { channel ->
+                                            launchLiveStreamPlayer(context, channel)
                                         }
                                     )
                                 }

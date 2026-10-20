@@ -93,6 +93,13 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     }
 
     private fun handleIntent(intent: Intent) {
+        val directUrl = intent.getStringExtra("DIRECT_URL") ?: intent.getStringExtra("LIVE_URL")
+        val directTitle = intent.getStringExtra("TITLE")
+        if (!directUrl.isNullOrBlank()) {
+            playDirectStream(directUrl, directTitle)
+            return
+        }
+
         val apiName = intent.getStringExtra(MainActivity.API_NAME_EXTRA_KEY)
         val contentUrl = intent.getStringExtra("CONTENT_URL") ?: intent.getStringExtra("URL")
         if (apiName != null && contentUrl != null) {
@@ -147,6 +154,19 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         )
         val args = GeneratorPlayer.newInstance(
             DownloadFileGenerator(listOf(extractorUri)),
+            0
+        )
+        navigateToPlayer(args)
+    }
+
+    private fun playDirectStream(url: String, title: String?) {
+        val displayName = title ?: "Live TV"
+        val args = GeneratorPlayer.newInstance(
+            LinkGenerator(
+                listOf(BasicLink(url, displayName)),
+                extract = false,
+                id = url.hashCode()
+            ),
             0
         )
         navigateToPlayer(args)

@@ -67,13 +67,14 @@ fun HomeScreen(
     onPlayClick: (MovieVortexMedia) -> Unit,
     onPlatformClick: (StreamingPlatform) -> Unit,
     onRequireAuth: (String) -> Unit = {},
+    onNavigateToLiveTv: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val state by homeController.uiState.collectAsState()
     val scrollState = rememberLazyListState()
     var selectedCategory by remember { mutableStateOf("All") }
 
-    val categories = listOf("All", "Movies", "Series", "Anime", "4K UHD", "Documentaries")
+    val categories = listOf("All", "Live TV", "Movies", "Series", "Anime", "4K UHD")
 
     val filteredRows = remember(selectedCategory, state.rows) {
         when (selectedCategory) {
@@ -143,7 +144,13 @@ fun HomeScreen(
                                 if (isSelected) Color.White else Color(0x22FFFFFF),
                                 RoundedCornerShape(20.dp)
                             )
-                            .clickable { selectedCategory = cat }
+                            .clickable {
+                                if (cat == "Live TV" && onNavigateToLiveTv != null) {
+                                    onNavigateToLiveTv()
+                                } else {
+                                    selectedCategory = cat
+                                }
+                            }
                             .padding(horizontal = 18.dp, vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -197,6 +204,60 @@ fun HomeScreen(
                             width = 135.dp
                         )
                     }
+                }
+            }
+        }
+
+        // 4b. Live TV Channels Row
+        item {
+            val liveChannels = remember { com.movievortex.android.model.LiveChannelsRepository.AllChannels.take(8) }
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE50914))
+                    )
+                    Text(
+                        text = "Live TV Channels",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = (-0.3).sp
+                    )
+                }
+                if (onNavigateToLiveTv != null) {
+                    Text(
+                        text = "View All →",
+                        color = Color(0xAAFFFFFF),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { onNavigateToLiveTv() }
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(liveChannels, key = { it.id }) { channel ->
+                    com.movievortex.android.ui.livetv.LiveChannelCard(
+                        channel = channel,
+                        onClick = { onPlayClick(channel.toMovieVortexMedia()) },
+                        modifier = Modifier.width(170.dp)
+                    )
                 }
             }
         }

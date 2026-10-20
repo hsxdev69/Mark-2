@@ -49,6 +49,7 @@ import com.movievortex.android.ui.theme.VortexColors
 
 enum class MainDestination {
     Home,
+    LiveTv,
     Search,
     Downloads,
     Me;
@@ -203,6 +204,13 @@ fun MovieVortexBottomBar(
                 )
 
                 BottomNavIslandItem(
+                    title = "Live TV",
+                    icon = VortexIcons.Tv,
+                    isSelected = currentDestination == MainDestination.LiveTv,
+                    onClick = { onDestinationSelected(MainDestination.LiveTv) }
+                )
+
+                BottomNavIslandItem(
                     title = "Search",
                     icon = VortexIcons.Search,
                     isSelected = currentDestination == MainDestination.Search,
@@ -265,7 +273,7 @@ private fun BottomNavIslandItem(
                     indication = null,
                     onClick = onClick
                 )
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 13.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
