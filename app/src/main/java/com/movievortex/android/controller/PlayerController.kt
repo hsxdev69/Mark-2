@@ -92,6 +92,27 @@ class PlayerController : ViewModel() {
             return
         }
 
+        // Direct stream or live stream
+        if (media.type == com.movievortex.android.model.MediaType.LiveStream ||
+            activeApiName == "LiveTV" ||
+            activeDataUrl.contains(".m3u8") ||
+            activeDataUrl.endsWith(".mp4")) {
+            val directSource = StreamSource(
+                url = activeDataUrl,
+                quality = "1080p FHD",
+                isM3u8 = activeDataUrl.contains(".m3u8")
+            )
+            _uiState.value = PlayerUiState(
+                status = PlayerStatus.Ready,
+                mediaTitle = title,
+                mediaSubtitle = subTitle,
+                streamSources = listOf(directSource),
+                currentSource = directSource,
+                statusMessage = ""
+            )
+            return
+        }
+
         // Resume saved position
         val lastPos = DataStoreHelper.getViewPos(activeDataUrl.hashCode())
         val resumeMs = lastPos?.position ?: 0L
