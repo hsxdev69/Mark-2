@@ -53,6 +53,7 @@ import com.movievortex.android.controller.HomeController
 import com.movievortex.android.model.MediaType
 import com.movievortex.android.model.MovieVortexMedia
 import com.movievortex.android.model.StreamingPlatform
+import com.movievortex.android.ui.components.HomeScreenSkeleton
 import com.movievortex.android.ui.components.PosterCard
 import com.movievortex.android.ui.components.PosterSkeleton
 import com.movievortex.android.ui.components.VortexIcons
@@ -98,26 +99,7 @@ fun HomeScreen(
     }
 
     if (state.isLoading) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(VortexColors.PureBlack),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CircularProgressIndicator(
-                    color = Color.White,
-                    strokeWidth = 3.dp,
-                    modifier = Modifier.size(36.dp)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Loading MovieVortex...",
-                    color = VortexColors.MutedText,
-                    fontSize = 13.sp
-                )
-            }
-        }
+        HomeScreenSkeleton(modifier = modifier)
         return
     }
 
