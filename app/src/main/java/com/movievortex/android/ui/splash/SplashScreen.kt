@@ -7,18 +7,18 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,78 +27,48 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.movievortex.android.ui.theme.VortexColors
+import com.lagradost.cloudstream3.R
 import kotlinx.coroutines.delay
 
 @Composable
 fun MovieVortexSplashScreen(
     onSplashFinished: () -> Unit
 ) {
-    // Guest Mode First: After 3-dot loader, navigate directly to Home screen
+    // Navigate smoothly after splash duration
     LaunchedEffect(Unit) {
-        delay(1400)
+        delay(1600)
         onSplashFinished()
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(VortexColors.BackgroundOled),
-        contentAlignment = Alignment.Center
+            .background(Color.Black)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        // Full-screen Splash Artwork Image (SplashScreen.jpeg)
+        AsyncImage(
+            model = R.drawable.vortex_splash_bg,
+            contentDescription = "MovieVortex Splash",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // 3-Dot Loading Animation at the very bottom
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(bottom = 36.dp),
+            contentAlignment = Alignment.Center
         ) {
-            // Centered Brand Logo (vortex_brand_logo.jpg)
-            Box(
-                modifier = Modifier
-                    .size(92.dp)
-                    .clip(CircleShape)
-                    .background(Color.Black)
-                    .border(2.dp, VortexColors.NeonCrimsonGlow, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                AsyncImage(
-                    model = com.lagradost.cloudstream3.R.drawable.vortex_brand_logo,
-                    contentDescription = "MovieVortex Logo",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // App Brand Name with clean sans-serif typography
-            Text(
-                text = "MovieVortex",
-                color = Color.White,
-                fontSize = 28.sp,
-                fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
+            ThreeDotLoader(
+                dotColor = Color.White,
+                dotSize = 9.dp
             )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = "Next-Gen Cinematic Streaming",
-                color = VortexColors.TextMuted,
-                fontSize = 13.sp,
-                fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Normal
-            )
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // 3-Dot Loading Animation
-            ThreeDotLoader()
         }
     }
 }
@@ -106,8 +76,8 @@ fun MovieVortexSplashScreen(
 @Composable
 fun ThreeDotLoader(
     modifier: Modifier = Modifier,
-    dotColor: Color = VortexColors.NeonCrimson,
-    dotSize: Dp = 10.dp
+    dotColor: Color = Color.White,
+    dotSize: Dp = 9.dp
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "three_dot_loader")
 

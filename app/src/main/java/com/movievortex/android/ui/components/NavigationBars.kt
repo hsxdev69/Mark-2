@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
+import com.movievortex.android.ui.theme.ManropeFontFamily
 import com.movievortex.android.ui.theme.VortexColors
 
 enum class MainDestination {
@@ -86,7 +88,7 @@ fun MovieVortexTopBar(
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(38.dp)
                     .clip(CircleShape)
                     .background(Color.Black)
                     .border(1.dp, Color(0x33FFFFFF), CircleShape),
@@ -103,10 +105,10 @@ fun MovieVortexTopBar(
             Text(
                 text = "MovieVortex",
                 color = Color.White,
-                fontSize = 18.sp,
-                fontFamily = FontFamily.SansSerif,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
+                fontSize = 19.sp,
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.ExtraBold,
+                letterSpacing = 0.3.sp
             )
         }
 
@@ -118,10 +120,10 @@ fun MovieVortexTopBar(
             // Chromecast Button
             Box(
                 modifier = Modifier
-                    .size(38.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
-                    .background(VortexColors.GlassSurfaceDark)
-                    .border(1.dp, VortexColors.GlassBorder, CircleShape)
+                    .background(Color(0xBB0E0E0E))
+                    .border(1.dp, Color(0x28FFFFFF), CircleShape)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
@@ -133,17 +135,17 @@ fun MovieVortexTopBar(
                     imageVector = VortexIcons.Cast,
                     contentDescription = "Cast",
                     tint = Color.White,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(19.dp)
                 )
             }
 
             // Notifications Bell Button
             Box(
                 modifier = Modifier
-                    .size(38.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
-                    .background(VortexColors.GlassSurfaceDark)
-                    .border(1.dp, VortexColors.GlassBorder, CircleShape)
+                    .background(Color(0xBB0E0E0E))
+                    .border(1.dp, Color(0x28FFFFFF), CircleShape)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
@@ -155,7 +157,7 @@ fun MovieVortexTopBar(
                     imageVector = VortexIcons.Notifications,
                     contentDescription = "Notifications",
                     tint = Color.White,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(19.dp)
                 )
             }
         }
@@ -180,10 +182,11 @@ fun MovieVortexBottomBar(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp)
-                .clip(RoundedCornerShape(32.dp))
-                .background(Color(0xDD0A0A0A))
-                .border(1.dp, Color(0x2EFFFFFF), RoundedCornerShape(32.dp))
+                .height(66.dp)
+                .shadow(elevation = 16.dp, shape = RoundedCornerShape(33.dp))
+                .clip(RoundedCornerShape(33.dp))
+                .background(Color(0xE00A0A0A))
+                .border(1.dp, Color(0x30FFFFFF), RoundedCornerShape(33.dp))
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -235,12 +238,28 @@ private fun BottomNavIslandItem(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
+    // Smooth scale animation on selected item
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.05f else 1f,
+        animationSpec = tween(durationMillis = 250),
+        label = "navItemScale"
+    )
+
+    // Animated background color transition
+    val pillBackground by animateColorAsState(
+        targetValue = if (isSelected) Color.White else Color.Transparent,
+        animationSpec = tween(durationMillis = 300),
+        label = "navItemBg"
+    )
+
     if (isSelected) {
-        // Active Pill matching Flutter: Pure White Background, Black Text & Icon
+        // Active Pill: Pure White Background with subtle shadow, Black Text & Icon
         Row(
             modifier = Modifier
+                .scale(scale)
+                .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp))
                 .clip(RoundedCornerShape(24.dp))
-                .background(Color.White)
+                .background(pillBackground)
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null,
@@ -254,13 +273,14 @@ private fun BottomNavIslandItem(
                 imageVector = icon,
                 contentDescription = title,
                 tint = Color.Black,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(19.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = title,
                 color = Color.Black,
                 fontSize = 12.sp,
+                fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.ExtraBold
             )
         }
@@ -268,6 +288,7 @@ private fun BottomNavIslandItem(
         // Inactive: Minimal frosted icon with notification badge
         Box(
             modifier = Modifier
+                .scale(scale)
                 .clip(CircleShape)
                 .clickable(
                     interactionSource = interactionSource,
@@ -280,22 +301,23 @@ private fun BottomNavIslandItem(
             Icon(
                 imageVector = icon,
                 contentDescription = title,
-                tint = Color(0x99FFFFFF),
-                modifier = Modifier.size(20.dp)
+                tint = Color(0x80FFFFFF),
+                modifier = Modifier.size(21.dp)
             )
 
             if (badgeCount > 0) {
                 Box(
                     modifier = Modifier
-                        .size(12.dp)
+                        .size(14.dp)
                         .clip(CircleShape)
-                        .background(Color.White),
+                        .background(Color(0xFFFFFFFF)),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = if (badgeCount > 9) "9+" else badgeCount.toString(),
                         color = Color.Black,
                         fontSize = 7.sp,
+                        fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.Bold
                     )
                 }
