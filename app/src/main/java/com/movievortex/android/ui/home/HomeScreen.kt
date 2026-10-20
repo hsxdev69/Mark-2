@@ -540,7 +540,7 @@ fun FlutterStyleHeroCarousel(
 }
 
 @Composable
-private fun SectionHeader(
+fun SectionHeader(
     title: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector?
 ) {
@@ -578,4 +578,45 @@ private fun SectionHeader(
             fontWeight = FontWeight.Bold
         )
     }
+}
+
+@Composable
+fun ContentRowSection(
+    row: ContentRow,
+    onMediaClick: (MovieVortexMedia) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        SectionHeader(title = row.title, icon = null)
+        Spacer(modifier = Modifier.height(12.dp))
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(row.items) { item ->
+                PosterCard(
+                    media = item,
+                    onClick = { onMediaClick(item) },
+                    width = 135.dp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FeaturedHero(
+    items: List<MovieVortexMedia>,
+    onMediaClick: (MovieVortexMedia) -> Unit,
+    onPlayClick: (MovieVortexMedia) -> Unit,
+    onMyListClick: (MovieVortexMedia) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    FlutterStyleHeroCarousel(
+        items = items,
+        onTap = onMediaClick,
+        onWatchNow = onPlayClick,
+        onAddToList = onMyListClick,
+        modifier = modifier
+    )
 }
