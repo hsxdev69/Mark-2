@@ -63,12 +63,14 @@ jobs:
         if: github.ref == 'refs/heads/main'
         with:
           tag_name: v2.0-latest
-          name: "MovieVortex 2.0 Latest"
+          name: "MovieVortex 2.0 (Pure B&W + CloudStream Backend)"
           body: |
-            ### MovieVortex 2.0 - Latest Build
-            - Complete Figma UI (Golden Amber Accents, Floating Nav Island, Rounded Hero)
-            - Fullscreen / Portrait YouTube-style rotation fix
-            - Hold 2X speed indicator
+            ### MovieVortex 2.0 - Stable Release
+            - **Pure Monochrome Theme**: OLED True Black (#000000) & Crisp White (#FFFFFF) throughout.
+            - **Manrope Typography**: High-legibility Google Fonts Manrope across all UI screens.
+            - **Genuine CloudStream Backend**: Embedded providers (MovieBox, AniVortex, IStreamFlare, SuperStream) pre-packaged in assets for instant launch without network lag.
+            - **Trending Search Suggestions**: Clickable suggestions (Severance, Interstellar, Solo Leveling, Dune: Part Two, The Batman, Arcane, etc.).
+            - **Native Hardware Playback**: ExoPlayer with adaptive HLS/DASH/MP4 stream resolution and subtitle track switching.
           draft: false
           prerelease: false
           files: app/build/outputs/apk/stable/release/*.apk

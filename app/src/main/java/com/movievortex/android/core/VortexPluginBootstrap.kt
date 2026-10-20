@@ -46,6 +46,11 @@ object VortexPluginBootstrap {
             name = "MovieBoxProvider",
             internalName = "MovieBoxProvider",
             fallbackUrl = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/builds/MovieBoxProvider.cs3"
+        ),
+        TargetPlugin(
+            name = "SuperStream",
+            internalName = "SuperStream",
+            fallbackUrl = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/builds/SuperStream.cs3"
         )
     )
 
@@ -60,7 +65,7 @@ object VortexPluginBootstrap {
         _isBootstrapping.value = true
 
         try {
-            Log.i(TAG, "Starting VortexPluginBootstrap with Phisher Repo...")
+            Log.i(TAG, "Starting VortexPluginBootstrap with Phisher Repo & Bundled Assets...")
 
             // 1. Ensure Phisher Repo is added to repositories
             val repoData = RepositoryData(
@@ -78,7 +83,38 @@ object VortexPluginBootstrap {
                 Log.w(TAG, "Initial plugin load warning: ${e.message}")
             }
 
-            // 3. Query repository manifest for online metadata
+            // 3. Ensure each target plugin is available, installing from bundled assets if needed
+            var installedAny = false
+            for (target in TARGET_PLUGINS) {
+                val file = PluginManager.getPluginPath(activity, target.internalName, PHISHER_REPO_URL)
+                var isInstalled = file.exists()
+
+                if (!isInstalled) {
+                    try {
+                        val assetPath = "plugins/${target.internalName}.cs3"
+                        activity.assets.open(assetPath).use { input ->
+                            val tempFile = java.io.File(activity.cacheDir, "${target.internalName}.tmp.cs3")
+                            tempFile.outputStream().use { output -> input.copyTo(output) }
+                            val ok = PluginManager.installPluginFromFile(
+                                context = activity,
+                                sourceFile = tempFile,
+                                internalName = target.internalName,
+                                repositoryUrl = PHISHER_REPO_URL
+                            )
+                            tempFile.delete()
+                            if (ok) {
+                                isInstalled = true
+                                installedAny = true
+                                Log.i(TAG, "Successfully installed bundled plugin: ${target.name}")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.d(TAG, "Bundled asset not found or failed for ${target.name}: ${e.message}")
+                    }
+                }
+            }
+
+            // 4. Query online repository manifest to fetch missing or updated plugins
             val repoPlugins = try {
                 RepositoryManager.getRepoPlugins(repoData)
             } catch (e: Exception) {
@@ -86,14 +122,12 @@ object VortexPluginBootstrap {
                 null
             }
 
-            // 4. Ensure each of the 3 target plugins is downloaded & active
-            var installedAny = false
             for (target in TARGET_PLUGINS) {
                 val file = PluginManager.getPluginPath(activity, target.internalName, PHISHER_REPO_URL)
                 val isInstalled = file.exists()
 
                 if (!isInstalled) {
-                    Log.i(TAG, "Auto-installing target plugin: ${target.name}...")
+                    Log.i(TAG, "Auto-installing target plugin from online repo: ${target.name}...")
                     val matchingPlugin = repoPlugins?.firstOrNull {
                         it.plugin.internalName.equals(target.internalName, ignoreCase = true) ||
                         it.plugin.name.equals(target.name, ignoreCase = true)
@@ -113,7 +147,7 @@ object VortexPluginBootstrap {
 
                     if (success) {
                         installedAny = true
-                        Log.i(TAG, "Successfully installed: ${target.name}")
+                        Log.i(TAG, "Successfully installed from web: ${target.name}")
                     } else {
                         // Retry with fallback URL without hash restriction
                         Log.w(TAG, "Direct fallback retry for: ${target.name}...")
@@ -133,7 +167,7 @@ object VortexPluginBootstrap {
                         }
                     }
                 } else {
-                    Log.i(TAG, "Plugin ${target.name} is already installed.")
+                    Log.i(TAG, "Plugin ${target.name} is verified on disk.")
                 }
             }
 

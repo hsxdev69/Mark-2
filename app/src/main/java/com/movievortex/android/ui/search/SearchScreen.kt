@@ -160,7 +160,115 @@ fun SearchScreen(
         when (state.status) {
             SearchStatus.Idle -> {
                 Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    // 1. Top Genre Chips (ui_search.png)
+                    // 1. Trending Searches with TrendingUp Icon
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = VortexIcons.TrendingUp,
+                            contentDescription = "Trending",
+                            tint = VortexColors.PrimaryText,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Trending Searches",
+                            color = VortexColors.PrimaryText,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    val trendingSuggestions = listOf(
+                        "Severance",
+                        "Interstellar",
+                        "Solo Leveling",
+                        "Dune: Part Two",
+                        "The Batman",
+                        "Arcane",
+                        "Stranger Things",
+                        "Oppenheimer"
+                    )
+
+                    // First row of trending chips
+                    androidx.compose.foundation.lazy.LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(trendingSuggestions.take(4)) { title ->
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(VortexColors.CardSurface)
+                                    .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(16.dp))
+                                    .clickable {
+                                        searchController.onQueryChange(title)
+                                        searchController.performSearch(title)
+                                    }
+                                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = VortexIcons.Search,
+                                        contentDescription = null,
+                                        tint = VortexColors.SecondaryText,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = title,
+                                        color = VortexColors.PrimaryText,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Second row of trending chips
+                    androidx.compose.foundation.lazy.LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        items(trendingSuggestions.drop(4)) { title ->
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(VortexColors.CardSurface)
+                                    .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(16.dp))
+                                    .clickable {
+                                        searchController.onQueryChange(title)
+                                        searchController.performSearch(title)
+                                    }
+                                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = VortexIcons.Search,
+                                        contentDescription = null,
+                                        tint = VortexColors.SecondaryText,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = title,
+                                        color = VortexColors.PrimaryText,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // 2. Top Genre Chips
                     Text(
                         text = "Top Genres",
                         color = VortexColors.PrimaryText,
@@ -175,14 +283,14 @@ fun SearchScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         items(topGenres) { genre ->
-                            val isCrimson = genre == "Sci-Fi"
+                            val isFirst = genre == "Sci-Fi"
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(18.dp))
-                                    .background(if (isCrimson) VortexColors.NeonCrimson else VortexColors.GlassSurfaceLight)
+                                    .background(if (isFirst) VortexColors.PrimaryBrand else VortexColors.CardSurface)
                                     .border(
                                         1.dp,
-                                        if (isCrimson) Color(0x66FFFFFF) else VortexColors.GlassBorder,
+                                        if (isFirst) Color.Transparent else Color(0x33FFFFFF),
                                         RoundedCornerShape(18.dp)
                                     )
                                     .clickable {
@@ -193,9 +301,9 @@ fun SearchScreen(
                             ) {
                                 Text(
                                     text = genre,
-                                    color = Color.White,
+                                    color = if (isFirst) Color.Black else Color.White,
                                     fontSize = 12.sp,
-                                    fontWeight = if (isCrimson) FontWeight.Bold else FontWeight.Medium
+                                    fontWeight = if (isFirst) FontWeight.Bold else FontWeight.Medium
                                 )
                             }
                         }
@@ -203,7 +311,7 @@ fun SearchScreen(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // 2. Recent Searches (ui_search.png)
+                    // 3. Recent Searches
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -217,7 +325,7 @@ fun SearchScreen(
                         )
                         Text(
                             text = "Clear All",
-                            color = VortexColors.NeonCrimson,
+                            color = VortexColors.SecondaryText,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.clickable { searchController.clearRecentQueries() }
@@ -240,8 +348,8 @@ fun SearchScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(VortexColors.GlassSurfaceDark)
-                                    .border(1.dp, VortexColors.NeonCrimsonGlow, RoundedCornerShape(16.dp))
+                                    .background(VortexColors.CardSurface)
+                                    .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
                                     .clickable {
                                         searchController.onQueryChange(query)
                                         searchController.performSearch(query)
@@ -365,10 +473,10 @@ fun SearchScreen(
                         Button(
                             onClick = { searchController.performSearch(state.query) },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = VortexColors.CinematicRed
+                                containerColor = VortexColors.PrimaryBrand
                             )
                         ) {
-                            Text(text = "Retry", color = Color.White)
+                            Text(text = "Retry", color = Color.Black, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

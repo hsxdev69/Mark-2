@@ -274,7 +274,7 @@ fun DetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                        .background(Color(0xFF121217))
+                        .background(VortexColors.SecondaryBackground)
                         .padding(top = 16.dp, bottom = 8.dp)
                 ) {
                     // Category Filter Pills: Recent, Movies, Sports, Reality
@@ -289,7 +289,7 @@ fun DetailScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(20.dp))
-                                    .background(if (isSelected) VortexColors.GoldenAmber else Color(0x3325252E))
+                                    .background(if (isSelected) VortexColors.PrimaryBrand else VortexColors.CardSurface)
                                     .border(
                                         1.dp,
                                         if (isSelected) Color.Transparent else Color(0x28FFFFFF),
@@ -407,20 +407,20 @@ fun DetailScreen(
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(46.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0x3325252E)),
-                                border = BorderStroke(1.dp, VortexColors.GoldenAmber),
+                                colors = ButtonDefaults.buttonColors(containerColor = VortexColors.CardSurface),
+                                border = BorderStroke(1.dp, Color(0x33FFFFFF)),
                                 shape = RoundedCornerShape(24.dp)
                             ) {
                                 Icon(
                                     imageVector = VortexIcons.Download,
                                     contentDescription = "Download Movie",
-                                    tint = VortexColors.GoldenAmber,
+                                    tint = VortexColors.PrimaryBrand,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "Download",
-                                    color = VortexColors.GoldenAmber,
+                                    color = VortexColors.PrimaryBrand,
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -476,7 +476,7 @@ fun DetailScreen(
                                         .fillMaxWidth()
                                         .aspectRatio(16f / 10f)
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(Color(0xFF1E1E24))
+                                        .background(VortexColors.CardSurface)
                                 ) {
                                     AsyncImage(
                                         model = posterUrl,
@@ -534,7 +534,7 @@ private fun EpisodeItemRow(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF1A1A22))
+            .background(VortexColors.CardSurface)
             .border(1.dp, Color(0x28FFFFFF), RoundedCornerShape(12.dp))
             .clickable(onClick = onPlay)
             .padding(12.dp),
@@ -544,7 +544,7 @@ private fun EpisodeItemRow(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(Color(0x33F5A524)),
+                .background(Color(0x22FFFFFF)),
             contentAlignment = Alignment.Center
         ) {
             Icon(

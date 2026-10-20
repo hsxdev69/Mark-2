@@ -804,6 +804,31 @@ object PluginManager {
         }
     }
 
+    suspend fun installPluginFromFile(
+        context: Context,
+        sourceFile: File,
+        internalName: String,
+        repositoryUrl: String = PREBUILT_REPOSITORIES.firstOrNull()?.url ?: ""
+    ): Boolean {
+        try {
+            val dest = getPluginPath(context, internalName, repositoryUrl)
+            dest.parentFile?.mkdirs()
+            sourceFile.copyTo(dest, overwrite = true)
+            val data = PluginData(
+                internalName = internalName,
+                url = null,
+                isOnline = true,
+                filePath = dest.absolutePath,
+                version = PLUGIN_VERSION_NOT_SET
+            )
+            unloadPlugin(dest.absolutePath)
+            return loadPlugin(context, dest, data)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to install plugin from file: ${sourceFile.name}", e)
+            return false
+        }
+    }
+
     suspend fun deletePlugin(file: File): Boolean {
         val list =
             (getPluginsLocal() + getPluginsOnline()).filter { it.filePath == file.absolutePath }

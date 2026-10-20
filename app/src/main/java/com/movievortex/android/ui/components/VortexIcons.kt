@@ -1157,5 +1157,24 @@ object VortexIcons {
             }
         }.build()
     }
+
+    val TrendingUp: ImageVector by lazy {
+        ImageVector.Builder("TrendingUp", 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(16f, 6f)
+                lineToRelative(2.29f, 2.29f)
+                lineToRelative(-4.88f, 4.88f)
+                lineToRelative(-4f, -4f)
+                lineTo(2f, 16.59f)
+                lineTo(3.41f, 18f)
+                lineToRelative(6f, -6f)
+                lineToRelative(4f, 4f)
+                lineToRelative(6.3f, -6.29f)
+                lineTo(22f, 12f)
+                verticalLineTo(6f)
+                close()
+            }
+        }.build()
+    }
 }
 

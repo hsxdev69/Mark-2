@@ -196,13 +196,27 @@ class DownloadedPlayerActivity : AppCompatActivity() {
 
         ioSafe {
             try {
-                val api = APIHolder.getApiFromNameNull(apiName)
+                var api = APIHolder.getApiFromNameNull(apiName)
                     ?: APIHolder.apis.firstOrNull { url.startsWith(it.mainUrl) }
                     ?: APIHolder.apis.firstOrNull()
 
                 if (api == null) {
+                    try {
+                        com.movievortex.android.core.VortexPluginBootstrap.bootstrap(this@DownloadedPlayerActivity)
+                    } catch (_: Exception) {}
+                    api = APIHolder.getApiFromNameNull(apiName)
+                        ?: APIHolder.apis.firstOrNull { url.startsWith(it.mainUrl) }
+                        ?: APIHolder.apis.firstOrNull()
+                }
+
+                if (api == null) {
                     main {
                         spinner?.isVisible = false
+                        android.widget.Toast.makeText(
+                            this@DownloadedPlayerActivity,
+                            "Connecting streaming provider... please retry",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
                         finish()
                     }
                     return@ioSafe
@@ -320,6 +334,11 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                 } else {
                     main {
                         spinner?.isVisible = false
+                        android.widget.Toast.makeText(
+                            this@DownloadedPlayerActivity,
+                            "Unable to resolve stream from provider. Retrying...",
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
                         finish()
                     }
                 }
@@ -327,6 +346,11 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                 logError(e)
                 main {
                     spinner?.isVisible = false
+                    android.widget.Toast.makeText(
+                        this@DownloadedPlayerActivity,
+                        "Player error: ${e.message}",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
                     finish()
                 }
             }

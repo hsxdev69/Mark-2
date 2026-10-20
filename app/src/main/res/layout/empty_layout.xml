@@ -23,7 +23,7 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:indeterminate="true"
-        android:indeterminateTint="#E50914"
+        android:indeterminateTint="#FFFFFF"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

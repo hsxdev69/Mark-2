@@ -8,72 +8,79 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.lagradost.cloudstream3.R
+
+val ManropeFontFamily = FontFamily(
+    Font(R.font.manrope_regular, FontWeight.Normal),
+    Font(R.font.manrope_bold, FontWeight.Bold)
+)
 
 object VortexColors {
     val PureBlack = Color(0xFF000000)
-    val AppBackground = Color(0xFF0A0A0E)
-    val SecondaryBackground = Color(0xFF0D0D11)
-    val DarkGraphite = Color(0xFF14141A)
-    val CardSurface = Color(0xFF181820)
-    val CardSurfaceElevated = Color(0xFF22222A)
-    val BorderSubtle = Color(0xFF282834)
-    val Divider = Color(0xFF242430)
+    val AppBackground = Color(0xFF000000)
+    val SecondaryBackground = Color(0xFF0A0A0A)
+    val DarkGraphite = Color(0xFF101010)
+    val CardSurface = Color(0xFF141414)
+    val CardSurfaceElevated = Color(0xFF1C1C1C)
+    val BorderSubtle = Color(0xFF242424)
+    val Divider = Color(0xFF1F1F1F)
 
     val PrimaryText = Color(0xFFFFFFFF)
-    val SecondaryText = Color(0xFFB5B5C3)
-    val MutedText = Color(0xFF8E8E9A)
+    val SecondaryText = Color(0xFFCCCCCC)
+    val MutedText = Color(0xFF888888)
     val TextPrimary = PrimaryText
     val TextSecondary = SecondaryText
     val TextMuted = MutedText
 
-    // MovieVortex 2.0 Cyber-Spatial Design Tokens
-    val NeonCrimson = Color(0xFFEF2F62)
-    val NeonCrimsonPressed = Color(0xFFD4224F)
-    val NeonCrimsonGlow = Color(0x59EF2F62)
+    // Pure Monochrome Black & White Design Tokens
+    val NeonCrimson = Color(0xFFFFFFFF)
+    val NeonCrimsonPressed = Color(0xFFCCCCCC)
+    val NeonCrimsonGlow = Color(0x33FFFFFF)
     val BackgroundOled = Color(0xFF000000)
-    val GlassSurfaceDark = Color(0xBF0D0D12)
-    val GlassSurfaceLight = Color(0x0FFFFFFF)
-    val GlassBorder = Color(0x24FFFFFF)
-    val AccentGold = Color(0xFFFFB800)
-    val VerifiedGreen = Color(0xFF10B981)
+    val GlassSurfaceDark = Color(0xDD0C0C0C)
+    val GlassSurfaceLight = Color(0x1AFFFFFF)
+    val GlassBorder = Color(0x22FFFFFF)
+    val AccentGold = Color(0xFFFFFFFF)
+    val VerifiedGreen = Color(0xFFFFFFFF)
 
-    // Legacy and Brand Accent Aliases
-    val PrimaryBrand = NeonCrimson
-    val PrimaryBrandGlow = NeonCrimsonGlow
-    val GoldenAmber = Color(0xFFF5A524)
-    val GoldenAmberDark = Color(0xFFE59819)
-    val GoldenAmberGlow = Color(0x66F5A524)
-    val AmberLight = Color(0xFFFFB800)
+    // Brand Accent Aliases
+    val PrimaryBrand = Color(0xFFFFFFFF)
+    val PrimaryBrandGlow = Color(0x33FFFFFF)
+    val GoldenAmber = Color(0xFFFFFFFF)
+    val GoldenAmberDark = Color(0xFFCCCCCC)
+    val GoldenAmberGlow = Color(0x33FFFFFF)
+    val AmberLight = Color(0xFFFFFFFF)
 
     // Secondary Accents
-    val CinematicRed = NeonCrimson
-    val CinematicRedGlow = NeonCrimsonGlow
-    val SubtlePurple = Color(0xFF8B5CF6)
-    val SubtlePurpleGlow = Color(0x4D8B5CF6)
-    val CoolBlue = Color(0xFF3B82F6)
-    val CoolBlueGlow = Color(0x4D3B82F6)
-    val EmeraldGreen = VerifiedGreen
-    val WarmAmber = Color(0xFFF5A524)
+    val CinematicRed = Color(0xFFFFFFFF)
+    val CinematicRedGlow = Color(0x33FFFFFF)
+    val SubtlePurple = Color(0xFFFFFFFF)
+    val SubtlePurpleGlow = Color(0x33FFFFFF)
+    val CoolBlue = Color(0xFFFFFFFF)
+    val CoolBlueGlow = Color(0x33FFFFFF)
+    val EmeraldGreen = Color(0xFFFFFFFF)
+    val WarmAmber = Color(0xFFFFFFFF)
 
     // Skeleton
-    val SkeletonDark = Color(0xFF181822)
-    val SkeletonShimmer = Color(0xFF282836)
+    val SkeletonDark = Color(0xFF141414)
+    val SkeletonShimmer = Color(0xFF222222)
 
     // Gradients
     val CrimsonGradient = Brush.horizontalGradient(
         colors = listOf(
-            NeonCrimson,
-            NeonCrimsonPressed
+            Color(0xFFFFFFFF),
+            Color(0xFFE0E0E0)
         )
     )
 
     val GoldenGradient = Brush.horizontalGradient(
         colors = listOf(
-            Color(0xFFFFB800),
-            Color(0xFFF5A524)
+            Color(0xFFFFFFFF),
+            Color(0xFFE0E0E0)
         )
     )
 
@@ -96,26 +103,24 @@ object VortexColors {
 
     val SplashAuraGradient = Brush.radialGradient(
         colors = listOf(
-            NeonCrimsonGlow,
-            Color(0x20EF2F62),
+            Color(0x33FFFFFF),
+            Color(0x10FFFFFF),
             Color.Transparent
-        )
-    )
-
-    val AccentSelectionGradient = Brush.horizontalGradient(
-        colors = listOf(
-            NeonCrimson,
-            NeonCrimsonPressed
         )
     )
 }
 
-private val DarkColorScheme = darkColorScheme(
+val DarkColorScheme = darkColorScheme(
     primary = VortexColors.NeonCrimson,
-    onPrimary = Color.White,
-    secondary = VortexColors.NeonCrimsonPressed,
-    onSecondary = VortexColors.PrimaryText,
-    tertiary = VortexColors.AccentGold,
+    onPrimary = VortexColors.PureBlack,
+    primaryContainer = VortexColors.CardSurfaceElevated,
+    onPrimaryContainer = VortexColors.PrimaryText,
+    secondary = VortexColors.AccentGold,
+    onSecondary = VortexColors.PureBlack,
+    secondaryContainer = VortexColors.CardSurface,
+    onSecondaryContainer = VortexColors.PrimaryText,
+    tertiary = VortexColors.VerifiedGreen,
+    onTertiary = VortexColors.PureBlack,
     background = VortexColors.BackgroundOled,
     onBackground = VortexColors.PrimaryText,
     surface = VortexColors.DarkGraphite,
@@ -126,21 +131,21 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 val ModernTypography = Typography(
-    displayLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, fontSize = 57.sp),
-    displayMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, fontSize = 45.sp),
-    displaySmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, fontSize = 36.sp),
-    headlineLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold, fontSize = 32.sp),
-    headlineMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold, fontSize = 28.sp),
-    headlineSmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 24.sp),
-    titleLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold, fontSize = 22.sp),
-    titleMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 16.sp),
-    titleSmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 14.sp),
-    bodyLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, fontSize = 16.sp),
-    bodyMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, fontSize = 14.sp),
-    bodySmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, fontSize = 12.sp),
-    labelLarge = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 14.sp),
-    labelMedium = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 12.sp),
-    labelSmall = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, fontSize = 11.sp)
+    displayLarge = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.Normal, fontSize = 57.sp),
+    displayMedium = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.Normal, fontSize = 45.sp),
+    displaySmall = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.Normal, fontSize = 36.sp),
+    headlineLarge = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.Bold, fontSize = 32.sp),
+    headlineMedium = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.Bold, fontSize = 28.sp),
+    headlineSmall = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.SemiBold, fontSize = 24.sp),
+    titleLarge = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.Bold, fontSize = 22.sp),
+    titleMedium = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.SemiBold, fontSize = 16.sp),
+    titleSmall = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.Medium, fontSize = 14.sp),
+    bodyLarge = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.Normal, fontSize = 16.sp),
+    bodyMedium = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.Normal, fontSize = 14.sp),
+    bodySmall = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.Normal, fontSize = 12.sp),
+    labelLarge = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.Medium, fontSize = 14.sp),
+    labelMedium = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.Medium, fontSize = 12.sp),
+    labelSmall = TextStyle(fontFamily = ManropeFontFamily, fontWeight = FontWeight.Medium, fontSize = 11.sp)
 )
 
 @Composable
@@ -159,7 +164,7 @@ val TextSecondary = VortexColors.SecondaryText
 val TextMuted = VortexColors.MutedText
 val PrimaryText = VortexColors.PrimaryText
 val SecondaryText = VortexColors.SecondaryText
-val MutedText = VortexColors.MutedText
+val TextMutedAlias = VortexColors.MutedText
 val NeonCrimson = VortexColors.NeonCrimson
 val BackgroundOled = VortexColors.BackgroundOled
 val GlassSurfaceDark = VortexColors.GlassSurfaceDark
