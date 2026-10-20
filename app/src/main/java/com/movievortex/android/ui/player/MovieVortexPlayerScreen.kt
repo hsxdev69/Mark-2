@@ -467,7 +467,7 @@ fun MovieVortexPlayerScreen(
                                     isPlaying = true
                                 }
                             },
-                            onSeek = { frac ->
+                            onSeek = { frac: Float ->
                                 val dur = exoPlayer.duration.coerceAtLeast(0L)
                                 val newPos = (frac * dur).toLong()
                                 exoPlayer.seekTo(newPos)
@@ -880,7 +880,8 @@ fun MovieVortexPlayerScreen(
                 }
             }
         }
-    } else {
+    }
+} else {
         // Fullscreen / Landscape Mode (Reuses exact same PlayerView, zero recreation!)
         Box(
             modifier = Modifier
@@ -988,7 +989,7 @@ fun MovieVortexPlayerScreen(
                             isPlaying = true
                         }
                     },
-                    onSeek = { frac ->
+                    onSeek = { frac: Float ->
                         val dur = exoPlayer.duration.coerceAtLeast(0L)
                         val newPos = (frac * dur).toLong()
                         exoPlayer.seekTo(newPos)
@@ -1011,6 +1012,7 @@ fun MovieVortexPlayerScreen(
             }
         }
     }
+}
 }
 
 @Composable
