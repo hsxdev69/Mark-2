@@ -121,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     backgroundColor: Colors.white,
                     behavior: SnackBarBehavior.floating,
-                    shape: RoundedCornerShape(12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 );
               },

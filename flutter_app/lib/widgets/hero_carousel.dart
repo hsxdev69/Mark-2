@@ -218,7 +218,7 @@ class _HeroCarouselState extends State<HeroCarousel> {
                                     foregroundColor: MonochromeTheme.oledBlack,
                                     elevation: 0,
                                     padding: const EdgeInsets.symmetric(vertical: 14),
-                                    shape: RoundedCornerShape(24),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                                   ),
                                   icon: const Icon(Icons.play_arrow_rounded, size: 20),
                                   label: Text(
@@ -247,7 +247,7 @@ class _HeroCarouselState extends State<HeroCarousel> {
                                       width: 1,
                                     ),
                                     padding: const EdgeInsets.symmetric(vertical: 14),
-                                    shape: RoundedCornerShape(24),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                                   ),
                                   icon: const Icon(Icons.add, size: 18),
                                   label: Text(
@@ -369,5 +369,3 @@ class _HeroCarouselState extends State<HeroCarousel> {
     );
   }
 }
-
-RoundedCornerShape(double radius) => RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius));

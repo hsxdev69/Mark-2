@@ -201,7 +201,7 @@ class _DetailScreenState extends State<DetailScreen> {
                             backgroundColor: Colors.white,
                             foregroundColor: Colors.black,
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedCornerShape(26),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
                           ),
                           icon: const Icon(Icons.play_arrow_rounded, size: 22),
                           label: Text(
