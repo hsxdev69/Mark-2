@@ -1,11 +1,14 @@
 package com.movievortex.android.controller
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lagradost.cloudstream3.APIHolder
+import com.lagradost.cloudstream3.CloudStreamApp
 import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.ui.APIRepository
 import com.movievortex.android.core.CoreAdapter
+import com.movievortex.android.core.ServerManager
 import com.movievortex.android.model.MovieVortexMedia
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -115,7 +118,14 @@ class SearchController : ViewModel() {
                 // Deduplicate by title & url
                 val distinctResults = searchResults.distinctBy { it.title.trim().lowercase() }
 
-                if (distinctResults.isEmpty()) {
+                val defaultServerName = try {
+                    CloudStreamApp.context?.getSharedPreferences("movievortex_settings", Context.MODE_PRIVATE)
+                        ?.getString("pref_default_server", ServerManager.DEFAULT_SERVER) ?: ServerManager.DEFAULT_SERVER
+                } catch (_: Exception) { ServerManager.DEFAULT_SERVER }
+                val targetProvider = ServerManager.toProviderName(defaultServerName)
+                val prioritizedResults = distinctResults.sortedByDescending { it.providerApiName.equals(targetProvider, ignoreCase = true) }
+
+                if (prioritizedResults.isEmpty()) {
                     _uiState.value = _uiState.value.copy(
                         status = SearchStatus.NoResults,
                         results = emptyList()
@@ -123,7 +133,7 @@ class SearchController : ViewModel() {
                 } else {
                     _uiState.value = _uiState.value.copy(
                         status = SearchStatus.Results,
-                        results = distinctResults
+                        results = prioritizedResults
                     )
                 }
             } catch (_: Throwable) {

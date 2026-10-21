@@ -14,6 +14,7 @@ import com.lagradost.cloudstream3.APIHolder
 import com.lagradost.cloudstream3.CloudStreamApp
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.utils.DataStoreHelper
+import com.movievortex.android.core.ServerManager
 import com.movievortex.android.core.VortexPluginBootstrap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,7 +63,7 @@ data class SettingsUiState(
     val downloadLocation: String = "",
 
     // 4. SOURCES & SERVERS
-    val defaultServer: String = "Auto Select Best",
+    val defaultServer: String = ServerManager.DEFAULT_SERVER,
     val connectionStatus: String = "Checking...",
     val isTestingConnection: Boolean = false,
     val installedSources: List<SourceItem> = emptyList(),
@@ -158,7 +159,7 @@ class SettingsController(private val context: Context) : ViewModel() {
             downloadLocation = settingsManager.getString(PREF_DOWNLOAD_LOCATION, defaultDownloadDir) ?: defaultDownloadDir,
 
             // 4. Sources & Servers
-            defaultServer = settingsManager.getString(PREF_DEFAULT_SERVER, "Auto Select Best") ?: "Auto Select Best",
+            defaultServer = settingsManager.getString(PREF_DEFAULT_SERVER, ServerManager.DEFAULT_SERVER) ?: ServerManager.DEFAULT_SERVER,
 
             // 5. Appearance
             appTheme = settingsManager.getString(PREF_APP_THEME, "Dark (OLED Pure Black)") ?: "Dark (OLED Pure Black)",
@@ -263,16 +264,36 @@ class SettingsController(private val context: Context) : ViewModel() {
     fun loadInstalledSources() {
         viewModelScope.launch(Dispatchers.IO) {
             val apis = APIHolder.apis
-            val sources = apis.map { api ->
+            val apiSources = apis.map { api ->
+                val markName = ServerManager.toDisplayName(api.name)
                 SourceItem(
-                    name = api.name,
+                    name = markName,
                     language = api.lang.uppercase(Locale.US),
                     isOnline = true,
-                    supportedTypes = api.supportedTypes.joinToString(", ") { it.name }
+                    supportedTypes = ServerManager.toDescription(markName)
                 )
             }
+
+            // Ensure all 4 Mark servers are represented
+            val finalSources = mutableListOf<SourceItem>()
+            ServerManager.ALL_SERVERS.forEach { serverName ->
+                val existing = apiSources.firstOrNull { it.name == serverName }
+                if (existing != null) {
+                    finalSources.add(existing)
+                } else {
+                    finalSources.add(
+                        SourceItem(
+                            name = serverName,
+                            language = "EN",
+                            isOnline = true,
+                            supportedTypes = ServerManager.toDescription(serverName)
+                        )
+                    )
+                }
+            }
+
             withContext(Dispatchers.Main) {
-                _uiState.value = _uiState.value.copy(installedSources = sources)
+                _uiState.value = _uiState.value.copy(installedSources = finalSources)
             }
         }
     }

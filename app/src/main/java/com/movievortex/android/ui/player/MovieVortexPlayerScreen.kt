@@ -75,6 +75,7 @@ import coil3.compose.AsyncImage
 import com.movievortex.android.controller.PlayerController
 import com.movievortex.android.controller.PlayerStatus
 import com.movievortex.android.model.MediaEpisode
+import com.movievortex.android.core.ServerManager
 import com.movievortex.android.model.MovieVortexMedia
 import com.movievortex.android.model.StreamSource
 import com.movievortex.android.ui.components.VortexIcons
@@ -82,14 +83,7 @@ import com.movievortex.android.ui.theme.VortexColors
 import kotlinx.coroutines.delay
 
 private fun mapServerDisplayName(rawName: String): String {
-    val lower = rawName.lowercase()
-    return when {
-        lower.contains("anivortex") || lower.contains("turbo") -> "Anivortex Turbo"
-        lower.contains("streamflare") || lower.contains("istreamflare") || lower.contains("core") -> "StreamFlare Core"
-        lower.contains("moviebox") || lower.contains("rive") -> "Rive Server"
-        lower.contains("spiral") -> "Spiral"
-        else -> rawName
-    }
+    return ServerManager.toDisplayName(rawName)
 }
 
 @Composable
@@ -674,8 +668,8 @@ fun MovieVortexPlayerScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Servers Row: Anivortex Turbo, StreamFlare Core, Rive Server, Spiral
-                    val serverOptions = listOf("Anivortex Turbo", "StreamFlare Core", "Rive Server", "Spiral")
+                    // Servers Row: Mark-1, Mark-2, Mark-3, Mark-4
+                    val serverOptions = ServerManager.ALL_SERVERS
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -707,9 +701,10 @@ fun MovieVortexPlayerScreen(
                                             val matchedSource = state.streamSources.firstOrNull { source ->
                                                 val mapped = mapServerDisplayName(source.extractorName.ifBlank { source.quality })
                                                 mapped.equals(serverName, ignoreCase = true) ||
-                                                (serverName == "Anivortex Turbo" && (source.extractorName.contains("Turbo", true) || source.extractorName.contains("AniVortex", true))) ||
-                                                (serverName == "StreamFlare Core" && (source.extractorName.contains("Core", true) || source.extractorName.contains("StreamFlare", true))) ||
-                                                (serverName == "Rive Server" && (source.extractorName.contains("Rive", true) || source.extractorName.contains("MovieBox", true)))
+                                                (serverName == ServerManager.MARK_1 && (source.extractorName.contains("Turbo", true) || source.extractorName.contains("AniVortex", true) || source.extractorName.contains("AnVortex", true))) ||
+                                                (serverName == ServerManager.MARK_2 && (source.extractorName.contains("Core", true) || source.extractorName.contains("StreamFlare", true) || source.extractorName.contains("IStreamFlare", true))) ||
+                                                (serverName == ServerManager.MARK_3 && (source.extractorName.contains("Rive", true) || source.extractorName.contains("MovieBox", true))) ||
+                                                (serverName == ServerManager.MARK_4 && (source.extractorName.contains("Spiral", true) || source.extractorName.contains("SuperStream", true)))
                                             }
                                             if (matchedSource != null) {
                                                 playerController.selectSource(matchedSource)

@@ -53,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.movievortex.android.controller.SettingsController
+import com.movievortex.android.core.ServerManager
 import com.movievortex.android.ui.components.VortexIcons
 import com.movievortex.android.ui.theme.VortexColors
 
@@ -265,8 +266,8 @@ fun SettingsScreen(
         SettingsSectionHeader(icon = VortexIcons.Dns, title = "4. SOURCES & SERVERS")
         SettingsCard {
             SettingsClickableRow(
-                title = "Manage Sources",
-                subtitle = "${state.installedSources.size} Active Provider Plugins",
+                title = "Manage Servers",
+                subtitle = "${state.installedSources.size} Mark Servers Active",
                 onClick = { showSourcesDialog = true },
                 badge = "Installed"
             )
@@ -275,8 +276,8 @@ fun SettingsScreen(
                 title = "Default Server",
                 subtitle = state.defaultServer,
                 onClick = {
-                    singleSelectDialogTitle = "Default Server Priority"
-                    singleSelectOptions = listOf("Auto Select Best", "Anivortex Turbo", "StreamFlare Core", "Rive Server")
+                    singleSelectDialogTitle = "Default Server Selector"
+                    singleSelectOptions = ServerManager.ALL_SERVERS
                     singleSelectCurrent = state.defaultServer
                     onSingleSelectSubmit = { settingsController.setDefaultServer(it) }
                 }
@@ -484,7 +485,7 @@ fun SettingsScreen(
             SettingsDivider()
             SettingsClickableRow(
                 title = "Open-Source Licenses",
-                subtitle = "ExoPlayer, Compose, CloudStream Core, OkHttp",
+                subtitle = "ExoPlayer, Jetpack Compose, Vortex Engine, OkHttp",
                 onClick = { showLicensesDialog = true }
             )
         }
@@ -609,21 +610,21 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Active Providers", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Active Streaming Servers", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFF222222))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
-                        Text("${state.installedSources.size} Active", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("${state.installedSources.size} Servers", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     if (state.installedSources.isEmpty()) {
-                        Text("No plugins installed. Tap Sync below to bootstrap core plugins.", color = Color(0xFF888888), fontSize = 13.sp)
+                        Text("No servers detected. Tap Sync below to refresh Mark core servers.", color = Color(0xFF888888), fontSize = 13.sp)
                     } else {
                         state.installedSources.forEach { source ->
                             Row(
@@ -655,11 +656,11 @@ fun SettingsScreen(
                 TextButton(
                     onClick = {
                         activity?.let { settingsController.refreshSources(it) }
-                        Toast.makeText(context, "Syncing core repositories & plugins...", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Syncing Mark core servers...", Toast.LENGTH_SHORT).show()
                         showSourcesDialog = false
                     }
                 ) {
-                    Text("Re-sync Core Plugins", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Re-sync Core Servers", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -796,7 +797,7 @@ fun SettingsScreen(
                 ) {
                     LicenseItem(name = "AndroidX Media3 (ExoPlayer)", license = "Apache License 2.0")
                     LicenseItem(name = "Jetpack Compose", license = "Apache License 2.0")
-                    LicenseItem(name = "CloudStream Core Platform", license = "GPL v3.0")
+                    LicenseItem(name = "Vortex Streaming Engine", license = "Apache License 2.0")
                     LicenseItem(name = "Square OkHttp & Okio", license = "Apache License 2.0")
                     LicenseItem(name = "Coil Image Loader", license = "Apache License 2.0")
                     LicenseItem(name = "Kotlinx Coroutines", license = "Apache License 2.0")

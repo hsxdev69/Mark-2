@@ -1,8 +1,10 @@
 package com.movievortex.android.controller
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lagradost.cloudstream3.APIHolder
+import com.lagradost.cloudstream3.CloudStreamApp
 import com.lagradost.cloudstream3.HomePageList
 import com.lagradost.cloudstream3.MainActivity
 import com.lagradost.cloudstream3.MainAPI
@@ -12,6 +14,7 @@ import com.lagradost.cloudstream3.mvvm.Resource
 import com.lagradost.cloudstream3.ui.APIRepository
 import com.lagradost.cloudstream3.utils.DataStoreHelper
 import com.movievortex.android.core.CoreAdapter
+import com.movievortex.android.core.ServerManager
 import com.movievortex.android.model.MediaType
 import com.movievortex.android.model.MovieVortexMedia
 import com.movievortex.android.model.StreamingPlatform
@@ -75,7 +78,15 @@ class HomeController : ViewModel() {
 
                 // 2. Load Content from Core Providers
                 val apis = APIHolder.apis
-                val mainApi = apis.firstOrNull { it.hasMainPage } ?: apis.firstOrNull()
+                val defaultServerName = try {
+                    CloudStreamApp.context?.getSharedPreferences("movievortex_settings", Context.MODE_PRIVATE)
+                        ?.getString("pref_default_server", ServerManager.DEFAULT_SERVER) ?: ServerManager.DEFAULT_SERVER
+                } catch (_: Exception) { ServerManager.DEFAULT_SERVER }
+                val targetProvider = ServerManager.toProviderName(defaultServerName)
+                val mainApi = apis.firstOrNull { it.name.equals(targetProvider, ignoreCase = true) && it.hasMainPage }
+                    ?: apis.firstOrNull { it.name.equals(targetProvider, ignoreCase = true) }
+                    ?: apis.firstOrNull { it.hasMainPage }
+                    ?: apis.firstOrNull()
 
                 val rows = mutableListOf<ContentRow>()
                 val heroList = mutableListOf<MovieVortexMedia>()
