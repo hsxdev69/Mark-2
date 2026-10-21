@@ -1,10 +1,6 @@
-name: Build MovieVortex Flutter APK
+name: Build MovieVortex Flutter APK (Disabled - Using Native Kotlin)
 
 on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
   workflow_dispatch:
 
 concurrency:
