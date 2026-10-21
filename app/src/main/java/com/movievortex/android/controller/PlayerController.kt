@@ -191,23 +191,23 @@ class PlayerController : ViewModel() {
             activeApiName == "LiveTV" ||
             activeDataUrl.contains(".m3u8") ||
             activeDataUrl.endsWith(".mp4")) {
-            val liveLink = newExtractorLink(
-                source = activeApiName.ifBlank { "LiveTV" },
-                name = title,
-                url = activeDataUrl,
-                type = if (activeDataUrl.contains(".m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
-            )
-            val directSource = CoreAdapter.fromExtractorLink(liveLink)
-            rawExtractorLinks[directSource.url] = liveLink
-            _uiState.value = PlayerUiState(
-                status = PlayerStatus.Ready,
-                mediaTitle = title,
-                mediaSubtitle = subTitle,
-                streamSources = listOf(directSource),
-                currentSource = directSource,
-                statusMessage = ""
-            )
             viewModelScope.launch(Dispatchers.Main) {
+                val liveLink = newExtractorLink(
+                    source = activeApiName.ifBlank { "LiveTV" },
+                    name = title,
+                    url = activeDataUrl,
+                    type = if (activeDataUrl.contains(".m3u8")) ExtractorLinkType.M3U8 else ExtractorLinkType.VIDEO
+                )
+                val directSource = CoreAdapter.fromExtractorLink(liveLink)
+                rawExtractorLinks[directSource.url] = liveLink
+                _uiState.value = PlayerUiState(
+                    status = PlayerStatus.Ready,
+                    mediaTitle = title,
+                    mediaSubtitle = subTitle,
+                    streamSources = listOf(directSource),
+                    currentSource = directSource,
+                    statusMessage = ""
+                )
                 cs3Player.loadPlayer(
                     context = context,
                     sameEpisode = false,
