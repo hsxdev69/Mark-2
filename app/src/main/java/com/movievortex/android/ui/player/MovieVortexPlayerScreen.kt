@@ -656,7 +656,75 @@ fun MovieVortexPlayerScreen(
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(20.dp))
 
+                    // Server Selection Section (Screenshot_20261015_084607.jpg)
+                    Text(
+                        text = "If current server is not working, try a different one:",
+                        color = Color(0xFFDDDDDD),
+                        fontSize = 13.sp,
+                        fontStyle = FontStyle.Italic
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Servers Row: Mark-1, Mark-2, Mark-3, Mark-4
+                    val serverOptions = ServerManager.ALL_SERVERS
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text(
+                            text = "Servers :",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(serverOptions) { serverName ->
+                                val isSelected = selectedServerName.equals(serverName, ignoreCase = true)
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(if (isSelected) Color.White else Color(0xFF222222))
+                                        .border(
+                                            width = 1.dp,
+                                            color = if (isSelected) Color.White else Color(0xFF333333),
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                        .clickable {
+                                            selectedServerName = serverName
+                                            val matchedSource = state.streamSources.firstOrNull { source ->
+                                                val mapped = mapServerDisplayName(source.extractorName.ifBlank { source.quality })
+                                                mapped.equals(serverName, ignoreCase = true) ||
+                                                (serverName == ServerManager.MARK_1 && (source.extractorName.contains("Turbo", true) || source.extractorName.contains("AniVortex", true) || source.extractorName.contains("AnVortex", true))) ||
+                                                (serverName == ServerManager.MARK_2 && (source.extractorName.contains("Core", true) || source.extractorName.contains("StreamFlare", true) || source.extractorName.contains("IStreamFlare", true))) ||
+                                                (serverName == ServerManager.MARK_3 && (source.extractorName.contains("Rive", true) || source.extractorName.contains("MovieBox", true))) ||
+                                                (serverName == ServerManager.MARK_4 && (source.extractorName.contains("Spiral", true) || source.extractorName.contains("SuperStream", true)))
+                                            }
+                                            if (matchedSource != null) {
+                                                playerController.selectSource(matchedSource)
+                                            } else {
+                                                Toast.makeText(context, "Switched to $serverName", Toast.LENGTH_SHORT).show()
+                                                playerController.retryPlayback()
+                                            }
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 7.dp)
+                                ) {
+                                    Text(
+                                        text = serverName,
+                                        color = if (isSelected) Color.Black else Color.White,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(20.dp))
 

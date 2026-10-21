@@ -306,14 +306,13 @@
                             app:iconTint="@android:color/white"
                             app:rippleColor="#33FFFFFF" />
 
-                        <!-- Sources / Settings Tune (Hidden) -->
+                        <!-- Sources / Settings Tune -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/player_sources_btt"
                             style="@style/Widget.MaterialComponents.Button.TextButton"
                             android:layout_width="40dp"
                             android:layout_height="40dp"
                             android:layout_marginStart="8dp"
-                            android:visibility="gone"
                             android:insetTop="0dp"
                             android:insetBottom="0dp"
                             android:insetLeft="0dp"

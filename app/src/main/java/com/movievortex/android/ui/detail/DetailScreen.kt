@@ -260,6 +260,14 @@ fun DetailScreen(
                                 fontWeight = FontWeight.Bold
                             )
                         }
+
+                        // Provider Name
+                        Text(
+                            text = "• ${media.providerApiName}",
+                            color = VortexColors.MutedText,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
