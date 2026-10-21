@@ -272,6 +272,7 @@ fun MovieVortexNavGraph(
                                 MainDestination.Me -> {
                                     SettingsScreen(
                                         settingsController = settingsController,
+                                        onNavigateToDownloads = { currentDestination = MainDestination.Downloads },
                                         onOpenDnsSetup = { currentScreen = AppScreen.DnsIntro },
                                         onOpenWatchlist = { currentScreen = AppScreen.Watchlist },
                                         onOpenHistory = { currentScreen = AppScreen.History },
