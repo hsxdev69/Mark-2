@@ -116,6 +116,31 @@ fun DownloadsScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // 2. Storage Analytics Gauge Card (ui_download.png)
+        val dlBytes = state.totalDownloadedBytes
+        val availBytes = state.deviceAvailableBytes
+        val totBytes = state.deviceTotalBytes
+        val usedDeviceBytes = (totBytes - availBytes).coerceAtLeast(0L)
+        val usageRatio = if (totBytes > 0L) {
+            (usedDeviceBytes.toFloat() / totBytes.toFloat()).coerceIn(0.01f, 1f)
+        } else {
+            0.05f
+        }
+
+        val usedFormatted = if (dlBytes >= 1024L * 1024L * 1024L) {
+            String.format(java.util.Locale.US, "%.2f GB used", dlBytes.toDouble() / (1024.0 * 1024.0 * 1024.0))
+        } else if (dlBytes > 0L) {
+            String.format(java.util.Locale.US, "%.1f MB used", dlBytes.toDouble() / (1024.0 * 1024.0))
+        } else {
+            "0.0 MB used"
+        }
+
+        val availableFormatted = if (availBytes > 0L) {
+            val availGb = availBytes.toDouble() / (1024.0 * 1024.0 * 1024.0)
+            String.format(java.util.Locale.US, "Available: %.1f GB", availGb)
+        } else {
+            "Available: System Storage"
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -135,8 +160,8 @@ fun DownloadsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     androidx.compose.material3.CircularProgressIndicator(
-                        progress = { 0.35f },
-                        color = VortexColors.NeonCrimson,
+                        progress = { usageRatio },
+                        color = Color.White,
                         trackColor = Color(0x33FFFFFF),
                         strokeWidth = 4.dp,
                         modifier = Modifier.fillMaxSize()
@@ -158,13 +183,13 @@ fun DownloadsScreen(
                         fontSize = 12.sp
                     )
                     Text(
-                        text = "14.2 GB used",
-                        color = VortexColors.NeonCrimson,
+                        text = usedFormatted,
+                        color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "Available: 48 GB",
+                        text = availableFormatted,
                         color = VortexColors.TextMuted,
                         fontSize = 11.sp
                     )
@@ -284,10 +309,13 @@ fun DownloadsScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
                         onClick = onBrowseClick,
-                        colors = ButtonDefaults.buttonColors(containerColor = VortexColors.NeonCrimson),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color.Black
+                        ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text(text = "Browse Content", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(text = "Browse Content", color = Color.Black, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -446,7 +474,10 @@ fun DownloadItemCard(
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
                     onClick = onPlay,
-                    colors = ButtonDefaults.buttonColors(containerColor = VortexColors.NeonCrimson),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = Color.Black
+                    ),
                     shape = RoundedCornerShape(20.dp),
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -454,13 +485,13 @@ fun DownloadItemCard(
                     Icon(
                         imageVector = VortexIcons.Play,
                         contentDescription = "Play Offline",
-                        tint = Color.White,
+                        tint = Color.Black,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Play Offline",
-                        color = Color.White,
+                        color = Color.Black,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
                     )

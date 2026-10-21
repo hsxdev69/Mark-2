@@ -161,13 +161,14 @@ fun DnsIntroScreen(
                     .fillMaxWidth()
                     .height(50.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = VortexColors.CinematicRed
+                    containerColor = Color.White,
+                    contentColor = Color.Black
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
                     text = "Apply & Continue",
-                    color = Color.White,
+                    color = Color.Black,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold
                 )

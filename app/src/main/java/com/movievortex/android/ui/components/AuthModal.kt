@@ -173,8 +173,8 @@ fun AuthModal(
                         onLoginSuccess(user)
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = VortexColors.NeonCrimson,
-                        contentColor = Color.White
+                        containerColor = Color.White,
+                        contentColor = Color.Black
                     ),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
@@ -183,7 +183,7 @@ fun AuthModal(
                 ) {
                     Text(
                         text = if (isSignUp) "Create Account" else "Sign In",
-                        color = Color.White,
+                        color = Color.Black,
                         fontSize = 14.sp,
                         fontFamily = FontFamily.SansSerif,
                         fontWeight = FontWeight.Bold

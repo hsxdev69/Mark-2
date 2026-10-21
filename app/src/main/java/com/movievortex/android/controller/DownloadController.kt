@@ -3,6 +3,7 @@ package com.movievortex.android.controller
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
+import android.os.StatFs
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
@@ -58,7 +59,10 @@ data class DownloadUiItem(
 
 data class DownloadsUiState(
     val items: List<DownloadUiItem> = emptyList(),
-    val activeDownloadsCount: Int = 0
+    val activeDownloadsCount: Int = 0,
+    val totalDownloadedBytes: Long = 0L,
+    val deviceAvailableBytes: Long = 0L,
+    val deviceTotalBytes: Long = 0L
 )
 
 class DownloadController : ViewModel() {
@@ -241,11 +245,62 @@ class DownloadController : ViewModel() {
                 }
             }
 
+            val (dlBytes, availBytes, totBytes) = calculateStorageStats(downloadItems)
             _uiState.value = DownloadsUiState(
                 items = downloadItems,
-                activeDownloadsCount = downloadItems.count { it.state == MediaDownloadState.Downloading }
+                activeDownloadsCount = downloadItems.count { it.state == MediaDownloadState.Downloading },
+                totalDownloadedBytes = dlBytes,
+                deviceAvailableBytes = availBytes,
+                deviceTotalBytes = totBytes
             )
         }
+    }
+
+    private fun calculateStorageStats(items: List<DownloadUiItem>): Triple<Long, Long, Long> {
+        var downloadedBytes = 0L
+
+        // 1. Scan external storage MovieVortex downloads directory
+        try {
+            val dir = File("/storage/emulated/0/Download/$DOWNLOAD_DIR_NAME")
+            if (dir.exists() && dir.isDirectory) {
+                dir.walkTopDown().filter { it.isFile }.forEach { file ->
+                    downloadedBytes += file.length()
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error calculating download folder size", e)
+        }
+
+        // 2. Scan internal app-specific download directory
+        try {
+            val appDownloads = CloudStreamApp.context?.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+            if (appDownloads != null && appDownloads.exists() && appDownloads.isDirectory) {
+                appDownloads.walkTopDown().filter { it.isFile }.forEach { file ->
+                    downloadedBytes += file.length()
+                }
+            }
+        } catch (_: Exception) {}
+
+        // 3. Compare with sum of downloadedBytes from UI items
+        val itemsSum = items.sumOf { it.downloadedBytes.coerceAtLeast(0L) }
+        val finalDownloadedBytes = maxOf(downloadedBytes, itemsSum)
+
+        // 4. Device storage via StatFs
+        var availableBytes = 0L
+        var totalBytes = 0L
+        try {
+            val stat = StatFs(Environment.getDataDirectory().path)
+            availableBytes = stat.availableBlocksLong * stat.blockSizeLong
+            totalBytes = stat.blockCountLong * stat.blockSizeLong
+        } catch (_: Exception) {
+            try {
+                val stat = StatFs(Environment.getExternalStorageDirectory().path)
+                availableBytes = stat.availableBlocksLong * stat.blockSizeLong
+                totalBytes = stat.blockCountLong * stat.blockSizeLong
+            } catch (_: Exception) {}
+        }
+
+        return Triple(finalDownloadedBytes, availableBytes, totalBytes)
     }
 
     private fun updateProgressForQueueItem(id: String, downloaded: Long, total: Long) {
@@ -306,6 +361,7 @@ class DownloadController : ViewModel() {
             items = _uiState.value.items.filter { it.id != id },
             activeDownloadsCount = _uiState.value.items.count { it.state == MediaDownloadState.Downloading }
         )
+        loadDownloads()
     }
 
     fun pauseDownload(id: String) {
@@ -374,6 +430,7 @@ class DownloadController : ViewModel() {
             items = _uiState.value.items.filter { it.id != id },
             activeDownloadsCount = _uiState.value.items.count { it.state == MediaDownloadState.Downloading }
         )
+        loadDownloads()
     }
 
     /**

@@ -114,10 +114,13 @@ fun MyListScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
                         onClick = onBrowseClick,
-                        colors = ButtonDefaults.buttonColors(containerColor = VortexColors.CinematicRed),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,
+                            contentColor = Color.Black
+                        ),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text(text = "Explore Movies & Shows", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text(text = "Explore Movies & Shows", color = Color.Black, fontWeight = FontWeight.Bold)
                     }
                 }
             }

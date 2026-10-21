@@ -375,7 +375,11 @@ class SettingsController(private val context: Context) : ViewModel() {
 
             val downloadDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
                 ?: File(context.filesDir, "downloads")
-            val downloadBytes = getFolderSize(downloadDir)
+            var downloadBytes = getFolderSize(downloadDir)
+            val publicDir = File("/storage/emulated/0/Download/MovieVortex")
+            if (publicDir.exists()) {
+                downloadBytes += getFolderSize(publicDir)
+            }
             val downloadStr = formatBytes(downloadBytes)
 
             var freeStr = "Unknown"
