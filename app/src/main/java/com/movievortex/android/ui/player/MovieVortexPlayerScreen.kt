@@ -124,47 +124,76 @@ fun MovieVortexPlayerScreen(
     }
 
     val activity = context as? Activity
-    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
-    val isDeviceLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
-    val effectiveFullscreen = isFullscreen || isDeviceLandscape
-    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
-
-    val attachedExoPlayer by playerController.attachedPlayer.collectAsState()
-
-    val playerView = remember {
-        PlayerView(context).apply {
-            useController = false
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-        }
-    }
-
-    LaunchedEffect(attachedExoPlayer) {
-        playerView.player = attachedExoPlayer
-    }
 
     BackHandler {
-        if (effectiveFullscreen) {
+        if (isFullscreen) {
             isFullscreen = false
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         } else {
-            playerController.releasePlayer()
             onCloseClick()
         }
     }
 
-    DisposableEffect(Unit) {
+    val exoPlayer = remember {
+        ExoPlayer.Builder(context).build().apply {
+            playWhenReady = true
+        }
+    }
+
+    DisposableEffect(exoPlayer) {
         onDispose {
-            playerController.releasePlayer()
+            try {
+                exoPlayer.release()
+            } catch (_: Exception) {}
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
 
+    // Attach stream source to ExoPlayer
     LaunchedEffect(state.currentSource) {
         state.currentSource?.let { source ->
-            selectedServerName = mapServerDisplayName(source.extractorName.ifBlank { "Anivortex Turbo" })
+            try {
+                selectedServerName = mapServerDisplayName(source.extractorName.ifBlank { "Anivortex Turbo" })
+                val mediaItem = MediaItem.fromUri(source.url)
+                val dataSourceFactory = DefaultHttpDataSource.Factory()
+                    .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                if (source.headers.isNotEmpty()) {
+                    dataSourceFactory.setDefaultRequestProperties(source.headers)
+                }
+                val mediaSource = DefaultMediaSourceFactory(dataSourceFactory)
+                    .createMediaSource(mediaItem)
+
+                exoPlayer.setMediaSource(mediaSource)
+                if (state.currentPositionMs > 0) {
+                    exoPlayer.seekTo(state.currentPositionMs)
+                }
+                exoPlayer.prepare()
+                exoPlayer.play()
+                isPlaying = true
+            } catch (_: Exception) {
+                try {
+                    val mediaItem = MediaItem.fromUri(source.url)
+                    exoPlayer.setMediaItem(mediaItem)
+                    if (state.currentPositionMs > 0) {
+                        exoPlayer.seekTo(state.currentPositionMs)
+                    }
+                    exoPlayer.prepare()
+                    exoPlayer.play()
+                    isPlaying = true
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
+    // Periodic progress syncing with controller
+    LaunchedEffect(exoPlayer) {
+        while (true) {
+            delay(500)
+            if (exoPlayer.isPlaying || exoPlayer.currentPosition > 0) {
+                val currentPos = exoPlayer.currentPosition
+                val dur = exoPlayer.duration.coerceAtLeast(0L)
+                playerController.updateProgress(currentPos, dur)
+            }
         }
     }
 
@@ -186,14 +215,18 @@ fun MovieVortexPlayerScreen(
             if (recommendations.isNotEmpty()) {
                 onMediaClick?.invoke(recommendations.first())
             } else {
-                playerController.seekForward()
+                val dur = exoPlayer.duration.coerceAtLeast(0L)
+                val newPos = (exoPlayer.currentPosition + 10000L).coerceAtMost(dur)
+                exoPlayer.seekTo(newPos)
+                playerController.updateProgress(newPos, dur)
             }
         }
     }
 
     val onPrevEpisodeAction: () -> Unit = {
-        if (state.currentPositionMs > 5000L) {
-            playerController.seekTo(0L)
+        if (exoPlayer.currentPosition > 5000L) {
+            exoPlayer.seekTo(0L)
+            playerController.updateProgress(0L, exoPlayer.duration.coerceAtLeast(0L))
         } else if (episodes.isNotEmpty()) {
             val currentIdx = if (currentEpisode != null) {
                 episodes.indexOfFirst { it.id == currentEpisode.id }
@@ -203,10 +236,12 @@ fun MovieVortexPlayerScreen(
             if (currentIdx > 0) {
                 onEpisodeClick?.invoke(episodes[currentIdx - 1])
             } else {
-                playerController.seekTo(0L)
+                exoPlayer.seekTo(0L)
             }
         } else {
-            playerController.seekBack()
+            val newPos = (exoPlayer.currentPosition - 10000L).coerceAtLeast(0L)
+            exoPlayer.seekTo(newPos)
+            playerController.updateProgress(newPos, exoPlayer.duration.coerceAtLeast(0L))
         }
     }
 
@@ -238,197 +273,299 @@ fun MovieVortexPlayerScreen(
         }
     }
 
-    Box(
+    // Fullscreen Mode
+    if (isFullscreen) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            AndroidView(
+                factory = { ctx ->
+                    PlayerView(ctx).apply {
+                        player = exoPlayer
+                        useController = false
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = { playerController.toggleControlsVisibility() },
+                            onDoubleTap = { offset ->
+                                val w = size.width
+                                val dur = exoPlayer.duration.coerceAtLeast(0L)
+                                if (offset.x < w / 2) {
+                                    val newPos = (exoPlayer.currentPosition - 10000L).coerceAtLeast(0L)
+                                    exoPlayer.seekTo(newPos)
+                                    playerController.updateProgress(newPos, dur)
+                                } else {
+                                    val newPos = (exoPlayer.currentPosition + 10000L).coerceAtMost(dur)
+                                    exoPlayer.seekTo(newPos)
+                                    playerController.updateProgress(newPos, dur)
+                                }
+                            },
+                            onPress = {
+                                var speedJob: Job? = null
+                                try {
+                                    speedJob = coroutineScope.launch {
+                                        delay(350)
+                                        isSpeedingUp = true
+                                        exoPlayer.setPlaybackSpeed(2.0f)
+                                    }
+                                    tryAwaitRelease()
+                                } finally {
+                                    speedJob?.cancel()
+                                    if (isSpeedingUp) {
+                                        exoPlayer.setPlaybackSpeed(1.0f)
+                                        isSpeedingUp = false
+                                    }
+                                }
+                            }
+                        )
+                    }
+            )
+
+            // 2X Speed Indicator Badge
+            if (isSpeedingUp) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 18.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color(0xE6000000))
+                        .border(1.dp, Color(0x66FFFFFF), RoundedCornerShape(20.dp))
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "2X",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                        Text(
+                            text = "▶▶",
+                            color = Color(0xFFFFC107),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                    }
+                }
+            }
+
+            // Fullscreen Overlay Controls
+            AnimatedVisibility(
+                visible = state.isControlsVisible,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                PlayerControlsOverlay(
+                    title = state.mediaTitle.ifBlank { media?.title ?: "MovieVortex" },
+                    subtitle = state.mediaSubtitle,
+                    isPlaying = isPlaying,
+                    currentPos = state.currentPositionMs,
+                    duration = state.durationMs,
+                    onPlayPause = {
+                        if (isPlaying) {
+                            exoPlayer.pause()
+                            isPlaying = false
+                        } else {
+                            exoPlayer.play()
+                            isPlaying = true
+                        }
+                    },
+                    onSeek = { frac ->
+                        val dur = exoPlayer.duration.coerceAtLeast(0L)
+                        val newPos = (frac * dur).toLong()
+                        exoPlayer.seekTo(newPos)
+                        playerController.updateProgress(newPos, dur)
+                    },
+                    onRewind = onPrevEpisodeAction,
+                    onForward = onNextEpisodeAction,
+                    onToggleFullscreen = {
+                        isFullscreen = false
+                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    },
+                    isFullscreen = true,
+                    onBackClick = {
+                        isFullscreen = false
+                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                    },
+                    onSubtitleClick = { showSubtitlePicker = !showSubtitlePicker },
+                    onQualityClick = { showQualityPicker = !showQualityPicker }
+                )
+            }
+        }
+        return
+    }
+
+    // Normal Integrated View (Screenshot_20261015_084607.jpg)
+    Column(
         modifier = modifier
             .fillMaxSize()
             .background(VortexColors.PureBlack)
     ) {
-        if (!effectiveFullscreen) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
-                // 1. Stable Fixed 16:9 Video Player Container (Never Resizes or Shifts)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(16f / 9f)
-                        .background(Color.Black)
-                ) {
-                    // Constant Backdrop Image placeholder (Guarantees zero layout shift before/during loading)
-                    AsyncImage(
-                        model = media?.backdrop ?: media?.poster,
-                        contentDescription = media?.title,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-
-                    // Video Surface
-                    AndroidView(
-                        factory = { ctx ->
-                            (playerView.parent as? ViewGroup)?.removeView(playerView)
-                            playerView
-                        },
-                        update = { pv ->
-                            if (pv.player != attachedExoPlayer) {
-                                pv.player = attachedExoPlayer
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .pointerInput(Unit) {
-                                detectTapGestures(
-                                    onTap = { playerController.toggleControlsVisibility() },
-                                    onDoubleTap = { offset ->
-                                        val w = size.width
-                                        if (offset.x < w / 2) {
-                                            playerController.seekBack()
-                                        } else {
-                                            playerController.seekForward()
-                                        }
-                                    },
-                                    onPress = {
-                                        var speedJob: Job? = null
-                                        try {
-                                            speedJob = coroutineScope.launch {
-                                                delay(350)
-                                                isSpeedingUp = true
-                                                playerController.setPlaybackSpeed(2.0f)
-                                            }
-                                            tryAwaitRelease()
-                                        } finally {
-                                            speedJob?.cancel()
-                                            if (isSpeedingUp) {
-                                                playerController.setPlaybackSpeed(1.0f)
-                                                isSpeedingUp = false
-                                            }
-                                        }
+        // 1. Embedded 16:9 Video Player View
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .background(Color.Black)
+        ) {
+            AndroidView(
+                factory = { ctx ->
+                    PlayerView(ctx).apply {
+                        player = exoPlayer
+                        useController = false
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = { playerController.toggleControlsVisibility() },
+                            onDoubleTap = { offset ->
+                                val w = size.width
+                                val dur = exoPlayer.duration.coerceAtLeast(0L)
+                                if (offset.x < w / 2) {
+                                    val newPos = (exoPlayer.currentPosition - 10000L).coerceAtLeast(0L)
+                                    exoPlayer.seekTo(newPos)
+                                    playerController.updateProgress(newPos, dur)
+                                } else {
+                                    val newPos = (exoPlayer.currentPosition + 10000L).coerceAtMost(dur)
+                                    exoPlayer.seekTo(newPos)
+                                    playerController.updateProgress(newPos, dur)
+                                }
+                            },
+                            onPress = {
+                                var speedJob: Job? = null
+                                try {
+                                    speedJob = coroutineScope.launch {
+                                        delay(350)
+                                        isSpeedingUp = true
+                                        exoPlayer.setPlaybackSpeed(2.0f)
                                     }
-                                )
-                            }
-                    )
-
-                    // 2X Speed Indicator Badge
-                    if (isSpeedingUp) {
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .padding(top = 14.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(Color(0xE6000000))
-                                .border(1.dp, Color(0x66FFFFFF), RoundedCornerShape(20.dp))
-                                .padding(horizontal = 16.dp, vertical = 6.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(
-                                    text = "2X",
-                                    color = Color.White,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Black
-                                )
-                                Text(
-                                    text = "▶▶",
-                                    color = Color(0xFFFFC107),
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Black
-                                )
-                            }
-                        }
-                    }
-
-                    // Loading / Resolving / Buffering State Indicator inside the stable container
-                    if (state.status == PlayerStatus.ResolvingStreams || state.status == PlayerStatus.Buffering) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color(0x55000000)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                color = Color.White,
-                                strokeWidth = 3.dp,
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
-                    }
-
-                    // Error State with Retry inside the stable container
-                    if (state.status == PlayerStatus.Error) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color(0xCC000000)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = state.errorMessage ?: "Connection failed",
-                                    color = Color.White,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(16.dp))
-                                        .background(Color.White)
-                                        .clickable { playerController.retryPlayback() }
-                                        .padding(horizontal = 16.dp, vertical = 6.dp)
-                                ) {
-                                    Text("Retry", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    tryAwaitRelease()
+                                } finally {
+                                    speedJob?.cancel()
+                                    if (isSpeedingUp) {
+                                        exoPlayer.setPlaybackSpeed(1.0f)
+                                        isSpeedingUp = false
+                                    }
                                 }
                             }
-                        }
+                        )
                     }
+            )
 
-                    // Embedded Overlay Controls
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = state.isControlsVisible,
-                        enter = fadeIn(),
-                        exit = fadeOut()
+            // 2X Speed Indicator Badge
+            if (isSpeedingUp) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 14.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color(0xE6000000))
+                        .border(1.dp, Color(0x66FFFFFF), RoundedCornerShape(20.dp))
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        PlayerControlsOverlay(
-                            title = state.mediaTitle.ifBlank { media?.title ?: "MovieVortex" },
-                            subtitle = state.mediaSubtitle,
-                            isPlaying = state.status == PlayerStatus.Playing,
-                            currentPos = state.currentPositionMs,
-                            duration = state.durationMs,
-                            onPlayPause = {
-                                playerController.togglePlayPause()
-                            },
-                            onSeek = { frac: Float ->
-                                val dur = state.durationMs.coerceAtLeast(0L)
-                                val newPos = (frac * dur).toLong()
-                                playerController.seekTo(newPos)
-                            },
-                            onRewind = onPrevEpisodeAction,
-                            onForward = onNextEpisodeAction,
-                            onToggleFullscreen = {
-                                isFullscreen = true
-                                activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                            },
-                            isFullscreen = false,
-                            onBackClick = {
-                                playerController.releasePlayer()
-                                onCloseClick()
-                            },
-                            onSubtitleClick = { showSubtitlePicker = !showSubtitlePicker },
-                            onQualityClick = { showQualityPicker = !showQualityPicker }
+                        Text(
+                            text = "2X",
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Black
+                        )
+                        Text(
+                            text = "▶▶",
+                            color = Color(0xFFFFC107),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Black
                         )
                     }
                 }
+            }
 
-                // 2. Scrollable Detail, Server & Episode Section Below Player
-                // Preserved with persistent listState so scroll position never resets
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentPadding = PaddingValues(bottom = 36.dp)
+            // Loading / Resolving state indicator
+            if (state.status == PlayerStatus.ResolvingStreams) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 3.dp,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+            }
+
+            // Embedded Overlay Controls
+            androidx.compose.animation.AnimatedVisibility(
+                visible = state.isControlsVisible,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                PlayerControlsOverlay(
+                    title = state.mediaTitle.ifBlank { media?.title ?: "MovieVortex" },
+                    subtitle = state.mediaSubtitle,
+                    isPlaying = isPlaying,
+                    currentPos = state.currentPositionMs,
+                    duration = state.durationMs,
+                    onPlayPause = {
+                        if (isPlaying) {
+                            exoPlayer.pause()
+                            isPlaying = false
+                        } else {
+                            exoPlayer.play()
+                            isPlaying = true
+                        }
+                    },
+                    onSeek = { frac ->
+                        val dur = exoPlayer.duration.coerceAtLeast(0L)
+                        val newPos = (frac * dur).toLong()
+                        exoPlayer.seekTo(newPos)
+                        playerController.updateProgress(newPos, dur)
+                    },
+                    onRewind = onPrevEpisodeAction,
+                    onForward = onNextEpisodeAction,
+                    onToggleFullscreen = {
+                        isFullscreen = true
+                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    },
+                    isFullscreen = false,
+                    onBackClick = {
+                        try { exoPlayer.stop() } catch (_: Exception) {}
+                        onCloseClick()
+                    },
+                    onSubtitleClick = { showSubtitlePicker = !showSubtitlePicker },
+                    onQualityClick = { showQualityPicker = !showQualityPicker }
+                )
+            }
+        }
+
+        // 2. Scrollable Detail, Server & Episode Section Below Player
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            contentPadding = PaddingValues(bottom = 36.dp)
+        ) {
             // Title, Rating, Year
             item {
                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
@@ -575,7 +712,7 @@ fun MovieVortexPlayerScreen(
                                                 (serverName == "Rive Server" && (source.extractorName.contains("Rive", true) || source.extractorName.contains("MovieBox", true)))
                                             }
                                             if (matchedSource != null) {
-                                                playerController.selectSource(context, matchedSource)
+                                                playerController.selectSource(matchedSource)
                                             } else {
                                                 Toast.makeText(context, "Switched to $serverName", Toast.LENGTH_SHORT).show()
                                                 playerController.retryPlayback()
@@ -811,126 +948,6 @@ fun MovieVortexPlayerScreen(
             }
         }
     }
-} else {
-        // Fullscreen / Landscape Mode (Reuses exact same PlayerView, zero recreation!)
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black)
-        ) {
-            AndroidView(
-                factory = { ctx ->
-                    (playerView.parent as? ViewGroup)?.removeView(playerView)
-                    playerView
-                },
-                update = { pv ->
-                    if (pv.player != attachedExoPlayer) {
-                        pv.player = attachedExoPlayer
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onTap = { playerController.toggleControlsVisibility() },
-                            onDoubleTap = { offset ->
-                                val w = size.width
-                                if (offset.x < w / 2) {
-                                    playerController.seekBack()
-                                } else {
-                                    playerController.seekForward()
-                                }
-                            },
-                            onPress = {
-                                var speedJob: Job? = null
-                                try {
-                                    speedJob = coroutineScope.launch {
-                                        delay(350)
-                                        isSpeedingUp = true
-                                        playerController.setPlaybackSpeed(2.0f)
-                                    }
-                                    tryAwaitRelease()
-                                } finally {
-                                    speedJob?.cancel()
-                                    if (isSpeedingUp) {
-                                        playerController.setPlaybackSpeed(1.0f)
-                                        isSpeedingUp = false
-                                    }
-                                }
-                            }
-                        )
-                    }
-            )
-
-            // 2X Speed Indicator Badge
-            if (isSpeedingUp) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 18.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0xE6000000))
-                        .border(1.dp, Color(0x66FFFFFF), RoundedCornerShape(20.dp))
-                        .padding(horizontal = 16.dp, vertical = 6.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = "2X",
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Black
-                        )
-                        Text(
-                            text = "▶▶",
-                            color = Color(0xFFFFC107),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Black
-                        )
-                    }
-                }
-            }
-
-            // Fullscreen Overlay Controls
-            AnimatedVisibility(
-                visible = state.isControlsVisible,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                PlayerControlsOverlay(
-                    title = state.mediaTitle.ifBlank { media?.title ?: "MovieVortex" },
-                    subtitle = state.mediaSubtitle,
-                    isPlaying = state.status == PlayerStatus.Playing,
-                    currentPos = state.currentPositionMs,
-                    duration = state.durationMs,
-                    onPlayPause = {
-                        playerController.togglePlayPause()
-                    },
-                    onSeek = { frac: Float ->
-                        val dur = state.durationMs.coerceAtLeast(0L)
-                        val newPos = (frac * dur).toLong()
-                        playerController.seekTo(newPos)
-                    },
-                    onRewind = onPrevEpisodeAction,
-                    onForward = onNextEpisodeAction,
-                    onToggleFullscreen = {
-                        isFullscreen = false
-                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    },
-                    isFullscreen = true,
-                    onBackClick = {
-                        isFullscreen = false
-                        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    },
-                    onSubtitleClick = { showSubtitlePicker = !showSubtitlePicker },
-                    onQualityClick = { showQualityPicker = !showQualityPicker }
-                )
-            }
-        }
-    }
-}
 }
 
 @Composable
