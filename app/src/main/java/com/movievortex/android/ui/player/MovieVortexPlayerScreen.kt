@@ -129,15 +129,10 @@ fun MovieVortexPlayerScreen(
     val effectiveFullscreen = isFullscreen || isDeviceLandscape
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
 
-    val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            playWhenReady = true
-        }
-    }
+    val attachedExoPlayer by playerController.attachedPlayer.collectAsState()
 
     val playerView = remember {
         PlayerView(context).apply {
-            player = exoPlayer
             useController = false
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -146,77 +141,30 @@ fun MovieVortexPlayerScreen(
         }
     }
 
+    LaunchedEffect(attachedExoPlayer) {
+        playerView.player = attachedExoPlayer
+    }
+
     BackHandler {
         if (effectiveFullscreen) {
             isFullscreen = false
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         } else {
-            try { exoPlayer.stop() } catch (_: Exception) {}
+            playerController.releasePlayer()
             onCloseClick()
         }
     }
 
-    DisposableEffect(exoPlayer) {
-        val listener = object : androidx.media3.common.Player.Listener {
-            override fun onIsPlayingChanged(playing: Boolean) {
-                isPlaying = playing
-            }
-        }
-        exoPlayer.addListener(listener)
+    DisposableEffect(Unit) {
         onDispose {
-            try {
-                exoPlayer.removeListener(listener)
-                exoPlayer.release()
-            } catch (_: Exception) {}
+            playerController.releasePlayer()
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
 
-    // Attach stream source to ExoPlayer
     LaunchedEffect(state.currentSource) {
         state.currentSource?.let { source ->
-            try {
-                selectedServerName = mapServerDisplayName(source.extractorName.ifBlank { "Anivortex Turbo" })
-                val mediaItem = MediaItem.fromUri(source.url)
-                val dataSourceFactory = DefaultHttpDataSource.Factory()
-                    .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-                if (source.headers.isNotEmpty()) {
-                    dataSourceFactory.setDefaultRequestProperties(source.headers)
-                }
-                val mediaSource = DefaultMediaSourceFactory(dataSourceFactory)
-                    .createMediaSource(mediaItem)
-
-                exoPlayer.setMediaSource(mediaSource)
-                if (state.currentPositionMs > 0) {
-                    exoPlayer.seekTo(state.currentPositionMs)
-                }
-                exoPlayer.prepare()
-                exoPlayer.play()
-                isPlaying = true
-            } catch (_: Exception) {
-                try {
-                    val mediaItem = MediaItem.fromUri(source.url)
-                    exoPlayer.setMediaItem(mediaItem)
-                    if (state.currentPositionMs > 0) {
-                        exoPlayer.seekTo(state.currentPositionMs)
-                    }
-                    exoPlayer.prepare()
-                    exoPlayer.play()
-                    isPlaying = true
-                } catch (_: Exception) {}
-            }
-        }
-    }
-
-    // Periodic progress syncing with controller
-    LaunchedEffect(exoPlayer) {
-        while (true) {
-            delay(500)
-            if (exoPlayer.isPlaying || exoPlayer.currentPosition > 0) {
-                val currentPos = exoPlayer.currentPosition
-                val dur = exoPlayer.duration.coerceAtLeast(0L)
-                playerController.updateProgress(currentPos, dur)
-            }
+            selectedServerName = mapServerDisplayName(source.extractorName.ifBlank { "Anivortex Turbo" })
         }
     }
 
@@ -238,18 +186,14 @@ fun MovieVortexPlayerScreen(
             if (recommendations.isNotEmpty()) {
                 onMediaClick?.invoke(recommendations.first())
             } else {
-                val dur = exoPlayer.duration.coerceAtLeast(0L)
-                val newPos = (exoPlayer.currentPosition + 10000L).coerceAtMost(dur)
-                exoPlayer.seekTo(newPos)
-                playerController.updateProgress(newPos, dur)
+                playerController.seekForward()
             }
         }
     }
 
     val onPrevEpisodeAction: () -> Unit = {
-        if (exoPlayer.currentPosition > 5000L) {
-            exoPlayer.seekTo(0L)
-            playerController.updateProgress(0L, exoPlayer.duration.coerceAtLeast(0L))
+        if (state.currentPositionMs > 5000L) {
+            playerController.seekTo(0L)
         } else if (episodes.isNotEmpty()) {
             val currentIdx = if (currentEpisode != null) {
                 episodes.indexOfFirst { it.id == currentEpisode.id }
@@ -259,12 +203,10 @@ fun MovieVortexPlayerScreen(
             if (currentIdx > 0) {
                 onEpisodeClick?.invoke(episodes[currentIdx - 1])
             } else {
-                exoPlayer.seekTo(0L)
+                playerController.seekTo(0L)
             }
         } else {
-            val newPos = (exoPlayer.currentPosition - 10000L).coerceAtLeast(0L)
-            exoPlayer.seekTo(newPos)
-            playerController.updateProgress(newPos, exoPlayer.duration.coerceAtLeast(0L))
+            playerController.seekBack()
         }
     }
 
@@ -327,8 +269,8 @@ fun MovieVortexPlayerScreen(
                             playerView
                         },
                         update = { pv ->
-                            if (pv.player != exoPlayer) {
-                                pv.player = exoPlayer
+                            if (pv.player != attachedExoPlayer) {
+                                pv.player = attachedExoPlayer
                             }
                         },
                         modifier = Modifier
@@ -338,15 +280,10 @@ fun MovieVortexPlayerScreen(
                                     onTap = { playerController.toggleControlsVisibility() },
                                     onDoubleTap = { offset ->
                                         val w = size.width
-                                        val dur = exoPlayer.duration.coerceAtLeast(0L)
                                         if (offset.x < w / 2) {
-                                            val newPos = (exoPlayer.currentPosition - 10000L).coerceAtLeast(0L)
-                                            exoPlayer.seekTo(newPos)
-                                            playerController.updateProgress(newPos, dur)
+                                            playerController.seekBack()
                                         } else {
-                                            val newPos = (exoPlayer.currentPosition + 10000L).coerceAtMost(dur)
-                                            exoPlayer.seekTo(newPos)
-                                            playerController.updateProgress(newPos, dur)
+                                            playerController.seekForward()
                                         }
                                     },
                                     onPress = {
@@ -355,13 +292,13 @@ fun MovieVortexPlayerScreen(
                                             speedJob = coroutineScope.launch {
                                                 delay(350)
                                                 isSpeedingUp = true
-                                                exoPlayer.setPlaybackSpeed(2.0f)
+                                                playerController.setPlaybackSpeed(2.0f)
                                             }
                                             tryAwaitRelease()
                                         } finally {
                                             speedJob?.cancel()
                                             if (isSpeedingUp) {
-                                                exoPlayer.setPlaybackSpeed(1.0f)
+                                                playerController.setPlaybackSpeed(1.0f)
                                                 isSpeedingUp = false
                                             }
                                         }
@@ -455,23 +392,16 @@ fun MovieVortexPlayerScreen(
                         PlayerControlsOverlay(
                             title = state.mediaTitle.ifBlank { media?.title ?: "MovieVortex" },
                             subtitle = state.mediaSubtitle,
-                            isPlaying = isPlaying,
+                            isPlaying = state.status == PlayerStatus.Playing,
                             currentPos = state.currentPositionMs,
                             duration = state.durationMs,
                             onPlayPause = {
-                                if (isPlaying) {
-                                    exoPlayer.pause()
-                                    isPlaying = false
-                                } else {
-                                    exoPlayer.play()
-                                    isPlaying = true
-                                }
+                                playerController.togglePlayPause()
                             },
                             onSeek = { frac: Float ->
-                                val dur = exoPlayer.duration.coerceAtLeast(0L)
+                                val dur = state.durationMs.coerceAtLeast(0L)
                                 val newPos = (frac * dur).toLong()
-                                exoPlayer.seekTo(newPos)
-                                playerController.updateProgress(newPos, dur)
+                                playerController.seekTo(newPos)
                             },
                             onRewind = onPrevEpisodeAction,
                             onForward = onNextEpisodeAction,
@@ -481,7 +411,7 @@ fun MovieVortexPlayerScreen(
                             },
                             isFullscreen = false,
                             onBackClick = {
-                                try { exoPlayer.stop() } catch (_: Exception) {}
+                                playerController.releasePlayer()
                                 onCloseClick()
                             },
                             onSubtitleClick = { showSubtitlePicker = !showSubtitlePicker },
@@ -645,7 +575,7 @@ fun MovieVortexPlayerScreen(
                                                 (serverName == "Rive Server" && (source.extractorName.contains("Rive", true) || source.extractorName.contains("MovieBox", true)))
                                             }
                                             if (matchedSource != null) {
-                                                playerController.selectSource(matchedSource)
+                                                playerController.selectSource(context, matchedSource)
                                             } else {
                                                 Toast.makeText(context, "Switched to $serverName", Toast.LENGTH_SHORT).show()
                                                 playerController.retryPlayback()
@@ -894,8 +824,8 @@ fun MovieVortexPlayerScreen(
                     playerView
                 },
                 update = { pv ->
-                    if (pv.player != exoPlayer) {
-                        pv.player = exoPlayer
+                    if (pv.player != attachedExoPlayer) {
+                        pv.player = attachedExoPlayer
                     }
                 },
                 modifier = Modifier
@@ -905,15 +835,10 @@ fun MovieVortexPlayerScreen(
                             onTap = { playerController.toggleControlsVisibility() },
                             onDoubleTap = { offset ->
                                 val w = size.width
-                                val dur = exoPlayer.duration.coerceAtLeast(0L)
                                 if (offset.x < w / 2) {
-                                    val newPos = (exoPlayer.currentPosition - 10000L).coerceAtLeast(0L)
-                                    exoPlayer.seekTo(newPos)
-                                    playerController.updateProgress(newPos, dur)
+                                    playerController.seekBack()
                                 } else {
-                                    val newPos = (exoPlayer.currentPosition + 10000L).coerceAtMost(dur)
-                                    exoPlayer.seekTo(newPos)
-                                    playerController.updateProgress(newPos, dur)
+                                    playerController.seekForward()
                                 }
                             },
                             onPress = {
@@ -922,13 +847,13 @@ fun MovieVortexPlayerScreen(
                                     speedJob = coroutineScope.launch {
                                         delay(350)
                                         isSpeedingUp = true
-                                        exoPlayer.setPlaybackSpeed(2.0f)
+                                        playerController.setPlaybackSpeed(2.0f)
                                     }
                                     tryAwaitRelease()
                                 } finally {
                                     speedJob?.cancel()
                                     if (isSpeedingUp) {
-                                        exoPlayer.setPlaybackSpeed(1.0f)
+                                        playerController.setPlaybackSpeed(1.0f)
                                         isSpeedingUp = false
                                     }
                                 }
@@ -977,23 +902,16 @@ fun MovieVortexPlayerScreen(
                 PlayerControlsOverlay(
                     title = state.mediaTitle.ifBlank { media?.title ?: "MovieVortex" },
                     subtitle = state.mediaSubtitle,
-                    isPlaying = isPlaying,
+                    isPlaying = state.status == PlayerStatus.Playing,
                     currentPos = state.currentPositionMs,
                     duration = state.durationMs,
                     onPlayPause = {
-                        if (isPlaying) {
-                            exoPlayer.pause()
-                            isPlaying = false
-                        } else {
-                            exoPlayer.play()
-                            isPlaying = true
-                        }
+                        playerController.togglePlayPause()
                     },
                     onSeek = { frac: Float ->
-                        val dur = exoPlayer.duration.coerceAtLeast(0L)
+                        val dur = state.durationMs.coerceAtLeast(0L)
                         val newPos = (frac * dur).toLong()
-                        exoPlayer.seekTo(newPos)
-                        playerController.updateProgress(newPos, dur)
+                        playerController.seekTo(newPos)
                     },
                     onRewind = onPrevEpisodeAction,
                     onForward = onNextEpisodeAction,

@@ -248,7 +248,7 @@ fun MovieVortexNavGraph(
                                     LiveTvScreen(
                                         onChannelClick = { channel ->
                                             val liveMedia = channel.toMovieVortexMedia()
-                                            playerController.initializePlayback(liveMedia, null, null)
+                                            playerController.initializePlayback(context, liveMedia, null, null)
                                             currentScreen = AppScreen.Player(liveMedia)
                                         }
                                     )
@@ -301,7 +301,7 @@ fun MovieVortexNavGraph(
                     searchController = searchController,
                     onMediaClick = { media ->
                         detailController.loadMediaDetail(media.rawUrl, media.providerApiName, media)
-                        playerController.initializePlayback(media, null, null)
+                        playerController.initializePlayback(context, media, null, null)
                         currentScreen = AppScreen.Player(media)
                     },
                     onBackClick = { currentScreen = AppScreen.Main }
@@ -315,7 +315,7 @@ fun MovieVortexNavGraph(
                     catalogItems = homeState.exploreGrid,
                     onMediaClick = { media ->
                         detailController.loadMediaDetail(media.rawUrl, media.providerApiName, media)
-                        playerController.initializePlayback(media, null, null)
+                        playerController.initializePlayback(context, media, null, null)
                         currentScreen = AppScreen.Player(media)
                     },
                     onBackClick = { currentScreen = AppScreen.Main }
@@ -347,7 +347,7 @@ fun MovieVortexNavGraph(
                     libraryController = libraryController,
                     onMediaClick = { media ->
                         detailController.loadMediaDetail(media.rawUrl, media.providerApiName, media)
-                        playerController.initializePlayback(media, null, null)
+                        playerController.initializePlayback(context, media, null, null)
                         currentScreen = AppScreen.Player(media)
                     },
                     onBackClick = { currentScreen = AppScreen.Main }
@@ -358,7 +358,7 @@ fun MovieVortexNavGraph(
                 HistoryScreen(
                     onMediaClick = { media ->
                         detailController.loadMediaDetail(media.rawUrl, media.providerApiName, media)
-                        playerController.initializePlayback(media, null, null)
+                        playerController.initializePlayback(context, media, null, null)
                         currentScreen = AppScreen.Player(media)
                     },
                     onBackClick = { currentScreen = AppScreen.Main }
@@ -385,7 +385,7 @@ fun MovieVortexNavGraph(
                 }
 
                 LaunchedEffect(screen.media.id, screen.episode?.id) {
-                    playerController.initializePlayback(screen.media, screen.episode, screen.offlinePath)
+                    playerController.initializePlayback(context, screen.media, screen.episode, screen.offlinePath)
                 }
 
                 MovieVortexPlayerScreen(
@@ -394,12 +394,12 @@ fun MovieVortexNavGraph(
                     currentEpisode = screen.episode,
                     episodes = activeEpisodes,
                     onEpisodeClick = { ep ->
-                        playerController.initializePlayback(screen.media, ep, null)
+                        playerController.initializePlayback(context, screen.media, ep, null)
                     },
                     recommendations = recommendations,
                     onMediaClick = { recMedia ->
                         detailController.loadMediaDetail(recMedia.rawUrl, recMedia.providerApiName, recMedia)
-                        playerController.initializePlayback(recMedia, null, null)
+                        playerController.initializePlayback(context, recMedia, null, null)
                         currentScreen = AppScreen.Player(recMedia)
                     },
                     onCloseClick = {
