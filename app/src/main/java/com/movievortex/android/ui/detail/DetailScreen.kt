@@ -1,5 +1,7 @@
 package com.movievortex.android.ui.detail
 
+import com.movievortex.android.core.ServerManager
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
