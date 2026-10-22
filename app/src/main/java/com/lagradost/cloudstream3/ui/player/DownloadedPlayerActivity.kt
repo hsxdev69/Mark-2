@@ -452,7 +452,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                         val meta = buildString {
                             loadResponse.year?.let { append("$it  •  ") }
                             if (loadResponse is TvSeriesLoadResponse) append("TV Series") else append("Movie")
-                            loadResponse.rating?.let { append("  •  ★ $it") }
+                            loadResponse.score?.let { append("  •  ★ $it") }
                         }
                         findViewById<TextView>(R.id.inline_player_meta)?.text = meta
                         findViewById<TextView>(R.id.inline_player_overview)?.text = loadResponse.plot ?: ""

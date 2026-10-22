@@ -59,6 +59,6 @@
         android:layout_height="24dp"
         android:layout_marginStart="8dp"
         android:src="@drawable/ic_baseline_play_arrow_24"
-        android:contentDescription="@string/play"
+        tools:ignore="ContentDescription"
         app:tint="@android:color/white" />
 </LinearLayout>
