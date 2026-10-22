@@ -700,9 +700,6 @@ class DownloadedPlayerActivity : AppCompatActivity() {
             playProviderContent(item.apiName, item.url, intent)
         }
     }
-            }
-        }
-    }
 
     private fun setupSeasonTabs(
         seasons: List<Int>,
