@@ -70,6 +70,18 @@ class DownloadController : ViewModel() {
     companion object {
         private const val TAG = "DownloadController"
         const val DOWNLOAD_DIR_NAME = "MovieVortex"
+        private var instance: DownloadController? = null
+
+        fun registerExternalDownload(item: DownloadUiItem) {
+            val controller = instance ?: return
+            val current = controller._uiState.value
+            if (current.items.none { it.id == item.id || it.title == item.title }) {
+                controller._uiState.value = current.copy(
+                    items = listOf(item) + current.items.filter { it.title != item.title },
+                    activeDownloadsCount = current.activeDownloadsCount + 1
+                )
+            }
+        }
     }
 
     private val _uiState = MutableStateFlow(DownloadsUiState())
@@ -88,6 +100,7 @@ class DownloadController : ViewModel() {
     }
 
     init {
+        instance = this
         // Attach listeners to MovieVortex's internal downloader events
         VideoDownloadManager.downloadProgressEvent += downloadProgressListener
         VideoDownloadManager.downloadStatusEvent += downloadStatusListener
@@ -131,7 +144,46 @@ class DownloadController : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             val downloadItems = mutableListOf<DownloadUiItem>()
 
-            // 1. Scan external storage MovieVortex downloads directory
+            // 1. Scan app-specific private downloads directory (In-app only, no external folder pollution)
+            try {
+                val appDirs = listOfNotNull(
+                    CloudStreamApp.context?.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+                    CloudStreamApp.context?.filesDir
+                )
+                for (appDir in appDirs) {
+                    if (appDir.exists() && appDir.isDirectory) {
+                        appDir.walkTopDown().filter { file ->
+                            file.isFile && (file.extension.equals("mp4", true) ||
+                                    file.extension.equals("mkv", true) ||
+                                    file.extension.equals("webm", true) ||
+                                    file.extension.equals("avi", true))
+                        }.forEach { file ->
+                            if (!isHtmlOrInvalidMediaFile(file)) {
+                                val displayTitle = file.nameWithoutExtension.replace("_", " ")
+                                if (downloadItems.none { it.localFilePath == file.absolutePath || it.title == displayTitle }) {
+                                    downloadItems.add(
+                                        DownloadUiItem(
+                                            id = file.absolutePath.hashCode().toString(),
+                                            title = displayTitle,
+                                            poster = null,
+                                            quality = "1080p",
+                                            fileSizeBytes = file.length(),
+                                            downloadedBytes = file.length(),
+                                            progress = 1.0f,
+                                            state = MediaDownloadState.Completed,
+                                            localFilePath = file.absolutePath
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error scanning app private downloads", e)
+            }
+
+            // Also check external storage MovieVortex downloads directory for backwards compatibility
             try {
                 val dir = File("/storage/emulated/0/Download/$DOWNLOAD_DIR_NAME")
                 if (dir.exists() && dir.isDirectory) {
@@ -143,19 +195,21 @@ class DownloadController : ViewModel() {
                     }?.forEach { file ->
                         if (!isHtmlOrInvalidMediaFile(file)) {
                             val displayTitle = file.nameWithoutExtension.replace("_", " ")
-                            downloadItems.add(
-                                DownloadUiItem(
-                                    id = file.absolutePath.hashCode().toString(),
-                                    title = displayTitle,
-                                    poster = null,
-                                    quality = "1080p",
-                                    fileSizeBytes = file.length(),
-                                    downloadedBytes = file.length(),
-                                    progress = 1.0f,
-                                    state = MediaDownloadState.Completed,
-                                    localFilePath = file.absolutePath
+                            if (downloadItems.none { it.localFilePath == file.absolutePath || it.title == displayTitle }) {
+                                downloadItems.add(
+                                    DownloadUiItem(
+                                        id = file.absolutePath.hashCode().toString(),
+                                        title = displayTitle,
+                                        poster = null,
+                                        quality = "1080p",
+                                        fileSizeBytes = file.length(),
+                                        downloadedBytes = file.length(),
+                                        progress = 1.0f,
+                                        state = MediaDownloadState.Completed,
+                                        localFilePath = file.absolutePath
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 }
@@ -171,30 +225,31 @@ class DownloadController : ViewModel() {
                         val cachedEp = ctx.getKey<DownloadObjects.DownloadEpisodeCached>(key)
                         if (cachedEp != null) {
                             val info = VideoDownloadManager.getDownloadFileInfo(ctx, cachedEp.id)
-                            if (info != null && info.fileLength > 1024L) {
-                                val title = cachedEp.name ?: "Episode ${cachedEp.episode}"
-                                val header = ctx.getKey<DownloadObjects.DownloadHeaderCached>(
-                                    DOWNLOAD_HEADER_CACHE,
-                                    cachedEp.parentId.toString()
-                                )
-                                val fullTitle = if (header != null && !title.startsWith(header.name)) "${header.name} - $title" else title
-                                if (downloadItems.none { it.id == cachedEp.id.toString() || it.title == fullTitle }) {
-                                    val isDone = info.totalBytes > 0 && info.fileLength >= info.totalBytes
-                                    val prog = if (info.totalBytes > 0) (info.fileLength.toFloat() / info.totalBytes.toFloat()).coerceIn(0f, 1f) else 1.0f
-                                    downloadItems.add(
-                                        DownloadUiItem(
-                                            id = cachedEp.id.toString(),
-                                            title = fullTitle,
-                                            poster = cachedEp.poster ?: header?.poster,
-                                            quality = "1080p",
-                                            fileSizeBytes = info.totalBytes,
-                                            downloadedBytes = info.fileLength,
-                                            progress = prog,
-                                            state = if (isDone) MediaDownloadState.Completed else MediaDownloadState.Downloading,
-                                            localFilePath = info.path.toString()
-                                        )
+                            val title = cachedEp.name ?: "Episode ${cachedEp.episode}"
+                            val header = ctx.getKey<DownloadObjects.DownloadHeaderCached>(
+                                DOWNLOAD_HEADER_CACHE,
+                                cachedEp.parentId.toString()
+                            )
+                            val fullTitle = if (header != null && !title.startsWith(header.name)) "${header.name} - $title" else title
+                            val fileLength = info?.fileLength ?: 0L
+                            val totalBytes = info?.totalBytes ?: 0L
+                            val isDone = totalBytes > 0 && fileLength >= totalBytes
+                            val prog = if (totalBytes > 0) (fileLength.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f) else (if (fileLength > 1024L) 1.0f else 0.05f)
+
+                            if (downloadItems.none { it.id == cachedEp.id.toString() || it.title == fullTitle }) {
+                                downloadItems.add(
+                                    DownloadUiItem(
+                                        id = cachedEp.id.toString(),
+                                        title = fullTitle,
+                                        poster = cachedEp.poster ?: header?.poster,
+                                        quality = "1080p",
+                                        fileSizeBytes = totalBytes,
+                                        downloadedBytes = fileLength,
+                                        progress = prog,
+                                        state = if (isDone) MediaDownloadState.Completed else MediaDownloadState.Downloading,
+                                        localFilePath = info?.path?.toString()
                                     )
-                                }
+                                )
                             }
                         }
                     }
@@ -203,8 +258,9 @@ class DownloadController : ViewModel() {
                 Log.e(TAG, "Error reading download cache", e)
             }
 
-            // 3. Active downloads from internal persistent queue
+            // 3. Active downloads from internal persistent queue & current active downloads
             try {
+                val ctx = CloudStreamApp.context
                 val queue = DownloadQueueManager.queue.value
                 queue.forEach { queueWrapper ->
                     val item = queueWrapper.downloadItem
@@ -229,6 +285,31 @@ class DownloadController : ViewModel() {
                                 localFilePath = "/storage/emulated/0/Download/$DOWNLOAD_DIR_NAME/$cleanName.mp4"
                             )
                         )
+                    }
+                }
+
+                if (ctx != null) {
+                    VideoDownloadManager.currentDownloads.value.forEach { activeId ->
+                        val resume = ctx.getKey<VideoDownloadManager.DownloadResumePackage>(VideoDownloadManager.KEY_RESUME_PACKAGES, activeId.toString())
+                        if (resume != null) {
+                            val ep = resume.item.ep
+                            val title = ep.mainName ?: ep.name ?: "Downloading Stream"
+                            if (downloadItems.none { it.id == activeId.toString() || it.title == title }) {
+                                downloadItems.add(
+                                    0,
+                                    DownloadUiItem(
+                                        id = activeId.toString(),
+                                        title = title,
+                                        poster = ep.poster,
+                                        quality = "1080p",
+                                        fileSizeBytes = 0L,
+                                        downloadedBytes = 0L,
+                                        progress = 0.05f,
+                                        state = MediaDownloadState.Downloading
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -305,8 +386,9 @@ class DownloadController : ViewModel() {
 
     private fun updateProgressForQueueItem(id: String, downloaded: Long, total: Long) {
         val prog = if (total > 0L) (downloaded.toFloat() / total.toFloat()).coerceIn(0f, 1f) else 0f
-        _uiState.value = _uiState.value.copy(
-            items = _uiState.value.items.map { item ->
+        val exists = _uiState.value.items.any { it.id == id || it.id == (it.title.hashCode()).toString() }
+        val newItems = if (exists) {
+            _uiState.value.items.map { item ->
                 if (item.id == id || item.id == (item.title.hashCode()).toString()) {
                     item.copy(
                         downloadedBytes = downloaded,
@@ -315,8 +397,26 @@ class DownloadController : ViewModel() {
                         state = if (prog >= 1.0f) MediaDownloadState.Completed else MediaDownloadState.Downloading
                     )
                 } else item
-            },
-            activeDownloadsCount = _uiState.value.items.count { it.state == MediaDownloadState.Downloading }
+            }
+        } else {
+            val ctx = CloudStreamApp.context
+            val epName = ctx?.getKey<DownloadObjects.DownloadEpisodeCached>(DOWNLOAD_EPISODE_CACHE, id)?.name
+            val headerName = ctx?.getKey<DownloadObjects.DownloadHeaderCached>(DOWNLOAD_HEADER_CACHE, id)?.name
+            val title = epName ?: headerName ?: "Downloading Video"
+            val newItem = DownloadUiItem(
+                id = id,
+                title = title,
+                quality = "1080p",
+                downloadedBytes = downloaded,
+                fileSizeBytes = total,
+                progress = prog,
+                state = if (prog >= 1.0f) MediaDownloadState.Completed else MediaDownloadState.Downloading
+            )
+            listOf(newItem) + _uiState.value.items
+        }
+        _uiState.value = _uiState.value.copy(
+            items = newItems,
+            activeDownloadsCount = newItems.count { it.state == MediaDownloadState.Downloading }
         )
     }
 
@@ -464,9 +564,10 @@ class DownloadController : ViewModel() {
         }
         val cleanName = title.replace(Regex("[^a-zA-Z0-9.-]"), "_")
 
-        // 2. Use configured download location
+        // 2. Use configured download location (Default to app-private internal storage, no external folders)
         val customLoc = prefs.getString("pref_download_location", null)
-        val baseDir = if (!customLoc.isNullOrBlank()) File(customLoc) else File("/storage/emulated/0/Download/$DOWNLOAD_DIR_NAME")
+        val appDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
+        val baseDir = if (!customLoc.isNullOrBlank()) File(customLoc) else appDir
         if (!baseDir.exists()) baseDir.mkdirs()
         val localPath = File(baseDir, "$cleanName.mp4").absolutePath
 

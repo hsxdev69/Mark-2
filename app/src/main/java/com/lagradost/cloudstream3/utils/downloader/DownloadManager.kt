@@ -271,9 +271,8 @@ object VideoDownloadManager {
                     }
                 )
 
-            if (ep.sourceApiName != null) {
-                builder.setSubText(ep.sourceApiName)
-            }
+            // Provider name hidden from notification as requested
+            // (Strictly avoiding "MovieVortex - AniVortex" backend provider leakage)
 
             if (source != null) {
                 val intent = Intent(context, com.movievortex.android.MovieVortexActivity::class.java).apply {
@@ -2015,7 +2014,7 @@ object VideoDownloadManager {
 
             createDownloadNotification(
                 context,
-                downloadItem.apiName,
+                null,
                 txt(R.string.loading).asString(context),
                 meta,
                 DownloadType.IsPending,

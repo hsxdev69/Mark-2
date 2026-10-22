@@ -123,10 +123,8 @@ object DownloadFileManagement {
      * Special ContentResolver fuckery is needed for that as UniFile doesn't work.
      * */
     fun getDefaultDir(context: Context): SafeFile? {
-        // See https://www.py4u.net/discuss/614761
-        return SafeFile.fromMedia(
-            context, MediaFileContentType.Downloads
-        )
+        val appDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
+        return SafeFile.fromFilePath(context, appDir.absolutePath)
     }
 
 }

@@ -61,6 +61,17 @@ import com.lagradost.cloudstream3.ActorData
 import com.lagradost.cloudstream3.SearchResponse
 import com.lagradost.cloudstream3.utils.downloader.DownloadQueueManager
 import com.lagradost.cloudstream3.utils.downloader.DownloadObjects
+import android.os.Environment
+import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.ExtractorLinkType
+import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.utils.SingleSelectionHelper
+import com.lagradost.cloudstream3.utils.DataStore.setKey
+import com.lagradost.cloudstream3.utils.DOWNLOAD_HEADER_CACHE
+import com.lagradost.cloudstream3.utils.DOWNLOAD_EPISODE_CACHE
+import com.movievortex.android.controller.DownloadUiItem
+import com.movievortex.android.model.MediaDownloadState
+import com.movievortex.android.model.MediaType
 
 class DownloadedPlayerActivity : AppCompatActivity() {
     companion object {
@@ -633,40 +644,182 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     private fun setupDownloadButton() {
         val downloadBtn = findViewById<View>(R.id.inline_download_button) ?: return
         downloadBtn.setOnClickListener {
-            val resp = currentLoadResponse
-            val ep = currentAllEpisodes.getOrNull(currentPlayingEpisodeIndex) ?: currentAllEpisodes.firstOrNull()
-            if (resp != null && ep != null) {
-                val isMovie = resp is MovieLoadResponse
-                try {
-                    DownloadQueueManager.addToQueue(
-                        DownloadObjects.DownloadQueueItem(
-                            episode = ep,
-                            isMovie = isMovie,
-                            resultName = resp.name,
-                            resultType = resp.type,
-                            resultPoster = resp.posterUrl,
-                            apiName = resp.apiName,
-                            resultId = (resp.apiName + resp.url).hashCode(),
-                            resultUrl = resp.url
-                        ).toWrapper()
-                    )
-                    android.widget.Toast.makeText(
-                        this,
-                        "Download started: ${ep.name ?: resp.name}",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                    findViewById<TextView>(R.id.inline_download_text)?.text = "Download Queued"
-                } catch (e: Exception) {
-                    android.widget.Toast.makeText(
-                        this,
-                        "Download error: ${e.message}",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
+            handleDownloadClick()
+        }
+    }
+
+    private fun handleDownloadClick() {
+        val resp = currentLoadResponse
+        val ep = currentAllEpisodes.getOrNull(currentPlayingEpisodeIndex) ?: currentAllEpisodes.firstOrNull()
+        if (resp == null || ep == null) {
+            android.widget.Toast.makeText(this, "Stream details loading...", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val downloadText = findViewById<TextView>(R.id.inline_download_text)
+        downloadText?.text = "Resolving qualities..."
+        android.widget.Toast.makeText(this, "Checking available qualities...", android.widget.Toast.LENGTH_SHORT).show()
+
+        val generator = RepoLinkGenerator(listOf(ep), page = resp)
+        val extractedLinks = mutableListOf<ExtractorLink>()
+        val extractedSubs = mutableListOf<com.lagradost.cloudstream3.ui.player.SubtitleData>()
+
+        ioSafe {
+            try {
+                generator.generateLinks(
+                    clearCache = false,
+                    sourceTypes = setOf(ExtractorLinkType.VIDEO, ExtractorLinkType.M3U8),
+                    callback = { (link, _) ->
+                        if (link != null) {
+                            synchronized(extractedLinks) {
+                                if (extractedLinks.none { it.url == link.url }) {
+                                    extractedLinks.add(link)
+                                }
+                            }
+                        }
+                    },
+                    subtitleCallback = { sub ->
+                        synchronized(extractedSubs) {
+                            extractedSubs.add(sub)
+                        }
+                    },
+                    offset = 0,
+                    isCasting = false
+                )
+            } catch (_: Exception) {}
+
+            main {
+                downloadText?.text = if (resp is MovieLoadResponse) "Download Movie" else "Download Episode"
+                if (extractedLinks.isEmpty()) {
+                    // Fallback to direct auto download if links couldn't be pre-extracted
+                    startDirectDownload(ep, resp, null, emptyList())
+                } else {
+                    showQualitySelectionDialog(ep, resp, extractedLinks, extractedSubs)
                 }
-            } else {
-                android.widget.Toast.makeText(this, "Stream details loading...", android.widget.Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun showQualitySelectionDialog(
+        ep: ResultEpisode,
+        resp: com.lagradost.cloudstream3.LoadResponse,
+        links: List<ExtractorLink>,
+        subs: List<com.lagradost.cloudstream3.ui.player.SubtitleData>
+    ) {
+        val sortedLinks = links.sortedByDescending { it.quality }
+        val displayItems = sortedLinks.map { link ->
+            val qualityStr = Qualities.getStringByInt(link.quality)
+            val name = link.name
+            if (qualityStr.isNotBlank() && !qualityStr.equals("Unknown", ignoreCase = true)) {
+                "$qualityStr • $name"
+            } else {
+                name
+            }
+        }
+
+        val title = ep.name ?: resp.name
+        SingleSelectionHelper.apply {
+            showBottomDialogInstant(
+                displayItems,
+                "Select Quality - $title",
+                dismissCallback = {}
+            ) { selectedIndex ->
+                val chosenLink = sortedLinks.getOrNull(selectedIndex)
+                startDirectDownload(ep, resp, chosenLink, subs)
+            }
+        }
+    }
+
+    private fun startDirectDownload(
+        ep: ResultEpisode,
+        resp: com.lagradost.cloudstream3.LoadResponse,
+        selectedLink: ExtractorLink?,
+        subs: List<com.lagradost.cloudstream3.ui.player.SubtitleData>
+    ) {
+        val isMovie = resp is MovieLoadResponse
+        val linksList = if (selectedLink != null) listOf(selectedLink) else null
+        val title = ep.name ?: resp.name
+        val qualityStr = selectedLink?.let { Qualities.getStringByInt(it.quality) } ?: "1080p"
+
+        try {
+            // Save cache keys so MovieVortex and CloudStream download screens discover this immediately
+            val parentId = (resp.apiName + resp.url).hashCode()
+            setKey(
+                DOWNLOAD_HEADER_CACHE,
+                parentId.toString(),
+                DownloadObjects.DownloadHeaderCached(
+                    apiName = resp.apiName,
+                    url = resp.url,
+                    type = resp.type,
+                    name = resp.name,
+                    poster = resp.posterUrl,
+                    id = parentId,
+                    cacheTime = System.currentTimeMillis()
+                )
+            )
+            setKey(
+                DOWNLOAD_EPISODE_CACHE,
+                ep.id.toString(),
+                DownloadObjects.DownloadEpisodeCached(
+                    name = title,
+                    poster = ep.poster ?: resp.posterUrl,
+                    episode = ep.episode,
+                    season = ep.season,
+                    id = ep.id,
+                    parentId = parentId,
+                    score = ep.score,
+                    description = ep.description,
+                    cacheTime = System.currentTimeMillis()
+                )
+            )
+        } catch (_: Exception) {}
+
+        try {
+            DownloadQueueManager.addToQueue(
+                DownloadObjects.DownloadQueueItem(
+                    episode = ep,
+                    isMovie = isMovie,
+                    resultName = resp.name,
+                    resultType = resp.type,
+                    resultPoster = resp.posterUrl,
+                    apiName = resp.apiName,
+                    resultId = (resp.apiName + resp.url).hashCode(),
+                    resultUrl = resp.url,
+                    links = linksList,
+                    subs = subs.ifEmpty { null }
+                ).toWrapper()
+            )
+        } catch (e: Exception) {
+            logError(e)
+        }
+
+        try {
+            // Store strictly inside app-private internal directory (never in public external folders)
+            val appDir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: filesDir
+            val cleanName = title.replace(Regex("[^a-zA-Z0-9.-]"), "_")
+            val localPath = File(appDir, "$cleanName.mp4").absolutePath
+
+            val uiItem = DownloadUiItem(
+                id = ep.id.toString(),
+                title = title,
+                mediaType = if (isMovie) MediaType.Movie else MediaType.TvSeries,
+                poster = ep.poster ?: resp.posterUrl,
+                quality = qualityStr,
+                fileSizeBytes = 0L,
+                downloadedBytes = 0L,
+                progress = 0.05f,
+                state = MediaDownloadState.Downloading,
+                localFilePath = localPath
+            )
+            com.movievortex.android.controller.DownloadController.registerExternalDownload(uiItem)
+        } catch (_: Exception) {}
+
+        android.widget.Toast.makeText(
+            this,
+            "Download queued: $title ($qualityStr)",
+            android.widget.Toast.LENGTH_SHORT
+        ).show()
+        findViewById<TextView>(R.id.inline_download_text)?.text = "Downloading ($qualityStr)"
     }
 
     private fun setupCast(actors: List<ActorData>?) {
