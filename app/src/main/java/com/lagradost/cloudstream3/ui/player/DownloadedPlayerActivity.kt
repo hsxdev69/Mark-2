@@ -57,6 +57,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil3.load
 import com.movievortex.android.core.ServerManager
+import com.lagradost.cloudstream3.ActorData
+import com.lagradost.cloudstream3.SearchResponse
+import com.lagradost.cloudstream3.utils.downloader.DownloadQueueManager
+import com.lagradost.cloudstream3.utils.downloader.DownloadObjects
 
 class DownloadedPlayerActivity : AppCompatActivity() {
     companion object {
@@ -105,6 +109,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     private var currentPlayingEpisodeIndex: Int = 0
     private var currentSelectedSeason: Int = 1
     private var currentLoadResponse: com.lagradost.cloudstream3.LoadResponse? = null
+    private val triedServers: MutableSet<String> = mutableSetOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -123,6 +128,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
 
         setupWindowInsets()
         setupServerTabs()
+        setupDownloadButton()
         updateLayoutForOrientation(resources.configuration.orientation)
         handleIntent(intent)
 
@@ -151,6 +157,8 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         for ((mark, view) in tabs) {
             view.setOnClickListener {
                 if (currentMarkServer != mark) {
+                    triedServers.clear()
+                    triedServers.add(mark)
                     updateServerTabsUI(mark)
                     onServerSwitched(mark)
                 }
@@ -177,8 +185,9 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         for ((mark, view) in tabs) {
             if (view == null) continue
             if (mark == selectedMark) {
+                // Pure B&W: Solid White pill with Black text
                 view.setBackgroundResource(R.drawable.bg_server_tab_active)
-                view.setTextColor(Color.WHITE)
+                view.setTextColor(Color.BLACK)
                 view.setTypeface(null, Typeface.BOLD)
             } else {
                 view.setBackgroundResource(R.drawable.bg_server_tab_inactive)
@@ -188,17 +197,39 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         }
     }
 
+    private fun triggerAutoServerFallback(reason: String) {
+        triedServers.add(currentMarkServer)
+        val nextMark = ServerManager.ALL_SERVERS.firstOrNull { it !in triedServers }
+        if (nextMark != null) {
+            main {
+                android.widget.Toast.makeText(
+                    this@DownloadedPlayerActivity,
+                    "Switching automatically to $nextMark...",
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+                updateServerTabsUI(nextMark)
+                onServerSwitched(nextMark)
+            }
+        } else {
+            main {
+                android.widget.Toast.makeText(
+                    this@DownloadedPlayerActivity,
+                    "All streaming servers unavailable. Please try another title.",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+                finish()
+            }
+        }
+    }
+
     private fun onServerSwitched(markName: String) {
+        triedServers.add(markName)
         val providerName = ServerManager.toProviderName(markName)
         val title = currentMediaTitle ?: intent.getStringExtra("TITLE")
         if (title.isNullOrBlank()) {
             android.widget.Toast.makeText(this, "Switched to $markName", android.widget.Toast.LENGTH_SHORT).show()
             return
         }
-
-        val spinner = findViewById<ProgressBar>(R.id.player_loading_spinner)
-        spinner?.isVisible = true
-        android.widget.Toast.makeText(this, "Connecting to $markName...", android.widget.Toast.LENGTH_SHORT).show()
 
         ioSafe {
             try {
@@ -224,7 +255,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                     }
                 }
 
-                // Fallback: try loading with the new provider
+                // Fallback: try loading with the new provider and fallback url
                 val fallbackUrl = currentContentUrl
                 if (fallbackUrl != null && api != null) {
                     main {
@@ -233,23 +264,9 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                     return@ioSafe
                 }
 
-                main {
-                    spinner?.isVisible = false
-                    android.widget.Toast.makeText(
-                        this@DownloadedPlayerActivity,
-                        "Stream unavailable on $markName. Please try another server.",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                }
+                triggerAutoServerFallback("Stream unavailable on $markName.")
             } catch (e: Exception) {
-                main {
-                    spinner?.isVisible = false
-                    android.widget.Toast.makeText(
-                        this@DownloadedPlayerActivity,
-                        "Error connecting to $markName: ${e.message}",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                }
+                triggerAutoServerFallback("Error connecting to $markName.")
             }
         }
     }
@@ -330,6 +347,8 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         currentContentUrl = contentUrl
         if (apiName != null && contentUrl != null) {
             currentMarkServer = ServerManager.toDisplayName(apiName)
+            triedServers.clear()
+            triedServers.add(currentMarkServer)
             updateServerTabsUI(currentMarkServer)
             playProviderContent(apiName, contentUrl, intent)
             return
@@ -455,9 +474,6 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     }
 
     private fun playProviderContent(apiName: String, url: String, intent: Intent) {
-        val spinner = findViewById<ProgressBar>(R.id.player_loading_spinner)
-        spinner?.isVisible = true
-
         ioSafe {
             try {
                 var api = APIHolder.getApiFromNameNull(apiName)
@@ -474,15 +490,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                 }
 
                 if (api == null) {
-                    main {
-                        spinner?.isVisible = false
-                        android.widget.Toast.makeText(
-                            this@DownloadedPlayerActivity,
-                            "Connecting streaming provider... please retry",
-                            android.widget.Toast.LENGTH_SHORT
-                        ).show()
-                        finish()
-                    }
+                    triggerAutoServerFallback("Provider $currentMarkServer not available.")
                     return@ioSafe
                 }
 
@@ -567,10 +575,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                     }
 
                     if (episodes.isEmpty()) {
-                        main {
-                            spinner?.isVisible = false
-                            finish()
-                        }
+                        triggerAutoServerFallback("No streaming links found on $currentMarkServer.")
                         return@ioSafe
                     }
 
@@ -585,7 +590,6 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                     val generator = RepoLinkGenerator(episodes, page = loadResponse)
 
                     main {
-                        spinner?.isVisible = false
                         currentLoadResponse = loadResponse
                         currentMediaTitle = loadResponse.name
                         currentAllEpisodes = episodes
@@ -598,6 +602,13 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                         }
                         findViewById<TextView>(R.id.inline_player_meta)?.text = meta
                         findViewById<TextView>(R.id.inline_player_overview)?.text = loadResponse.plot ?: ""
+                        findViewById<TextView>(R.id.inline_download_text)?.text = if (loadResponse is MovieLoadResponse) "Download Movie" else "Download Episode"
+
+                        // Star Cast Details
+                        setupCast(loadResponse.actors)
+
+                        // Related Movies Recommendations
+                        setupRelatedMovies(loadResponse.recommendations)
 
                         if (episodes.isNotEmpty() && (loadResponse is TvSeriesLoadResponse || loadResponse is AnimeLoadResponse || episodes.size > 1)) {
                             val seasons = episodes.mapNotNull { it.season }.distinct().sorted()
@@ -610,27 +621,85 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                         navigateToPlayer(GeneratorPlayer.newInstance(generator, startIndex))
                     }
                 } else {
-                    main {
-                        spinner?.isVisible = false
-                        android.widget.Toast.makeText(
-                            this@DownloadedPlayerActivity,
-                            "Unable to resolve stream from provider. Retrying...",
-                            android.widget.Toast.LENGTH_SHORT
-                        ).show()
-                        finish()
-                    }
+                    triggerAutoServerFallback("Failed to resolve stream on $currentMarkServer.")
                 }
             } catch (e: Exception) {
                 logError(e)
-                main {
-                    spinner?.isVisible = false
+                triggerAutoServerFallback("Error loading $currentMarkServer: ${e.message}")
+            }
+        }
+    }
+
+    private fun setupDownloadButton() {
+        val downloadBtn = findViewById<View>(R.id.inline_download_button) ?: return
+        downloadBtn.setOnClickListener {
+            val resp = currentLoadResponse
+            val ep = currentAllEpisodes.getOrNull(currentPlayingEpisodeIndex) ?: currentAllEpisodes.firstOrNull()
+            if (resp != null && ep != null) {
+                val isMovie = resp is MovieLoadResponse
+                try {
+                    DownloadQueueManager.addToQueue(
+                        DownloadObjects.DownloadQueueItem(
+                            episode = ep,
+                            isMovie = isMovie,
+                            resultName = resp.name,
+                            resultType = resp.type,
+                            resultPoster = resp.posterUrl,
+                            apiName = resp.apiName,
+                            resultId = (resp.apiName + resp.url).hashCode(),
+                            resultUrl = resp.url
+                        ).toWrapper()
+                    )
                     android.widget.Toast.makeText(
-                        this@DownloadedPlayerActivity,
-                        "Player error: ${e.message}",
+                        this,
+                        "Download started: ${ep.name ?: resp.name}",
                         android.widget.Toast.LENGTH_SHORT
                     ).show()
-                    finish()
+                    findViewById<TextView>(R.id.inline_download_text)?.text = "Download Queued"
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(
+                        this,
+                        "Download error: ${e.message}",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
                 }
+            } else {
+                android.widget.Toast.makeText(this, "Stream details loading...", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun setupCast(actors: List<ActorData>?) {
+        val castSection = findViewById<View>(R.id.inline_cast_section) ?: return
+        val castRecycler = findViewById<RecyclerView>(R.id.inline_cast_recycler) ?: return
+        if (actors.isNullOrEmpty()) {
+            castSection.visibility = View.GONE
+            return
+        }
+        castSection.visibility = View.VISIBLE
+        castRecycler.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        castRecycler.adapter = InlineCastAdapter(actors)
+    }
+
+    private fun setupRelatedMovies(recommendations: List<SearchResponse>?) {
+        val relatedSection = findViewById<View>(R.id.inline_related_section) ?: return
+        val relatedRecycler = findViewById<RecyclerView>(R.id.inline_related_recycler) ?: return
+        if (recommendations.isNullOrEmpty()) {
+            relatedSection.visibility = View.GONE
+            return
+        }
+        relatedSection.visibility = View.VISIBLE
+        relatedRecycler.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        relatedRecycler.adapter = InlineRelatedAdapter(recommendations) { item ->
+            currentContentUrl = item.url
+            currentMediaTitle = item.name
+            currentMarkServer = ServerManager.toDisplayName(item.apiName)
+            updateServerTabsUI(currentMarkServer)
+            triedServers.clear()
+            triedServers.add(currentMarkServer)
+            playProviderContent(item.apiName, item.url, intent)
+        }
+    }
             }
         }
     }
@@ -759,10 +828,10 @@ class InlineEpisodeAdapter(
         val isSelected = ep.index == currentPlayingIndex
         if (isSelected) {
             holder.root.setBackgroundResource(R.drawable.bg_episode_item_active)
-            holder.playIcon.imageTintList = ColorStateList.valueOf(Color.parseColor("#E50914"))
+            holder.playIcon.imageTintList = ColorStateList.valueOf(Color.WHITE)
         } else {
             holder.root.setBackgroundResource(R.drawable.bg_episode_item_inactive)
-            holder.playIcon.imageTintList = ColorStateList.valueOf(Color.WHITE)
+            holder.playIcon.imageTintList = ColorStateList.valueOf(Color.parseColor("#80FFFFFF"))
         }
 
         holder.root.setOnClickListener {
@@ -774,4 +843,70 @@ class InlineEpisodeAdapter(
     }
 
     override fun getItemCount(): Int = episodes.size
+}
+
+class InlineCastAdapter(
+    private val actors: List<ActorData>
+) : RecyclerView.Adapter<InlineCastAdapter.ViewHolder>() {
+
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val image: ImageView = view.findViewById(R.id.cast_image)
+        val name: TextView = view.findViewById(R.id.cast_name)
+        val role: TextView = view.findViewById(R.id.cast_role)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_inline_cast, parent, false)
+        return ViewHolder(v)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val item = actors[position]
+        holder.name.text = item.actor.name
+        val roleStr = item.roleString ?: item.role?.name ?: ""
+        holder.role.text = roleStr
+        holder.role.visibility = if (roleStr.isBlank()) View.GONE else View.VISIBLE
+
+        val imgUrl = item.actor.image
+        if (!imgUrl.isNullOrBlank()) {
+            holder.image.load(imgUrl)
+        } else {
+            holder.image.setImageResource(R.drawable.example_poster)
+        }
+    }
+
+    override fun getItemCount(): Int = actors.size
+}
+
+class InlineRelatedAdapter(
+    private val items: List<SearchResponse>,
+    private val onItemClick: (SearchResponse) -> Unit
+) : RecyclerView.Adapter<InlineRelatedAdapter.ViewHolder>() {
+
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val root: View = view.findViewById(R.id.related_item_root)
+        val poster: ImageView = view.findViewById(R.id.related_poster)
+        val title: TextView = view.findViewById(R.id.related_title)
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_inline_related, parent, false)
+        return ViewHolder(v)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val item = items[position]
+        holder.title.text = item.name
+        val posterUrl = item.posterUrl
+        if (!posterUrl.isNullOrBlank()) {
+            holder.poster.load(posterUrl)
+        } else {
+            holder.poster.setImageResource(R.drawable.example_poster)
+        }
+        holder.root.setOnClickListener {
+            onItemClick(item)
+        }
+    }
+
+    override fun getItemCount(): Int = items.size
 }

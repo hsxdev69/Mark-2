@@ -150,6 +150,36 @@
                 </LinearLayout>
             </HorizontalScrollView>
 
+            <!-- DOWNLOAD OPTION BUTTON -->
+            <LinearLayout
+                android:id="@+id/inline_download_button"
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_download_button"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/inline_download_icon"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_baseline_arrow_downward_24"
+                    android:layout_marginEnd="8dp"
+                    app:tint="#000000" />
+
+                <TextView
+                    android:id="@+id/inline_download_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Download"
+                    android:textColor="#000000"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
             <!-- Overview Synopsis -->
             <TextView
                 android:id="@+id/inline_player_overview"
@@ -160,6 +190,35 @@
                 android:textSize="14sp"
                 android:lineSpacingExtra="3dp"
                 tools:text="Overview synopsis goes here." />
+
+            <!-- STAR CAST SECTION -->
+            <LinearLayout
+                android:id="@+id/inline_cast_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:text="TOP CAST"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:letterSpacing="0.06"
+                    android:textStyle="bold" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/inline_cast_recycler"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:overScrollMode="never"
+                    android:scrollbars="none"
+                    tools:listitem="@layout/item_inline_cast" />
+            </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
@@ -209,19 +268,36 @@
                     tools:listitem="@layout/item_inline_episode" />
             </LinearLayout>
 
+            <!-- RELATED MOVIES SECTION -->
+            <LinearLayout
+                android:id="@+id/inline_related_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:text="MORE LIKE THIS"
+                    android:textColor="#FFFFFF"
+                    android:textSize="13sp"
+                    android:letterSpacing="0.06"
+                    android:textStyle="bold" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/inline_related_recycler"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:overScrollMode="never"
+                    android:scrollbars="none"
+                    tools:listitem="@layout/item_inline_related" />
+            </LinearLayout>
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
-    <ProgressBar
-        android:id="@+id/player_loading_spinner"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
-        android:indeterminate="true"
-        android:indeterminateTint="#FFFFFF"
-        android:visibility="gone"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
