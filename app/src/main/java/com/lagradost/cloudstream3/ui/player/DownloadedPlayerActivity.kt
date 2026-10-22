@@ -63,6 +63,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     }
 
     private fun isSameIntent(newIntent: Intent): Boolean {
+        if (newIntent.getBooleanExtra("IS_NOTIFICATION_CLICK", false)) return true
         val old = intent ?: return false
         val oldContent = old.getStringExtra("CONTENT_URL") ?: old.getStringExtra("URL")
         val newContent = newIntent.getStringExtra("CONTENT_URL") ?: newIntent.getStringExtra("URL")

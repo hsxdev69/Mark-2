@@ -102,6 +102,7 @@
             android:name=".ui.player.DownloadedPlayerActivity"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation"
             android:exported="true"
+            android:launchMode="singleTop"
             android:resizeableActivity="true"
             android:screenOrientation="sensor"
             android:supportsPictureInPicture="true"

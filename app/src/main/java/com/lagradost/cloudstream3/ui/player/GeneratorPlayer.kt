@@ -359,12 +359,22 @@ class GeneratorPlayer : FullScreenPlayer() {
                 }
 
                 override fun createCurrentContentIntent(player: Player): PendingIntent? {
-                    // Open the app without creating a new task to resume playback seamlessly
+                    // Bring the existing active player activity to the foreground seamlessly without resetting
+                    val targetClass = activity?.javaClass ?: DownloadedPlayerActivity::class.java
+                    val resumeIntent = Intent(context, targetClass).apply {
+                        flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        action = Intent.ACTION_VIEW
+                        putExtra("IS_NOTIFICATION_CLICK", true)
+                    }
+                    val pendingFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    } else PendingIntent.FLAG_UPDATE_CURRENT
+
                     return PendingIntentCompat.getActivity(
                         context,
                         0,
-                        Intent(context, com.movievortex.android.MovieVortexActivity::class.java),
-                        0,
+                        resumeIntent,
+                        pendingFlags,
                         false
                     )
                 }
