@@ -444,13 +444,31 @@ class DownloadController : ViewModel() {
         episode: MediaEpisode? = null,
         streamUrl: String? = null
     ) {
+        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
+
+        // 1. Enforce Wi-Fi Only setting
+        val wifiOnly = prefs.getBoolean("pref_download_wifi_only", true)
+        if (wifiOnly) {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
+            val isWifi = cm?.getNetworkCapabilities(cm.activeNetwork)?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) == true
+            if (!isWifi) {
+                Toast.makeText(context, "Wi-Fi Only is enabled in Settings. Connect to Wi-Fi to download.", Toast.LENGTH_LONG).show()
+                return
+            }
+        }
+
         val title = if (episode != null) {
             "${media.title} S${episode.seasonNumber}E${episode.episodeNumber}"
         } else {
             media.title
         }
         val cleanName = title.replace(Regex("[^a-zA-Z0-9.-]"), "_")
-        val localPath = "/storage/emulated/0/Download/$DOWNLOAD_DIR_NAME/$cleanName.mp4"
+
+        // 2. Use configured download location
+        val customLoc = prefs.getString("pref_download_location", null)
+        val baseDir = if (!customLoc.isNullOrBlank()) File(customLoc) else File("/storage/emulated/0/Download/$DOWNLOAD_DIR_NAME")
+        if (!baseDir.exists()) baseDir.mkdirs()
+        val localPath = File(baseDir, "$cleanName.mp4").absolutePath
 
         // 1. Duplicate check: Already downloaded and verified
         val targetFile = File(localPath)
@@ -580,6 +598,15 @@ class DownloadController : ViewModel() {
                     videoWatchState = VideoWatchState.None
                 )
 
+                // Sort extracted links based on configured download quality preference
+                val qualityPref = prefs.getString("pref_download_quality", "Highest (1080p)") ?: "Highest (1080p)"
+                val sortedLinks = when {
+                    qualityPref.contains("Highest", true) -> extractedLinks.sortedByDescending { it.quality }
+                    qualityPref.contains("720", true) -> extractedLinks.sortedBy { kotlin.math.abs(it.quality - 720) }
+                    qualityPref.contains("480", true) -> extractedLinks.sortedBy { it.quality }
+                    else -> extractedLinks
+                }
+
                 // Queue into MovieVortex's internal in-app downloader
                 val queueItem = DownloadObjects.DownloadQueueItem(
                     episode = resultEp,
@@ -590,7 +617,7 @@ class DownloadController : ViewModel() {
                     apiName = media.providerApiName,
                     resultId = media.rawUrl.hashCode(),
                     resultUrl = media.rawUrl,
-                    links = if (extractedLinks.isNotEmpty()) extractedLinks else null,
+                    links = if (sortedLinks.isNotEmpty()) sortedLinks else null,
                     subs = if (extractedSubs.isNotEmpty()) extractedSubs else null
                 )
 

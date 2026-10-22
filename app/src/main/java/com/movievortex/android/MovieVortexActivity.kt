@@ -45,9 +45,17 @@ class MovieVortexActivity : ComponentActivity() {
 
         val settingsController = SettingsController(applicationContext)
 
+        // Ensure saved app language locale is applied
+        CommonActivity.setLocale(this, settingsController.getLanguageTag())
+
         setContent {
             val destination by targetDestination.collectAsState()
-            MovieVortexTheme {
+            val settingsState by settingsController.uiState.collectAsState()
+
+            MovieVortexTheme(
+                appTheme = settingsState.appTheme,
+                accentColor = settingsState.accentColor
+            ) {
                 MovieVortexNavGraph(
                     settingsController = settingsController,
                     isFirstLaunch = false,

@@ -470,6 +470,12 @@ open class FullScreenPlayer : AbstractPlayerFragment<FragmentPlayerBinding>(
     }
 
     override fun onResume() {
+        activity?.let { act ->
+            val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(act)
+            if (prefs.getBoolean("pref_auto_fullscreen", false)) {
+                act.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            }
+        }
         playerHostView?.enterFullscreen {
             if (rotatedManually || isLayout(TV or EMULATOR)) {
                 updateOrientation()

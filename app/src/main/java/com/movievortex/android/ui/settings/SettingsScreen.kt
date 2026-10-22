@@ -20,14 +20,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.RadioButton
@@ -112,14 +109,14 @@ fun SettingsScreen(
             Column {
                 Text(
                     text = "Settings",
-                    color = Color.White,
+                    color = VortexColors.PrimaryText,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "Preferences & System Configuration",
-                    color = Color(0xFF888888),
+                    color = VortexColors.MutedText,
                     fontSize = 13.sp
                 )
             }
@@ -127,14 +124,14 @@ fun SettingsScreen(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF161616))
-                    .border(1.dp, Color(0xFF262626), CircleShape),
+                    .background(VortexColors.CardSurface)
+                    .border(1.dp, VortexColors.BorderSubtle, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = VortexIcons.Settings,
                     contentDescription = "Settings",
-                    tint = Color.White,
+                    tint = VortexColors.PrimaryText,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -181,10 +178,21 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         // ─────────────────────────────────────────────────────────────────────
-        // 2. SUBTITLES
+        // 2. AUDIO & SUBTITLES
         // ─────────────────────────────────────────────────────────────────────
-        SettingsSectionHeader(icon = VortexIcons.Subtitles, title = "2. SUBTITLES")
+        SettingsSectionHeader(icon = VortexIcons.Subtitles, title = "2. AUDIO & SUBTITLES")
         SettingsCard {
+            SettingsClickableRow(
+                title = "Preferred Audio Language",
+                subtitle = state.preferredAudioLanguage,
+                onClick = {
+                    singleSelectDialogTitle = "Preferred Audio Language"
+                    singleSelectOptions = listOf("Default / Original", "Hindi", "English", "Japanese", "Spanish", "French")
+                    singleSelectCurrent = state.preferredAudioLanguage
+                    onSingleSelectSubmit = { settingsController.setPreferredAudioLanguage(it) }
+                }
+            )
+            SettingsDivider()
             SettingsClickableRow(
                 title = "Subtitle Style",
                 subtitle = state.subtitleStyle,
@@ -316,7 +324,7 @@ fun SettingsScreen(
                     singleSelectDialogTitle = "App Language"
                     singleSelectOptions = listOf("English", "Hindi", "Spanish", "French", "Japanese")
                     singleSelectCurrent = state.appLanguage
-                    onSingleSelectSubmit = { settingsController.setAppLanguage(it) }
+                    onSingleSelectSubmit = { settingsController.setAppLanguage(it, activity) }
                 }
             )
         }
@@ -330,7 +338,7 @@ fun SettingsScreen(
         SettingsCard {
             SettingsSwitchRow(
                 title = "Data Saver",
-                subtitle = "Limits video resolution and reduces pre-buffering",
+                subtitle = "Limits video quality to 480p and reduces pre-buffering",
                 checked = state.dataSaver,
                 onCheckedChange = { settingsController.setDataSaver(it) }
             )
@@ -490,12 +498,12 @@ fun SettingsScreen(
     if (singleSelectDialogTitle != null) {
         AlertDialog(
             onDismissRequest = { singleSelectDialogTitle = null },
-            containerColor = Color(0xFF141414),
+            containerColor = VortexColors.CardSurfaceElevated,
             shape = RoundedCornerShape(16.dp),
             title = {
                 Text(
                     text = singleSelectDialogTitle ?: "",
-                    color = Color.White,
+                    color = VortexColors.PrimaryText,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -524,14 +532,14 @@ fun SettingsScreen(
                                     singleSelectDialogTitle = null
                                 },
                                 colors = RadioButtonDefaults.colors(
-                                    selectedColor = Color.White,
-                                    unselectedColor = Color(0xFF666666)
+                                    selectedColor = VortexColors.NeonCrimson,
+                                    unselectedColor = VortexColors.MutedText
                                 )
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = option,
-                                color = if (isSelected) Color.White else Color(0xFFCCCCCC),
+                                color = if (isSelected) VortexColors.PrimaryText else VortexColors.SecondaryText,
                                 fontSize = 15.sp,
                                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                             )
@@ -541,7 +549,7 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { singleSelectDialogTitle = null }) {
-                    Text("Close", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Close", color = VortexColors.PrimaryText, fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -551,12 +559,12 @@ fun SettingsScreen(
     if (confirmDialogTitle != null) {
         AlertDialog(
             onDismissRequest = { confirmDialogTitle = null },
-            containerColor = Color(0xFF141414),
+            containerColor = VortexColors.CardSurfaceElevated,
             shape = RoundedCornerShape(16.dp),
             title = {
                 Text(
                     text = confirmDialogTitle ?: "",
-                    color = Color.White,
+                    color = VortexColors.PrimaryText,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -564,7 +572,7 @@ fun SettingsScreen(
             text = {
                 Text(
                     text = confirmDialogMessage,
-                    color = Color(0xFFCCCCCC),
+                    color = VortexColors.SecondaryText,
                     fontSize = 14.sp,
                     lineHeight = 20.sp
                 )
@@ -581,7 +589,7 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { confirmDialogTitle = null }) {
-                    Text("Cancel", color = Color.White)
+                    Text("Cancel", color = VortexColors.PrimaryText)
                 }
             }
         )
@@ -591,7 +599,7 @@ fun SettingsScreen(
     if (showSourcesDialog) {
         AlertDialog(
             onDismissRequest = { showSourcesDialog = false },
-            containerColor = Color(0xFF141414),
+            containerColor = VortexColors.CardSurfaceElevated,
             shape = RoundedCornerShape(16.dp),
             title = {
                 Row(
@@ -599,21 +607,22 @@ fun SettingsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Active Streaming Servers", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("Active Streaming Servers", color = VortexColors.PrimaryText, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF222222))
+                            .background(VortexColors.CardSurface)
+                            .border(1.dp, VortexColors.BorderSubtle, RoundedCornerShape(12.dp))
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
-                        Text("${state.installedSources.size} Servers", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("${state.installedSources.size} Servers", color = VortexColors.PrimaryText, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     if (state.installedSources.isEmpty()) {
-                        Text("No servers detected. Tap Sync below to refresh Mark core servers.", color = Color(0xFF888888), fontSize = 13.sp)
+                        Text("No servers detected. Tap Sync below to refresh Mark core servers.", color = VortexColors.MutedText, fontSize = 13.sp)
                     } else {
                         state.installedSources.forEach { source ->
                             Row(
@@ -624,19 +633,24 @@ fun SettingsScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(source.name, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                                    Text(source.supportedTypes, color = Color(0xFF888888), fontSize = 12.sp)
+                                    Text(source.name, color = VortexColors.PrimaryText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(source.supportedTypes, color = VortexColors.MutedText, fontSize = 12.sp)
                                 }
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(Color(0xFF1E3A20))
+                                        .background(if (source.isOnline) Color(0xFF1B3D23) else Color(0xFF332020))
                                         .padding(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
-                                    Text(source.language, color = Color(0xFF4CAF50), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        text = if (source.isOnline) "Active" else "Standby",
+                                        color = if (source.isOnline) Color(0xFF4CAF50) else Color(0xFFE57373),
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                             }
-                            HorizontalDivider(color = Color(0xFF222222), thickness = 0.5.dp)
+                            HorizontalDivider(color = VortexColors.BorderSubtle, thickness = 0.5.dp)
                         }
                     }
                 }
@@ -649,12 +663,12 @@ fun SettingsScreen(
                         showSourcesDialog = false
                     }
                 ) {
-                    Text("Re-sync Core Servers", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Re-sync Core Servers", color = VortexColors.NeonCrimson, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showSourcesDialog = false }) {
-                    Text("Close", color = Color(0xFF888888))
+                    Text("Close", color = VortexColors.MutedText)
                 }
             }
         )
@@ -664,10 +678,10 @@ fun SettingsScreen(
     if (showStorageDialog) {
         AlertDialog(
             onDismissRequest = { showStorageDialog = false },
-            containerColor = Color(0xFF141414),
+            containerColor = VortexColors.CardSurfaceElevated,
             shape = RoundedCornerShape(16.dp),
             title = {
-                Text("Storage Breakdown", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Storage Breakdown", color = VortexColors.PrimaryText, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             },
             text = {
                 Column(
@@ -675,14 +689,14 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     StorageInfoCard(title = "Free System Memory", value = state.storageFreeGb, color = Color(0xFF4CAF50))
-                    StorageInfoCard(title = "Total Device Storage", value = state.storageTotalGb, color = Color.White)
+                    StorageInfoCard(title = "Total Device Storage", value = state.storageTotalGb, color = VortexColors.PrimaryText)
                     StorageInfoCard(title = "Offline Movies & Series", value = state.downloadsSizeMb, color = Color(0xFF2196F3))
                     StorageInfoCard(title = "App Buffer Cache", value = state.cacheSizeMb, color = Color(0xFFFF9800))
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showStorageDialog = false }) {
-                    Text("Done", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Done", color = VortexColors.PrimaryText, fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -692,33 +706,80 @@ fun SettingsScreen(
     if (showDownloadLocationDialog) {
         AlertDialog(
             onDismissRequest = { showDownloadLocationDialog = false },
-            containerColor = Color(0xFF141414),
+            containerColor = VortexColors.CardSurfaceElevated,
             shape = RoundedCornerShape(16.dp),
             title = {
-                Text("Download Storage Path", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Download Storage Path", color = VortexColors.PrimaryText, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             },
             text = {
                 Column {
                     Text(
-                        "Downloaded movies are saved to dedicated isolated external app storage:",
-                        color = Color(0xFF888888),
+                        "Choose the target storage directory for downloaded media:",
+                        color = VortexColors.MutedText,
                         fontSize = 13.sp
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Box(
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Option 1: Public Download folder
+                    val isPublic = state.downloadLocation == settingsController.defaultDownloadDir
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF0A0A0A))
-                            .border(1.dp, Color(0xFF262626), RoundedCornerShape(8.dp))
-                            .padding(12.dp)
+                            .background(if (isPublic) VortexColors.CardSurface else Color.Transparent)
+                            .clickable {
+                                settingsController.setDownloadLocation(settingsController.defaultDownloadDir)
+                                Toast.makeText(context, "Location set to Public Downloads", Toast.LENGTH_SHORT).show()
+                                showDownloadLocationDialog = false
+                            }
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = state.downloadLocation,
-                            color = Color(0xFFEEEEEE),
-                            fontSize = 12.sp,
-                            lineHeight = 16.sp
+                        RadioButton(
+                            selected = isPublic,
+                            onClick = {
+                                settingsController.setDownloadLocation(settingsController.defaultDownloadDir)
+                                showDownloadLocationDialog = false
+                            },
+                            colors = RadioButtonDefaults.colors(selectedColor = VortexColors.NeonCrimson)
                         )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Column {
+                            Text("Public Downloads Folder", color = VortexColors.PrimaryText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text(settingsController.defaultDownloadDir, color = VortexColors.MutedText, fontSize = 11.sp)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Option 2: Internal App directory
+                    val isInternal = state.downloadLocation == settingsController.internalDownloadDir
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isInternal) VortexColors.CardSurface else Color.Transparent)
+                            .clickable {
+                                settingsController.setDownloadLocation(settingsController.internalDownloadDir)
+                                Toast.makeText(context, "Location set to App Internal Storage", Toast.LENGTH_SHORT).show()
+                                showDownloadLocationDialog = false
+                            }
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = isInternal,
+                            onClick = {
+                                settingsController.setDownloadLocation(settingsController.internalDownloadDir)
+                                showDownloadLocationDialog = false
+                            },
+                            colors = RadioButtonDefaults.colors(selectedColor = VortexColors.NeonCrimson)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Column {
+                            Text("Internal App Storage", color = VortexColors.PrimaryText, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                            Text(settingsController.internalDownloadDir, color = VortexColors.MutedText, fontSize = 11.sp)
+                        }
                     }
                 }
             },
@@ -730,12 +791,12 @@ fun SettingsScreen(
                         showDownloadLocationDialog = false
                     }
                 ) {
-                    Text("Reset Default", color = Color.White)
+                    Text("Reset Default", color = VortexColors.PrimaryText)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDownloadLocationDialog = false }) {
-                    Text("Close", color = Color(0xFF888888))
+                    Text("Close", color = VortexColors.MutedText)
                 }
             }
         )
@@ -745,10 +806,10 @@ fun SettingsScreen(
     if (showPrivacyPolicyDialog) {
         AlertDialog(
             onDismissRequest = { showPrivacyPolicyDialog = false },
-            containerColor = Color(0xFF141414),
+            containerColor = VortexColors.CardSurfaceElevated,
             shape = RoundedCornerShape(16.dp),
             title = {
-                Text("MovieVortex Privacy Declaration", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("MovieVortex Privacy Declaration", color = VortexColors.PrimaryText, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
@@ -756,7 +817,7 @@ fun SettingsScreen(
                         text = "1. Zero-Log Architecture: MovieVortex does not collect, sell, or log your IP address, queries, or watch history.\n\n" +
                                "2. Encrypted DNS: Built-in DNS over HTTPS (DoH) routes resolution queries via Cloudflare (1.1.1.1) preventing ISP interception and throttling.\n\n" +
                                "3. Client-Side Only: All bookmarking, continue watching timestamps, and cache records remain strictly stored on your local device.",
-                        color = Color(0xFFCCCCCC),
+                        color = VortexColors.SecondaryText,
                         fontSize = 13.sp,
                         lineHeight = 18.sp
                     )
@@ -764,7 +825,7 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showPrivacyPolicyDialog = false }) {
-                    Text("Got It", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Got It", color = VortexColors.PrimaryText, fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -774,10 +835,10 @@ fun SettingsScreen(
     if (showLicensesDialog) {
         AlertDialog(
             onDismissRequest = { showLicensesDialog = false },
-            containerColor = Color(0xFF141414),
+            containerColor = VortexColors.CardSurfaceElevated,
             shape = RoundedCornerShape(16.dp),
             title = {
-                Text("Open-Source Libraries", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Open-Source Libraries", color = VortexColors.PrimaryText, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             },
             text = {
                 Column(
@@ -794,7 +855,7 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showLicensesDialog = false }) {
-                    Text("Close", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("Close", color = VortexColors.PrimaryText, fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -816,13 +877,13 @@ private fun SettingsSectionHeader(icon: ImageVector, title: String) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = Color(0xFFAAAAAA),
+            tint = VortexColors.MutedText,
             modifier = Modifier.size(16.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = title,
-            color = Color(0xFFAAAAAA),
+            color = VortexColors.MutedText,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.5.sp
@@ -836,8 +897,8 @@ private fun SettingsCard(content: @Composable () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(Color(0xFF0F0F0F))
-            .border(1.dp, Color(0xFF1F1F1F), RoundedCornerShape(14.dp))
+            .background(VortexColors.CardSurface)
+            .border(1.dp, VortexColors.BorderSubtle, RoundedCornerShape(14.dp))
             .padding(horizontal = 16.dp, vertical = 6.dp)
     ) {
         content()
@@ -847,7 +908,7 @@ private fun SettingsCard(content: @Composable () -> Unit) {
 @Composable
 private fun SettingsDivider() {
     HorizontalDivider(
-        color = Color(0xFF191919),
+        color = VortexColors.BorderSubtle,
         thickness = 1.dp,
         modifier = Modifier.fillMaxWidth()
     )
@@ -871,14 +932,14 @@ private fun SettingsClickableRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                color = Color.White,
+                color = VortexColors.PrimaryText,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = subtitle,
-                color = Color(0xFF888888),
+                color = VortexColors.MutedText,
                 fontSize = 13.sp
             )
         }
@@ -886,13 +947,13 @@ private fun SettingsClickableRow(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF1E1E1E))
-                    .border(1.dp, Color(0xFF333333), RoundedCornerShape(8.dp))
+                    .background(VortexColors.CardSurfaceElevated)
+                    .border(1.dp, VortexColors.BorderSubtle, RoundedCornerShape(8.dp))
                     .padding(horizontal = 10.dp, vertical = 4.dp)
             ) {
                 Text(
                     text = badge,
-                    color = Color.White,
+                    color = VortexColors.PrimaryText,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -901,7 +962,7 @@ private fun SettingsClickableRow(
             Icon(
                 imageVector = VortexIcons.ChevronRight,
                 contentDescription = null,
-                tint = Color(0xFF666666),
+                tint = VortexColors.MutedText,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -925,14 +986,14 @@ private fun SettingsSwitchRow(
         Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
             Text(
                 text = title,
-                color = Color.White,
+                color = VortexColors.PrimaryText,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Medium
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = subtitle,
-                color = Color(0xFF888888),
+                color = VortexColors.MutedText,
                 fontSize = 13.sp
             )
         }
@@ -940,12 +1001,12 @@ private fun SettingsSwitchRow(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = Color(0xFF333333),
-                checkedBorderColor = Color.White,
-                uncheckedThumbColor = Color(0xFF666666),
-                uncheckedTrackColor = Color(0xFF141414),
-                uncheckedBorderColor = Color(0xFF262626)
+                checkedThumbColor = VortexColors.PureBlack,
+                checkedTrackColor = VortexColors.NeonCrimson,
+                checkedBorderColor = VortexColors.NeonCrimson,
+                uncheckedThumbColor = VortexColors.MutedText,
+                uncheckedTrackColor = VortexColors.CardSurface,
+                uncheckedBorderColor = VortexColors.BorderSubtle
             )
         )
     }
@@ -957,13 +1018,13 @@ private fun StorageInfoCard(title: String, value: String, color: Color) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF0C0C0C))
-            .border(1.dp, Color(0xFF222222), RoundedCornerShape(10.dp))
+            .background(VortexColors.CardSurface)
+            .border(1.dp, VortexColors.BorderSubtle, RoundedCornerShape(10.dp))
             .padding(12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(title, color = Color(0xFFCCCCCC), fontSize = 13.sp)
+        Text(title, color = VortexColors.SecondaryText, fontSize = 13.sp)
         Text(value, color = color, fontSize = 14.sp, fontWeight = FontWeight.Bold)
     }
 }
@@ -977,7 +1038,7 @@ private fun LicenseItem(name: String, license: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(name, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-        Text(license, color = Color(0xFF888888), fontSize = 11.sp)
+        Text(name, color = VortexColors.PrimaryText, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        Text(license, color = VortexColors.MutedText, fontSize = 11.sp)
     }
 }

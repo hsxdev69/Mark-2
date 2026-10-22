@@ -92,8 +92,26 @@ class PlayerController : ViewModel() {
             return
         }
 
-        // Resume saved position
-        val lastPos = DataStoreHelper.getViewPos(activeDataUrl.hashCode())
+        // Check mobile data restriction
+        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
+        val mobileAllowed = prefs.getBoolean("pref_mobile_data_allowed", true)
+        if (!mobileAllowed && offlineFilePath.isNullOrBlank()) {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
+            val isCellular = cm?.getNetworkCapabilities(cm.activeNetwork)?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR) == true
+            if (isCellular) {
+                _uiState.value = PlayerUiState(
+                    status = PlayerStatus.Error,
+                    mediaTitle = title,
+                    mediaSubtitle = subTitle,
+                    errorMessage = "Mobile data streaming is disabled in Settings. Switch to Wi-Fi or enable Mobile Data in Settings."
+                )
+                return
+            }
+        }
+
+        // Resume saved position only if Resume Playback is enabled in Settings
+        val shouldResume = prefs.getBoolean("pref_resume_playback", true)
+        val lastPos = if (shouldResume) DataStoreHelper.getViewPos(activeDataUrl.hashCode()) else null
         val resumeMs = lastPos?.position ?: 0L
 
         _uiState.value = PlayerUiState(

@@ -4,7 +4,10 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -23,191 +26,253 @@ val ManropeFontFamily = FontFamily(
 )
 
 // ─────────────────────────────────────────────────────────────────────────────
-// VortexColors — Dark Cinematic + Suspended Design System
+// VortexColors — Dynamic Cinematic + Suspended Design System
 // ─────────────────────────────────────────────────────────────────────────────
 object VortexColors {
 
+    var isDarkState = mutableStateOf(true)
+    var currentAccent = mutableStateOf(Color(0xFFFFFFFF))
+
+    fun updateTheme(themeName: String, accentName: String, systemInDark: Boolean) {
+        val dark = when (themeName) {
+            "Light" -> false
+            "System Default" -> systemInDark
+            else -> true // "Dark (OLED Pure Black)"
+        }
+        isDarkState.value = dark
+
+        val accent = when {
+            accentName.contains("Crimson", true) || accentName.contains("Red", true) -> Color(0xFFE50914)
+            accentName.contains("Blue", true) -> Color(0xFF0070F3)
+            accentName.contains("Green", true) -> Color(0xFF10B981)
+            accentName.contains("Gold", true) || accentName.contains("Amber", true) -> Color(0xFFF59E0B)
+            else -> if (dark) Color(0xFFFFFFFF) else Color(0xFF0F172A) // Pure White / Dark Slate
+        }
+        currentAccent.value = accent
+    }
+
     // ── Core Surfaces ────────────────────────────────────────────────────────
-    val PureBlack = Color(0xFF000000)
-    val AppBackground = Color(0xFF000000)
-    val SecondaryBackground = Color(0xFF0A0A0A)
-    val DarkGraphite = Color(0xFF101010)
-    val CardSurface = Color(0xFF141414)
-    val CardSurfaceElevated = Color(0xFF1C1C1C)
-    val BorderSubtle = Color(0xFF242424)
-    val Divider = Color(0xFF1F1F1F)
+    val PureBlack: Color
+        get() = if (isDarkState.value) Color(0xFF000000) else Color(0xFFF8F9FA)
+    val AppBackground: Color
+        get() = if (isDarkState.value) Color(0xFF000000) else Color(0xFFF8F9FA)
+    val SecondaryBackground: Color
+        get() = if (isDarkState.value) Color(0xFF0A0A0A) else Color(0xFFF1F3F5)
+    val DarkGraphite: Color
+        get() = if (isDarkState.value) Color(0xFF101010) else Color(0xFFFFFFFF)
+    val CardSurface: Color
+        get() = if (isDarkState.value) Color(0xFF141414) else Color(0xFFFFFFFF)
+    val CardSurfaceElevated: Color
+        get() = if (isDarkState.value) Color(0xFF1C1C1C) else Color(0xFFF1F5F9)
+    val BorderSubtle: Color
+        get() = if (isDarkState.value) Color(0xFF242424) else Color(0xFFE2E8F0)
+    val Divider: Color
+        get() = if (isDarkState.value) Color(0xFF1F1F1F) else Color(0xFFE2E8F0)
 
     // ── Text Hierarchy ───────────────────────────────────────────────────────
-    val PrimaryText = Color(0xFFFFFFFF)
-    val SecondaryText = Color(0xFFCCCCCC)
-    val MutedText = Color(0xFF888888)
-    val TextPrimary = PrimaryText
-    val TextSecondary = SecondaryText
-    val TextMuted = MutedText
+    val PrimaryText: Color
+        get() = if (isDarkState.value) Color(0xFFFFFFFF) else Color(0xFF0F172A)
+    val SecondaryText: Color
+        get() = if (isDarkState.value) Color(0xFFCCCCCC) else Color(0xFF475569)
+    val MutedText: Color
+        get() = if (isDarkState.value) Color(0xFF888888) else Color(0xFF64748B)
+    val TextPrimary: Color get() = PrimaryText
+    val TextSecondary: Color get() = SecondaryText
+    val TextMuted: Color get() = MutedText
 
-    // ── Pure Monochrome Black & White Design Tokens ──────────────────────────
-    val NeonCrimson = Color(0xFFFFFFFF)
-    val NeonCrimsonPressed = Color(0xFFCCCCCC)
-    val NeonCrimsonGlow = Color(0x33FFFFFF)
-    val BackgroundOled = Color(0xFF000000)
-    val GlassSurfaceDark = Color(0xDD0C0C0C)
-    val GlassSurfaceLight = Color(0x1AFFFFFF)
-    val GlassBorder = Color(0x22FFFFFF)
-    val AccentGold = Color(0xFFFFFFFF)
-    val VerifiedGreen = Color(0xFFFFFFFF)
+    // ── Dynamic Accent Tokens ────────────────────────────────────────────────
+    val NeonCrimson: Color
+        get() = currentAccent.value
+    val NeonCrimsonPressed: Color
+        get() = currentAccent.value.copy(alpha = 0.8f)
+    val NeonCrimsonGlow: Color
+        get() = currentAccent.value.copy(alpha = 0.25f)
+    val BackgroundOled: Color
+        get() = if (isDarkState.value) Color(0xFF000000) else Color(0xFFF8F9FA)
+    val GlassSurfaceDark: Color
+        get() = if (isDarkState.value) Color(0xDD0C0C0C) else Color(0xEEFFFFFF)
+    val GlassSurfaceLight: Color
+        get() = if (isDarkState.value) Color(0x1AFFFFFF) else Color(0x1A000000)
+    val GlassBorder: Color
+        get() = if (isDarkState.value) Color(0x22FFFFFF) else Color(0x22000000)
+    val AccentGold: Color
+        get() = currentAccent.value
+    val VerifiedGreen: Color
+        get() = Color(0xFF10B981)
 
     // ── Brand Accent Aliases ─────────────────────────────────────────────────
-    val PrimaryBrand = Color(0xFFFFFFFF)
-    val PrimaryBrandGlow = Color(0x33FFFFFF)
-    val GoldenAmber = Color(0xFFFFFFFF)
-    val GoldenAmberDark = Color(0xFFCCCCCC)
-    val GoldenAmberGlow = Color(0x33FFFFFF)
-    val AmberLight = Color(0xFFFFFFFF)
+    val PrimaryBrand: Color get() = currentAccent.value
+    val PrimaryBrandGlow: Color get() = currentAccent.value.copy(alpha = 0.25f)
+    val GoldenAmber: Color get() = currentAccent.value
+    val GoldenAmberDark: Color get() = currentAccent.value.copy(alpha = 0.8f)
+    val GoldenAmberGlow: Color get() = currentAccent.value.copy(alpha = 0.25f)
+    val AmberLight: Color get() = currentAccent.value
 
     // ── Secondary Accents ────────────────────────────────────────────────────
-    val CinematicRed = Color(0xFFFFFFFF)
-    val CinematicRedGlow = Color(0x33FFFFFF)
-    val SubtlePurple = Color(0xFFFFFFFF)
-    val SubtlePurpleGlow = Color(0x33FFFFFF)
-    val CoolBlue = Color(0xFFFFFFFF)
-    val CoolBlueGlow = Color(0x33FFFFFF)
-    val EmeraldGreen = Color(0xFFFFFFFF)
-    val WarmAmber = Color(0xFFFFFFFF)
+    val CinematicRed: Color get() = currentAccent.value
+    val CinematicRedGlow: Color get() = currentAccent.value.copy(alpha = 0.25f)
+    val SubtlePurple: Color get() = currentAccent.value
+    val SubtlePurpleGlow: Color get() = currentAccent.value.copy(alpha = 0.25f)
+    val CoolBlue: Color get() = currentAccent.value
+    val CoolBlueGlow: Color get() = currentAccent.value.copy(alpha = 0.25f)
+    val EmeraldGreen: Color get() = Color(0xFF10B981)
+    val WarmAmber: Color get() = Color(0xFFF59E0B)
 
     // ── Skeleton / Shimmer ───────────────────────────────────────────────────
-    val SkeletonDark = Color(0xFF141414)
-    val SkeletonShimmer = Color(0xFF222222)
+    val SkeletonDark: Color
+        get() = if (isDarkState.value) Color(0xFF141414) else Color(0xFFE2E8F0)
+    val SkeletonShimmer: Color
+        get() = if (isDarkState.value) Color(0xFF222222) else Color(0xFFCBD5E1)
 
-    // ── NEW: Cinematic Accent Colors ─────────────────────────────────────────
-    /** Soft silver for secondary highlights */
-    val CinematicAccent = Color(0xFFE0E0E0)
+    // ── Cinematic Accent Colors ──────────────────────────────────────────────
+    val CinematicAccent: Color
+        get() = if (isDarkState.value) Color(0xFFE0E0E0) else Color(0xFF334155)
 
-    /** 25% white for card glow shadows */
-    val GlowWhite = Color(0x40FFFFFF)
+    val GlowWhite: Color
+        get() = currentAccent.value.copy(alpha = 0.25f)
 
-    /** 80% dark for glassmorphic surfaces */
-    val FrostedGlass = Color(0xCC0A0A0A)
+    val FrostedGlass: Color
+        get() = if (isDarkState.value) Color(0xCC0A0A0A) else Color(0xEEFFFFFF)
 
-    /** 20% white border for frosted glass panels */
-    val FrostedGlassBorder = Color(0x33FFFFFF)
+    val FrostedGlassBorder: Color
+        get() = if (isDarkState.value) Color(0x33FFFFFF) else Color(0x33000000)
 
-    /** 60% black for hero text overlay */
-    val HeroOverlay = Color(0x99000000)
+    val HeroOverlay: Color
+        get() = Color(0x99000000)
 
-    /** White chip active background */
-    val ChipActive = Color(0xFFFFFFFF)
+    val ChipActive: Color
+        get() = currentAccent.value
 
-    /** Dark chip inactive background */
-    val ChipInactive = Color(0xFF1A1A1A)
+    val ChipInactive: Color
+        get() = if (isDarkState.value) Color(0xFF1A1A1A) else Color(0xFFF1F5F9)
 
-    /** Chip border — 20% white */
-    val ChipBorder = Color(0x33FFFFFF)
+    val ChipBorder: Color
+        get() = if (isDarkState.value) Color(0x33FFFFFF) else Color(0x33000000)
 
-    /** Progress bar track — 20% white */
-    val ProgressTrack = Color(0x33FFFFFF)
+    val ProgressTrack: Color
+        get() = if (isDarkState.value) Color(0x33FFFFFF) else Color(0x33000000)
 
-    /** Progress bar fill — pure white */
-    val ProgressFill = Color(0xFFFFFFFF)
+    val ProgressFill: Color
+        get() = currentAccent.value
 
-    /** Golden star rating color — the ONLY non-white accent in the system */
-    val RatingGold = Color(0xFFFFD700)
+    val RatingGold: Color
+        get() = Color(0xFFFFD700)
 
     // ── Gradients ────────────────────────────────────────────────────────────
-
-    val CrimsonGradient = Brush.horizontalGradient(
-        colors = listOf(
-            Color(0xFFFFFFFF),
-            Color(0xFFE0E0E0)
+    val CrimsonGradient: Brush
+        get() = Brush.horizontalGradient(
+            colors = listOf(
+                currentAccent.value,
+                currentAccent.value.copy(alpha = 0.75f)
+            )
         )
-    )
 
-    val GoldenGradient = Brush.horizontalGradient(
-        colors = listOf(
-            Color(0xFFFFFFFF),
-            Color(0xFFE0E0E0)
+    val GoldenGradient: Brush
+        get() = CrimsonGradient
+
+    val HeroGradient: Brush
+        get() = Brush.verticalGradient(
+            colors = listOf(
+                Color.Transparent,
+                Color(0x66000000),
+                Color(0xCC000000),
+                BackgroundOled
+            )
         )
-    )
 
-    val HeroGradient = Brush.verticalGradient(
-        colors = listOf(
-            Color.Transparent,
-            Color(0x66000000),
-            Color(0xCC000000),
-            BackgroundOled
+    val TopBarGradient: Brush
+        get() = Brush.verticalGradient(
+            colors = listOf(
+                if (isDarkState.value) Color(0xEE000000) else Color(0xEEF8F9FA),
+                if (isDarkState.value) Color(0x99000000) else Color(0x99F8F9FA),
+                Color.Transparent
+            )
         )
-    )
 
-    val TopBarGradient = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xEE000000),
-            Color(0x99000000),
-            Color.Transparent
+    val SplashAuraGradient: Brush
+        get() = Brush.radialGradient(
+            colors = listOf(
+                currentAccent.value.copy(alpha = 0.3f),
+                currentAccent.value.copy(alpha = 0.1f),
+                Color.Transparent
+            )
         )
-    )
 
-    val SplashAuraGradient = Brush.radialGradient(
-        colors = listOf(
-            Color(0x33FFFFFF),
-            Color(0x10FFFFFF),
-            Color.Transparent
+    val CinematicHeroGradient: Brush
+        get() = Brush.verticalGradient(
+            colorStops = arrayOf(
+                0.00f to Color.Transparent,
+                0.40f to Color(0x66000000),
+                0.70f to Color(0xCC000000),
+                0.90f to if (isDarkState.value) Color(0xF2000000) else Color(0xF2F8F9FA),
+                1.00f to PureBlack
+            )
         )
-    )
 
-    // ── NEW: Cinematic Gradients ─────────────────────────────────────────────
-
-    /** 5-stop smoother cinematic fade for hero sections */
-    val CinematicHeroGradient = Brush.verticalGradient(
-        colorStops = arrayOf(
-            0.00f to Color.Transparent,
-            0.40f to Color(0x66000000),
-            0.70f to Color(0xCC000000),
-            0.90f to Color(0xF2000000),
-            1.00f to PureBlack
+    val DetailBackdropGradient: Brush
+        get() = Brush.verticalGradient(
+            colorStops = arrayOf(
+                0.00f to Color.Transparent,
+                0.30f to Color(0x66000000),
+                0.60f to Color(0xCC000000),
+                0.85f to if (isDarkState.value) Color(0xF2000000) else Color(0xF2F8F9FA),
+                1.00f to PureBlack
+            )
         )
-    )
 
-    /** Backdrop gradient for detail screens — starts fading earlier at 0.3 */
-    val DetailBackdropGradient = Brush.verticalGradient(
-        colorStops = arrayOf(
-            0.00f to Color.Transparent,
-            0.30f to Color(0x66000000),
-            0.60f to Color(0xCC000000),
-            0.85f to Color(0xF2000000),
-            1.00f to PureBlack
+    val CardHoverGlow: Brush
+        get() = Brush.radialGradient(
+            colors = listOf(
+                GlowWhite,
+                Color.Transparent
+            )
         )
-    )
-
-    /** Radial glow effect for card hover / focus states */
-    val CardHoverGlow = Brush.radialGradient(
-        colors = listOf(
-            GlowWhite,
-            Color.Transparent
-        )
-    )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DarkColorScheme — Material3 dark palette wired to VortexColors
+// Dynamic Color Schemes
 // ─────────────────────────────────────────────────────────────────────────────
-val DarkColorScheme = darkColorScheme(
-    primary = VortexColors.NeonCrimson,
-    onPrimary = VortexColors.PureBlack,
-    primaryContainer = VortexColors.CardSurfaceElevated,
-    onPrimaryContainer = VortexColors.PrimaryText,
-    secondary = VortexColors.AccentGold,
-    onSecondary = VortexColors.PureBlack,
-    secondaryContainer = VortexColors.CardSurface,
-    onSecondaryContainer = VortexColors.PrimaryText,
-    tertiary = VortexColors.VerifiedGreen,
-    onTertiary = VortexColors.PureBlack,
-    background = VortexColors.BackgroundOled,
-    onBackground = VortexColors.PrimaryText,
-    surface = VortexColors.DarkGraphite,
-    onSurface = VortexColors.PrimaryText,
-    surfaceVariant = VortexColors.CardSurface,
-    onSurfaceVariant = VortexColors.SecondaryText,
-    outline = VortexColors.GlassBorder
-)
+fun getVortexColorScheme(isDark: Boolean, accent: Color) = if (isDark) {
+    darkColorScheme(
+        primary = accent,
+        onPrimary = if (accent == Color.White) Color.Black else Color.White,
+        primaryContainer = Color(0xFF1C1C1C),
+        onPrimaryContainer = Color.White,
+        secondary = accent,
+        onSecondary = Color.Black,
+        secondaryContainer = Color(0xFF141414),
+        onSecondaryContainer = Color.White,
+        tertiary = Color(0xFF10B981),
+        onTertiary = Color.Black,
+        background = Color(0xFF000000),
+        onBackground = Color.White,
+        surface = Color(0xFF101010),
+        onSurface = Color.White,
+        surfaceVariant = Color(0xFF141414),
+        onSurfaceVariant = Color(0xFFCCCCCC),
+        outline = Color(0x22FFFFFF)
+    )
+} else {
+    lightColorScheme(
+        primary = accent,
+        onPrimary = Color.White,
+        primaryContainer = Color(0xFFF1F5F9),
+        onPrimaryContainer = Color(0xFF0F172A),
+        secondary = accent,
+        onSecondary = Color.White,
+        secondaryContainer = Color(0xFFF1F5F9),
+        onSecondaryContainer = Color(0xFF0F172A),
+        tertiary = Color(0xFF10B981),
+        onTertiary = Color.White,
+        background = Color(0xFFF8F9FA),
+        onBackground = Color(0xFF0F172A),
+        surface = Color(0xFFFFFFFF),
+        onSurface = Color(0xFF0F172A),
+        surfaceVariant = Color(0xFFF1F5F9),
+        onSurfaceVariant = Color(0xFF475569),
+        outline = Color(0x22000000)
+    )
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ModernTypography — Manrope type scale
@@ -235,29 +300,39 @@ val ModernTypography = Typography(
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 fun MovieVortexTheme(
+    appTheme: String = "Dark (OLED Pure Black)",
+    accentColor: String = "Pure White (Cinematic)",
     content: @Composable () -> Unit
 ) {
+    val systemInDark = isSystemInDarkTheme()
+    SideEffect {
+        VortexColors.updateTheme(themeName = appTheme, accentName = accentColor, systemInDark = systemInDark)
+    }
+
+    val isDark = VortexColors.isDarkState.value
+    val accent = VortexColors.currentAccent.value
+
     MaterialTheme(
-        colorScheme = DarkColorScheme,
+        colorScheme = getVortexColorScheme(isDark, accent),
         typography = ModernTypography,
         content = content
     )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Top-level convenience aliases
+// Dynamic Top-level convenience aliases
 // ─────────────────────────────────────────────────────────────────────────────
-val TextPrimary = VortexColors.PrimaryText
-val TextSecondary = VortexColors.SecondaryText
-val TextMuted = VortexColors.MutedText
-val PrimaryText = VortexColors.PrimaryText
-val SecondaryText = VortexColors.SecondaryText
-val TextMutedAlias = VortexColors.MutedText
-val NeonCrimson = VortexColors.NeonCrimson
-val BackgroundOled = VortexColors.BackgroundOled
-val GlassSurfaceDark = VortexColors.GlassSurfaceDark
-val GlassSurfaceLight = VortexColors.GlassSurfaceLight
-val GlassBorder = VortexColors.GlassBorder
-val AccentGold = VortexColors.AccentGold
-val VerifiedGreen = VortexColors.VerifiedGreen
-val PureBlack = VortexColors.PureBlack
+val TextPrimary: Color get() = VortexColors.PrimaryText
+val TextSecondary: Color get() = VortexColors.SecondaryText
+val TextMuted: Color get() = VortexColors.MutedText
+val PrimaryText: Color get() = VortexColors.PrimaryText
+val SecondaryText: Color get() = VortexColors.SecondaryText
+val TextMutedAlias: Color get() = VortexColors.MutedText
+val NeonCrimson: Color get() = VortexColors.NeonCrimson
+val BackgroundOled: Color get() = VortexColors.BackgroundOled
+val GlassSurfaceDark: Color get() = VortexColors.GlassSurfaceDark
+val GlassSurfaceLight: Color get() = VortexColors.GlassSurfaceLight
+val GlassBorder: Color get() = VortexColors.GlassBorder
+val AccentGold: Color get() = VortexColors.AccentGold
+val VerifiedGreen: Color get() = VortexColors.VerifiedGreen
+val PureBlack: Color get() = VortexColors.PureBlack

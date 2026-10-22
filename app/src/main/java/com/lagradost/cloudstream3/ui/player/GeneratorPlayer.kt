@@ -269,15 +269,34 @@ class GeneratorPlayer : FullScreenPlayer() {
         playerBinding?.playerTracksBtt?.isVisible =
             tracks.allVideoTracks.size > 1 || tracks.allAudioTracks.size > 1
 
-        val hindiTrack = tracks.allAudioTracks.firstOrNull {
-            it.language?.equals("hin", ignoreCase = true) == true ||
-            it.language?.equals("hi", ignoreCase = true) == true ||
-            it.label?.contains("hindi", ignoreCase = true) == true
-        }
-        if (hindiTrack != null && (userSelectedLanguage == "Hindi" || preferredAudioTrackLanguage == null)) {
-            player.setPreferredAudioTrack(hindiTrack.language, hindiTrack.id, hindiTrack.formatIndex)
-        } else if (tracks.allAudioTracks.any { it.language == preferredAudioTrackLanguage }) {
-            player.setPreferredAudioTrack(preferredAudioTrackLanguage)
+        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
+        val prefAudioLang = prefs.getString("pref_preferred_audio_lang", "Default / Original") ?: "Default / Original"
+
+        val targetPreferredTrack = if (prefAudioLang != "Default / Original") {
+            tracks.allAudioTracks.firstOrNull { track ->
+                track.language?.equals(prefAudioLang, ignoreCase = true) == true ||
+                track.label?.contains(prefAudioLang, ignoreCase = true) == true ||
+                (prefAudioLang.equals("Hindi", true) && (track.language?.startsWith("hi", true) == true || track.label?.contains("hin", true) == true)) ||
+                (prefAudioLang.equals("Japanese", true) && (track.language?.startsWith("ja", true) == true || track.label?.contains("jpn", true) == true)) ||
+                (prefAudioLang.equals("English", true) && (track.language?.startsWith("en", true) == true || track.label?.contains("eng", true) == true)) ||
+                (prefAudioLang.equals("Spanish", true) && (track.language?.startsWith("es", true) == true || track.label?.contains("spa", true) == true)) ||
+                (prefAudioLang.equals("French", true) && (track.language?.startsWith("fr", true) == true || track.label?.contains("fra", true) == true))
+            }
+        } else null
+
+        if (targetPreferredTrack != null) {
+            player.setPreferredAudioTrack(targetPreferredTrack.language, targetPreferredTrack.id, targetPreferredTrack.formatIndex)
+        } else {
+            val hindiTrack = tracks.allAudioTracks.firstOrNull {
+                it.language?.equals("hin", ignoreCase = true) == true ||
+                it.language?.equals("hi", ignoreCase = true) == true ||
+                it.label?.contains("hindi", ignoreCase = true) == true
+            }
+            if (hindiTrack != null && (userSelectedLanguage == "Hindi" || preferredAudioTrackLanguage == null)) {
+                player.setPreferredAudioTrack(hindiTrack.language, hindiTrack.id, hindiTrack.formatIndex)
+            } else if (tracks.allAudioTracks.any { it.language == preferredAudioTrackLanguage }) {
+                player.setPreferredAudioTrack(preferredAudioTrackLanguage)
+            }
         }
         updatePlayerInfo()
     }
@@ -294,6 +313,10 @@ class GeneratorPlayer : FullScreenPlayer() {
     }
 
     private fun getPos(): Long {
+        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
+        val shouldResume = prefs.getBoolean("pref_resume_playback", true)
+        if (!shouldResume) return 0L
+
         val durPos = getViewPos(viewModel.state.generatorState?.id) ?: return 0L
         if (durPos.duration == 0L) return 0L
         if (durPos.position * 100L / durPos.duration > 95L) {

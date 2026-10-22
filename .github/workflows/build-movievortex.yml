@@ -63,14 +63,18 @@ jobs:
         if: github.ref == 'refs/heads/main'
         with:
           tag_name: v2.0-latest
-          name: "MovieVortex 2.0 (Pure B&W + CloudStream Backend)"
+          name: "MovieVortex 2.0 (4 Mark Servers + Full Settings Engine)"
           body: |
-            ### MovieVortex 2.0 - Stable Release
-            - **Pure Monochrome Theme**: OLED True Black (#000000) & Crisp White (#FFFFFF) throughout.
-            - **Manrope Typography**: High-legibility Google Fonts Manrope across all UI screens.
-            - **Genuine CloudStream Backend**: Embedded providers (MovieBox, AniVortex, IStreamFlare, SuperStream) pre-packaged in assets for instant launch without network lag.
-            - **Trending Search Suggestions**: Clickable suggestions (Severance, Interstellar, Solo Leveling, Dune: Part Two, The Batman, Arcane, etc.).
-            - **Native Hardware Playback**: ExoPlayer with adaptive HLS/DASH/MP4 stream resolution and subtitle track switching.
+            ### MovieVortex 2.0 - Stable Release (Build v2.0)
+            - **4 Dedicated Mark Clusters**: Mark-1 (Anime & Simulcasts), Mark-2 (Western & Hollywood), Mark-3 (Global Trending), Mark-4 (High-Speed Mirror).
+            - **Dynamic Theme & Accent System**: Full support for Dark (OLED Pure Black), Light, and System Default themes, plus 5 dynamic accent colors (Pure White, Crimson Red, Electric Blue, Emerald Green, Amber Gold).
+            - **Full Settings Engine**:
+              - Playback: Quality presets (4K/1080p/720p/480p), Auto Play Next, Resume Playback, Auto Full Screen.
+              - Audio & Subtitles: Preferred audio language track selection, granular subtitle styles & font sizing (18-36sp).
+              - Downloads: Wi-Fi only enforcement, custom download storage paths, quality selection.
+              - Network & Storage: Data saver mode, mobile data controls, real cache calculation & safe purging.
+            - **SingleTop Audio Notification**: Seamless playback resumption without resetting to home screen.
+            - **Native Kotlin ExoPlayer**: Zero-latency hardware decoding (AV1/HEVC/H.264).
           draft: false
           prerelease: false
           files: app/build/outputs/apk/stable/release/*.apk
