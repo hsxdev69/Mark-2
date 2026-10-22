@@ -1,15 +1,8 @@
-## CloudStream extension library
+# MovieVortex Core Extension Library
 
-This is the official API surface for all CloudStream plugins.
+This module defines the core provider API interfaces, extractors, and response models used by MovieVortex.
 
-To ensure that all plugins work on both the stable release and pre-release we must have
-binary compatibility on all changes. All new changes must be marked with `@Prerelease` to
-prevent accidental usage among extension developers.
-
-We use Kotlin binary compatibility validation using:
-
-``./gradlew checkKotlinAbi``
-
-If you for some reason must update the binary compatibility then manually edit `api/jvm/library.api` or use:
-
-``./gradlew updateKotlinAbi``
+### Architecture
+- **`MainAPI` / `APIRepository`**: Interfaces and query pipelines for resolving media metadata, episodes, and stream links.
+- **`ExtractorLink`**: Model representing direct video streams, HLS manifests, and subtitles.
+- **`SearchResponse` & `LoadResponse`**: Data models for search results and rich media details.

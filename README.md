@@ -1,112 +1,80 @@
-# CloudStream
+# MovieVortex 2.0 🎬
 
-**⚠️ Warning: By default, this app doesn't provide any video sources; you have to install extensions to add functionality to the app.**
-<p align="left"><a href="https://github.com/recloudstream/cloudstream/releases/download/pre-release/app-prerelease-release.apk"><img src=".github/images/download-cloudstream-pre.png" alt="Download Cloudstream Pre-Release" width=430/></a></p>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/hsxdev69/Mark-2/main/app/src/main/res/drawable/app_icon.png" alt="MovieVortex Logo" width="120" height="120" />
+</p>
 
-[![Discord](https://invidget.switchblade.xyz/5Hus6fM)](https://discord.gg/5Hus6fM)
+<p align="center">
+  <strong>The Ultimate Next-Generation Streaming &amp; Offline Entertainment Experience for Android</strong>
+</p>
 
+<p align="center">
+  <a href="https://github.com/hsxdev69/Mark-2/releases/latest"><img src="https://img.shields.io/github/v/release/hsxdev69/Mark-2?style=for-the-badge&amp;color=white&amp;labelColor=101014&amp;label=Latest%20Release" alt="Latest Release" /></a>
+  <a href="https://github.com/hsxdev69/Mark-2/actions"><img src="https://img.shields.io/github/actions/workflow/status/hsxdev69/Mark-2/build.yml?style=for-the-badge&amp;color=white&amp;labelColor=101014&amp;label=Build" alt="Build Status" /></a>
+  <a href="https://github.com/hsxdev69/Mark-2/releases"><img src="https://img.shields.io/github/downloads/hsxdev69/Mark-2/total?style=for-the-badge&amp;color=white&amp;labelColor=101014&amp;label=Downloads" alt="Total Downloads" /></a>
+</p>
 
-## Table of Contents: 
-+ [About Us:](#about_us)
-+ [Installation Steps:](#install_rules)
-+ [Contributing:](#contributing)
-+ [Issues:](#issues)
-  + [Bugs Reports:](#bug_report)
-  + [Enhancement:](#enhancment)
-+ [Extension Development:](#extensions)
-+ [Language Support:](#languages)
-+ [Further Sources](#contact_and_sources)
+<p align="center">
+  <a href="https://github.com/hsxdev69/Mark-2/releases/download/v2.0-flutter/app-release.apk">
+    <img src="https://img.shields.io/badge/Download-APK-white?style=for-the-badge&amp;logo=android&amp;logoColor=black&amp;labelColor=white" alt="Download APK" />
+  </a>
+</p>
 
+---
 
-<a id="about_us"></a>
+## ⚡ Overview
 
-## About us: 
+**MovieVortex** is a premium, ultra-fast streaming application engineered with high-efficiency native playback, a minimalist pure monochrome OLED design, and automatic multi-server failover. Built from the ground up for movie lovers, binge-watchers, and anime fans who value speed, privacy, and zero interruptions.
 
-**CloudStream is a media center that prioritizes and emphasizes complete freedom and flexibility for users and developers.** 
+---
 
-CloudStream is an extension-based multimedia player with tracking support. There are extensions to view videos from: 
+## ✨ Key Features
 
-+ [Librevox (audio-books)](https://librivox.org/) 
-+ [Youtube](https://www.youtube.com/)
-+ [Twitch](https://www.twitch.tv/)
-+ [iptv-org (A collection of publicly available IPTV (Internet Protocol television) channels from all over the world.)](https://github.com/iptv-org/iptv) 
-+ [nginx](https://nginx.org/)
-+ And more... 
+### 🎬 Seamless Inline Video Player
+- **Direct Playback**: Tap any movie or series to start streaming instantly with no intermediate loading screens or clunky overlays.
+- **Dynamic Orientation**: 16:9 portrait player inline with content details, seamlessly transitioning into full-screen cinema mode upon rotating the device.
+- **Single Loading State**: Zero double spinners or skeleton flicker—only crisp, internal video buffering indicators.
 
+### 🛡️ Multi-Server Failover (Mark 1 - Mark 4)
+- **Instant Server Tabs**: Switch instantly between **Mark 1**, **Mark 2**, **Mark 3**, and **Mark 4** directly below the video player.
+- **Auto-Server Switching**: If a server experiences issues or slow speeds, MovieVortex automatically falls back to the next available server in real-time without disrupting playback.
 
-**Please don't create illegal extensions or use any that host any copyrighted media.** For more details about our stance on the DMCA and EUCD, you can read about it on our organization: [reCloudStream](https://github.com/recloudstream)
+### 📦 In-App Offline Vault & Multi-Quality Downloads
+- **Private In-App Storage**: Downloaded media is stored securely inside the app’s private vault—isolated from external device folders and hidden from public gallery scanners.
+- **Quality Selector**: Choose your preferred download resolution (`1080p Full HD`, `720p HD`, `480p SD`, `360p`) before downloading.
+- **Downloads Section Sync**: Real-time download progress, offline playback, and storage management accessible from the dedicated Downloads & Offline Vault tab.
+- **Clean Privacy Notifications**: Clean notifications with no internal provider leakage.
 
-#### Important Copyright Note: 
+### 🌟 Rich Metadata & Intuitive Navigation
+- **Top Cast Details**: Explore actor portraits, real names, and character roles.
+- **Clean Seasons & Episode Lists**: Episode cards with high-definition thumbnails and quick season selectors.
+- **More Like This**: Discover personalized movie and TV show recommendations directly below playback.
 
-Our documentation is unmaintained and open to contributions; therefore, apps and sources, extensions in recommended sources, and recommended apps are not officially moderated or endorsed by CloudStream; if you or another copyright owner identify an extension that breaches your copyright, please let us know. 
+### 🖤 Pure Black & White Monochrome Aesthetic
+- Crafted for OLED and AMOLED displays with pure black backgrounds (`#0A0A0C`), crisp white accents (`#FFFFFF`), and refined gray highlights.
+- Zero harsh red tints or visual noise.
 
+---
 
-#### Features:
-+ **AdFree**, No ads whatsoever
-+ No tracking/analytics
-+ Bookmarks
-+ Phone and TV support
-+ Chromecast
-+ Extension system for personal customization
+## 📲 Download & Installation
 
+1. Download the latest **[app-release.apk](https://github.com/hsxdev69/Mark-2/releases/download/v2.0-flutter/app-release.apk)** from the [Releases](https://github.com/hsxdev69/Mark-2/releases) section.
+2. Open the downloaded `.apk` file on your Android device (Android 7.0+ supported).
+3. If prompted, allow "Install from Unknown Sources" in your device settings.
+4. Launch **MovieVortex** and enjoy instant streaming!
 
-<a id="install_rules"></a>
+---
 
-## Installation: 
+## 🛠️ Tech Stack & Architecture
 
-Our documentation provides the steps to install and configure CloudStream for your streaming needs.
+- **UI & Layout**: Jetpack Compose, Android Jetpack, ConstraintLayout, Material 3
+- **Language**: Kotlin 2.0+ (Coroutines, Flow, StateFlow)
+- **Engine**: Hardware Decoding Core with Adaptive Streaming
+- **Image Loading**: Coil 3 with disk caching
+- **Build System**: Gradle with GitHub Actions automated CI/CD pipeline
 
-[Getting Started With CloudStream:](https://recloudstream.github.io/csdocs/)
+---
 
-<a id="contributing"></a>
+## 📄 License & Disclaimer
 
-## Contributing:
-We **happily** accept any contributions to our project. To find out where you can start contributing towards the project, please look [at our issues tab](/cloudstream/issues)
-
-
-
-<a id="issues"></a> 
- 
-### Issues: 
-While we **actively** accept issues and pull requests, we do require you fill out an [template](https://github.com/recloudstream/cloudstream/issues/new/choose) for issues. These include the following:
-
-<a id="bug_report"></a>
-
-- [Bug Report Template: ](https://github.com/recloudstream/cloudstream/issues/new?assignees=&labels=bug&projects=&template=application-bug.yml)
-  - For bug reports, we want as much info as possible, including your downloaded version of CloudeStream, device and updated version (if possible, current API),
-    expected behavior of the program, and the actual behavior that the program did, most importantly we require clear, reproducible steps of the bug. If your bug can't be       reproduced, it is unlikely we'll work on your issue.
-    
-<a id="enhancment"></a>
-  
-- [Feature Request Template: ](https://github.com/recloudstream/cloudstream/issues/new?assignees=&labels=enhancement&projects=&template=feature-request.yml)
-  - Before adding a feature request, please check to see if a feature request already has been requested.  
-
-
-### Extensions:
- 
-**Further details on creating extensions for CloudStream are found in our documentation.**
-
-[Guide: For Extension Developers](https://recloudstream.github.io/csdocs/devs/gettingstarted/) 
-
-<a id="contact_and_sources"></a>
-
-## Further Sources: 
-
-As well as providing clear install steps, our [website](https://dweb.link/ipns/cloudstream.on.fleek.co/) includes a wide variety of other tools, such as: 
-- [Troubleshooting](https://recloudstream.github.io/csdocs/troubleshooting/)
-- [Further CloudStream Repositories](https://recloudstream.github.io/csdocs/repositories/) 
-- Set-Up for other devices, such as:
-  - [Android TV](https://recloudstream.github.io/csdocs/other-devices/tv/)
-  - [Windows](https://recloudstream.github.io/csdocs/other-devices/windows/)
-  - [Linux](https://recloudstream.github.io/csdocs/other-devices/linux/)
-- And more...
-
-<a id="languages"> </a>  
-
-### Supported languages:
-
-Even if you can't contribute to the code or documentation, we always look for those who can contribute to translation and language support. Your contribution is exceptionally appreciated; you can check our translation from the figure below. 
-
-<a href="https://hosted.weblate.org/engage/cloudstream/">
-  <img src="https://hosted.weblate.org/widgets/cloudstream/-/app/multi-auto.svg" alt="Translation status" />
-</a>
+MovieVortex is developed for educational and personal media consumption purposes. The application does not host or store any media content on its servers. All media data is fetched dynamically through decentralized streaming protocols and third-party extractors.
