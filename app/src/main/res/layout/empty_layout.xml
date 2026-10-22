@@ -20,7 +20,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Portrait Details & Episodes Section directly beneath Inline Player -->
+    <!-- Portrait Details, Server Switcher & Episodes Section directly beneath Inline Player -->
     <androidx.core.widget.NestedScrollView
         android:id="@+id/player_details_scroll"
         android:layout_width="0dp"
@@ -39,8 +39,9 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:paddingTop="14dp"
-            android:paddingBottom="40dp">
+            android:paddingBottom="48dp">
 
+            <!-- Title & Metadata -->
             <TextView
                 android:id="@+id/inline_player_title"
                 android:layout_width="match_parent"
@@ -59,11 +60,102 @@
                 android:textSize="13sp"
                 tools:text="2024 • Action, Adventure • 4K UHD" />
 
+            <!-- SERVER SWITCHING TABS: Mark 1, Mark 2, Mark 3, Mark 4 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp"
+                android:text="STREAMING SERVERS"
+                android:textColor="#80FFFFFF"
+                android:textSize="11sp"
+                android:letterSpacing="0.08"
+                android:textStyle="bold" />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/server_tabs_container"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Mark 1 Tab -->
+                    <TextView
+                        android:id="@+id/server_tab_mark_1"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_server_tab_active"
+                        android:gravity="center"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:text="Mark 1"
+                        android:textColor="#FFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <!-- Mark 2 Tab -->
+                    <TextView
+                        android:id="@+id/server_tab_mark_2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_server_tab_inactive"
+                        android:gravity="center"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:text="Mark 2"
+                        android:textColor="#B0B0C0"
+                        android:textSize="13sp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <!-- Mark 3 Tab -->
+                    <TextView
+                        android:id="@+id/server_tab_mark_3"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/bg_server_tab_inactive"
+                        android:gravity="center"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:text="Mark 3"
+                        android:textColor="#B0B0C0"
+                        android:textSize="13sp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <!-- Mark 4 Tab -->
+                    <TextView
+                        android:id="@+id/server_tab_mark_4"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_server_tab_inactive"
+                        android:gravity="center"
+                        android:paddingStart="18dp"
+                        android:paddingEnd="18dp"
+                        android:text="Mark 4"
+                        android:textColor="#B0B0C0"
+                        android:textSize="13sp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Overview Synopsis -->
             <TextView
                 android:id="@+id/inline_player_overview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="14dp"
                 android:textColor="#C8C8D4"
                 android:textSize="14sp"
                 android:lineSpacingExtra="3dp"
@@ -74,26 +166,48 @@
                 android:layout_height="1dp"
                 android:layout_marginTop="18dp"
                 android:layout_marginBottom="16dp"
-                android:background="#20FFFFFF" />
+                android:background="#1AFFFFFF" />
 
-            <TextView
-                android:id="@+id/inline_episodes_header"
+            <!-- SEASONS SELECTOR (Tabs for Season 1, Season 2, etc.) -->
+            <LinearLayout
+                android:id="@+id/inline_seasons_section"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:text="@string/episodes"
-                android:visibility="gone" />
+                android:orientation="vertical"
+                android:visibility="gone">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/inline_episodes_recycler"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                android:visibility="gone"
-                tools:listitem="@layout/item_inline_episode" />
+                <TextView
+                    android:id="@+id/inline_episodes_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:text="@string/episodes" />
+
+                <HorizontalScrollView
+                    android:id="@+id/inline_seasons_scroll"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="14dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/inline_seasons_container"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
+
+                <!-- Clean Vertical Episode List with Thumbnails -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/inline_episodes_recycler"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    tools:listitem="@layout/item_inline_episode" />
+            </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

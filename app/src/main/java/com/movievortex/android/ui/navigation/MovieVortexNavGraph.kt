@@ -221,8 +221,7 @@ fun MovieVortexNavGraph(
                                     HomeScreen(
                                         homeController = homeController,
                                         onMediaClick = { media ->
-                                            detailController.loadMediaDetail(media.rawUrl, media.providerApiName, media)
-                                            currentScreen = AppScreen.Detail(media)
+                                            launchCloudStreamPlayer(context, media, null)
                                         },
                                         onPlayClick = { media ->
                                             launchCloudStreamPlayer(context, media, null)
@@ -252,8 +251,7 @@ fun MovieVortexNavGraph(
                                     SearchScreen(
                                         searchController = searchController,
                                         onMediaClick = { media ->
-                                            detailController.loadMediaDetail(media.rawUrl, media.providerApiName, media)
-                                            currentScreen = AppScreen.Detail(media)
+                                            launchCloudStreamPlayer(context, media, null)
                                         },
                                         onBackClick = { currentDestination = MainDestination.Home }
                                     )
@@ -294,8 +292,7 @@ fun MovieVortexNavGraph(
                 SearchScreen(
                     searchController = searchController,
                     onMediaClick = { media ->
-                        detailController.loadMediaDetail(media.rawUrl, media.providerApiName, media)
-                        currentScreen = AppScreen.Detail(media)
+                        launchCloudStreamPlayer(context, media, null)
                     },
                     onBackClick = { currentScreen = AppScreen.Main }
                 )
@@ -307,37 +304,22 @@ fun MovieVortexNavGraph(
                     platform = screen.platform,
                     catalogItems = homeState.exploreGrid,
                     onMediaClick = { media ->
-                        detailController.loadMediaDetail(media.rawUrl, media.providerApiName, media)
-                        currentScreen = AppScreen.Detail(media)
+                        launchCloudStreamPlayer(context, media, null)
                     },
                     onBackClick = { currentScreen = AppScreen.Main }
                 )
             }
 
             is AppScreen.Detail -> {
-                DetailScreen(
-                    detailController = detailController,
-                    onPlayMovie = { media ->
-                        launchCloudStreamPlayer(context, media, null)
-                    },
-                    onPlayEpisode = { media, ep ->
-                        launchCloudStreamPlayer(context, media, ep)
-                    },
-                    onDownloadClick = { media, ep ->
-                        downloadController.downloadMedia(context, media, ep, null)
-                        currentDestination = MainDestination.Downloads
-                        currentScreen = AppScreen.Main
-                    },
-                    onBackClick = { currentScreen = AppScreen.Main }
-                )
+                launchCloudStreamPlayer(context, screen.media, null)
+                currentScreen = AppScreen.Main
             }
 
             is AppScreen.Watchlist -> {
                 WatchlistScreen(
                     libraryController = libraryController,
                     onMediaClick = { media ->
-                        detailController.loadMediaDetail(media.rawUrl, media.providerApiName, media)
-                        currentScreen = AppScreen.Detail(media)
+                        launchCloudStreamPlayer(context, media, null)
                     },
                     onBackClick = { currentScreen = AppScreen.Main }
                 )
@@ -346,8 +328,7 @@ fun MovieVortexNavGraph(
             is AppScreen.History -> {
                 HistoryScreen(
                     onMediaClick = { media ->
-                        detailController.loadMediaDetail(media.rawUrl, media.providerApiName, media)
-                        currentScreen = AppScreen.Detail(media)
+                        launchCloudStreamPlayer(context, media, null)
                     },
                     onBackClick = { currentScreen = AppScreen.Main }
                 )

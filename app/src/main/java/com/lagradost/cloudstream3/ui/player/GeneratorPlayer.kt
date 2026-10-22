@@ -2163,8 +2163,7 @@ class GeneratorPlayer : FullScreenPlayer() {
 
         when {
             isLayout(PHONE) ->
-                playerBinding?.playerSkipEpisode?.isVisible =
-                    !isOpVisible && viewModel.hasNextEpisode() == true
+                playerBinding?.playerSkipEpisode?.isVisible = false
 
             else -> {
                 val hasNextEpisode = viewModel.hasNextEpisode() == true

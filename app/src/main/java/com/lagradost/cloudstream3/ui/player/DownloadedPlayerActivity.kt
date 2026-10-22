@@ -40,10 +40,14 @@ import com.lagradost.cloudstream3.utils.UIHelper.navigate
 import com.lagradost.cloudstream3.utils.UIHelper.hideSystemUI
 import com.lagradost.cloudstream3.utils.UIHelper.showSystemUI
 import android.content.res.Configuration
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.Typeface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -51,6 +55,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil3.load
+import com.movievortex.android.core.ServerManager
 
 class DownloadedPlayerActivity : AppCompatActivity() {
     companion object {
@@ -92,6 +98,14 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         return oldText != null && oldText == newText
     }
 
+    private var currentMarkServer: String = ServerManager.MARK_1
+    private var currentMediaTitle: String? = null
+    private var currentContentUrl: String? = null
+    private var currentAllEpisodes: List<ResultEpisode> = emptyList()
+    private var currentPlayingEpisodeIndex: Int = 0
+    private var currentSelectedSeason: Int = 1
+    private var currentLoadResponse: com.lagradost.cloudstream3.LoadResponse? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
@@ -108,6 +122,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         Log.i(TAG, "onCreate")
 
         setupWindowInsets()
+        setupServerTabs()
         updateLayoutForOrientation(resources.configuration.orientation)
         handleIntent(intent)
 
@@ -116,6 +131,125 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                 requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             } else {
                 finish()
+            }
+        }
+    }
+
+    private fun setupServerTabs() {
+        val mark1Tab = findViewById<TextView>(R.id.server_tab_mark_1) ?: return
+        val mark2Tab = findViewById<TextView>(R.id.server_tab_mark_2) ?: return
+        val mark3Tab = findViewById<TextView>(R.id.server_tab_mark_3) ?: return
+        val mark4Tab = findViewById<TextView>(R.id.server_tab_mark_4) ?: return
+
+        val tabs = listOf(
+            ServerManager.MARK_1 to mark1Tab,
+            ServerManager.MARK_2 to mark2Tab,
+            ServerManager.MARK_3 to mark3Tab,
+            ServerManager.MARK_4 to mark4Tab
+        )
+
+        for ((mark, view) in tabs) {
+            view.setOnClickListener {
+                if (currentMarkServer != mark) {
+                    updateServerTabsUI(mark)
+                    onServerSwitched(mark)
+                }
+            }
+        }
+
+        updateServerTabsUI(currentMarkServer)
+    }
+
+    private fun updateServerTabsUI(selectedMark: String) {
+        currentMarkServer = selectedMark
+        val mark1Tab = findViewById<TextView>(R.id.server_tab_mark_1)
+        val mark2Tab = findViewById<TextView>(R.id.server_tab_mark_2)
+        val mark3Tab = findViewById<TextView>(R.id.server_tab_mark_3)
+        val mark4Tab = findViewById<TextView>(R.id.server_tab_mark_4)
+
+        val tabs = listOf(
+            ServerManager.MARK_1 to mark1Tab,
+            ServerManager.MARK_2 to mark2Tab,
+            ServerManager.MARK_3 to mark3Tab,
+            ServerManager.MARK_4 to mark4Tab
+        )
+
+        for ((mark, view) in tabs) {
+            if (view == null) continue
+            if (mark == selectedMark) {
+                view.setBackgroundResource(R.drawable.bg_server_tab_active)
+                view.setTextColor(Color.WHITE)
+                view.setTypeface(null, Typeface.BOLD)
+            } else {
+                view.setBackgroundResource(R.drawable.bg_server_tab_inactive)
+                view.setTextColor(Color.parseColor("#B0B0C0"))
+                view.setTypeface(null, Typeface.NORMAL)
+            }
+        }
+    }
+
+    private fun onServerSwitched(markName: String) {
+        val providerName = ServerManager.toProviderName(markName)
+        val title = currentMediaTitle ?: intent.getStringExtra("TITLE")
+        if (title.isNullOrBlank()) {
+            android.widget.Toast.makeText(this, "Switched to $markName", android.widget.Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val spinner = findViewById<ProgressBar>(R.id.player_loading_spinner)
+        spinner?.isVisible = true
+        android.widget.Toast.makeText(this, "Connecting to $markName...", android.widget.Toast.LENGTH_SHORT).show()
+
+        ioSafe {
+            try {
+                var api = APIHolder.getApiFromNameNull(providerName)
+                    ?: APIHolder.apis.firstOrNull { it.name.equals(providerName, ignoreCase = true) }
+
+                if (api == null) {
+                    try {
+                        com.movievortex.android.core.VortexPluginBootstrap.bootstrap(this@DownloadedPlayerActivity)
+                    } catch (_: Exception) {}
+                    api = APIHolder.getApiFromNameNull(providerName)
+                        ?: APIHolder.apis.firstOrNull { it.name.equals(providerName, ignoreCase = true) }
+                }
+
+                if (api != null) {
+                    val searchRes = api.search(title)
+                    val match = searchRes.firstOrNull()
+                    if (match != null) {
+                        main {
+                            playProviderContent(providerName, match.url, intent)
+                        }
+                        return@ioSafe
+                    }
+                }
+
+                // Fallback: try loading with the new provider
+                val fallbackUrl = currentContentUrl
+                if (fallbackUrl != null && api != null) {
+                    main {
+                        playProviderContent(providerName, fallbackUrl, intent)
+                    }
+                    return@ioSafe
+                }
+
+                main {
+                    spinner?.isVisible = false
+                    android.widget.Toast.makeText(
+                        this@DownloadedPlayerActivity,
+                        "Stream unavailable on $markName. Please try another server.",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+            } catch (e: Exception) {
+                main {
+                    spinner?.isVisible = false
+                    android.widget.Toast.makeText(
+                        this@DownloadedPlayerActivity,
+                        "Error connecting to $markName: ${e.message}",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
     }
@@ -185,6 +319,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     private fun handleIntent(intent: Intent) {
         val directUrl = intent.getStringExtra("DIRECT_URL") ?: intent.getStringExtra("LIVE_URL")
         val directTitle = intent.getStringExtra("TITLE")
+        currentMediaTitle = directTitle
         if (!directUrl.isNullOrBlank()) {
             playDirectStream(directUrl, directTitle)
             return
@@ -192,7 +327,10 @@ class DownloadedPlayerActivity : AppCompatActivity() {
 
         val apiName = intent.getStringExtra(MainActivity.API_NAME_EXTRA_KEY)
         val contentUrl = intent.getStringExtra("CONTENT_URL") ?: intent.getStringExtra("URL")
+        currentContentUrl = contentUrl
         if (apiName != null && contentUrl != null) {
+            currentMarkServer = ServerManager.toDisplayName(apiName)
+            updateServerTabsUI(currentMarkServer)
             playProviderContent(apiName, contentUrl, intent)
             return
         }
@@ -448,6 +586,10 @@ class DownloadedPlayerActivity : AppCompatActivity() {
 
                     main {
                         spinner?.isVisible = false
+                        currentLoadResponse = loadResponse
+                        currentMediaTitle = loadResponse.name
+                        currentAllEpisodes = episodes
+
                         findViewById<TextView>(R.id.inline_player_title)?.text = loadResponse.name
                         val meta = buildString {
                             loadResponse.year?.let { append("$it  •  ") }
@@ -457,16 +599,12 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                         findViewById<TextView>(R.id.inline_player_meta)?.text = meta
                         findViewById<TextView>(R.id.inline_player_overview)?.text = loadResponse.plot ?: ""
 
-                        if (episodes.size > 1) {
-                            val header = findViewById<TextView>(R.id.inline_episodes_header)
-                            val recycler = findViewById<RecyclerView>(R.id.inline_episodes_recycler)
-                            header?.visibility = View.VISIBLE
-                            recycler?.visibility = View.VISIBLE
-                            recycler?.layoutManager = LinearLayoutManager(this@DownloadedPlayerActivity)
-                            recycler?.adapter = InlineEpisodeAdapter(episodes, startIndex) { clickedIndex ->
-                                val gen = RepoLinkGenerator(episodes, page = loadResponse)
-                                navigateToPlayer(GeneratorPlayer.newInstance(gen, clickedIndex))
-                            }
+                        if (episodes.isNotEmpty() && (loadResponse is TvSeriesLoadResponse || loadResponse is AnimeLoadResponse || episodes.size > 1)) {
+                            val seasons = episodes.mapNotNull { it.season }.distinct().sorted()
+                            val availableSeasons = if (seasons.isEmpty()) listOf(1) else seasons
+                            setupSeasonTabs(availableSeasons, episodes, loadResponse, startIndex)
+                        } else {
+                            findViewById<View>(R.id.inline_seasons_section)?.visibility = View.GONE
                         }
 
                         navigateToPlayer(GeneratorPlayer.newInstance(generator, startIndex))
@@ -497,6 +635,84 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupSeasonTabs(
+        seasons: List<Int>,
+        allEpisodes: List<ResultEpisode>,
+        loadResponse: com.lagradost.cloudstream3.LoadResponse,
+        initialPlayingIndex: Int
+    ) {
+        val seasonsSection = findViewById<View>(R.id.inline_seasons_section) ?: return
+        val seasonsContainer = findViewById<LinearLayout>(R.id.inline_seasons_container) ?: return
+        val seasonsScroll = findViewById<View>(R.id.inline_seasons_scroll) ?: return
+        val recycler = findViewById<RecyclerView>(R.id.inline_episodes_recycler) ?: return
+
+        seasonsSection.visibility = View.VISIBLE
+        seasonsContainer.removeAllViews()
+
+        if (seasons.size <= 1) {
+            seasonsScroll.visibility = View.GONE
+        } else {
+            seasonsScroll.visibility = View.VISIBLE
+        }
+
+        currentPlayingEpisodeIndex = initialPlayingIndex
+        val playingEp = allEpisodes.getOrNull(initialPlayingIndex)
+        val initialSeason = playingEp?.season ?: seasons.firstOrNull() ?: 1
+
+        fun loadSeasonEpisodes(seasonNum: Int) {
+            currentSelectedSeason = seasonNum
+            val filtered = allEpisodes.filter { (it.season ?: 1) == seasonNum }
+            val displayEpisodes = if (filtered.isNotEmpty()) filtered else allEpisodes
+
+            recycler.layoutManager = LinearLayoutManager(this@DownloadedPlayerActivity)
+            recycler.adapter = InlineEpisodeAdapter(displayEpisodes, currentPlayingEpisodeIndex) { clickedEp ->
+                currentPlayingEpisodeIndex = clickedEp.index
+                val gen = RepoLinkGenerator(allEpisodes, page = loadResponse)
+                navigateToPlayer(GeneratorPlayer.newInstance(gen, clickedEp.index))
+            }
+
+            for (i in 0 until seasonsContainer.childCount) {
+                val tabView = seasonsContainer.getChildAt(i) as? TextView ?: continue
+                val tagSeason = tabView.tag as? Int ?: (i + 1)
+                if (tagSeason == seasonNum) {
+                    tabView.setBackgroundResource(R.drawable.bg_season_tab_active)
+                    tabView.setTextColor(Color.WHITE)
+                    tabView.setTypeface(null, Typeface.BOLD)
+                } else {
+                    tabView.setBackgroundResource(R.drawable.bg_season_tab_inactive)
+                    tabView.setTextColor(Color.parseColor("#B0B0C0"))
+                    tabView.setTypeface(null, Typeface.NORMAL)
+                }
+            }
+        }
+
+        for (s in seasons) {
+            val tab = TextView(this).apply {
+                text = "Season $s"
+                textSize = 13f
+                tag = s
+                val padH = (16 * resources.displayMetrics.density).toInt()
+                val padV = (8 * resources.displayMetrics.density).toInt()
+                setPadding(padH, padV, padH, padV)
+                val params = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    marginEnd = (8 * resources.displayMetrics.density).toInt()
+                }
+                layoutParams = params
+                isClickable = true
+                isFocusable = true
+                setOnClickListener {
+                    loadSeasonEpisodes(s)
+                }
+            }
+            seasonsContainer.addView(tab)
+        }
+
+        loadSeasonEpisodes(initialSeason)
+    }
+
     override fun onResume() {
         super.onResume()
         CommonActivity.setActivityInstance(this)
@@ -506,11 +722,12 @@ class DownloadedPlayerActivity : AppCompatActivity() {
 class InlineEpisodeAdapter(
     private val episodes: List<ResultEpisode>,
     private var currentPlayingIndex: Int,
-    private val onEpisodeClick: (Int) -> Unit
+    private val onEpisodeClick: (ResultEpisode) -> Unit
 ) : RecyclerView.Adapter<InlineEpisodeAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val number: TextView = view.findViewById(R.id.ep_number)
+        val root: View = view.findViewById(R.id.episode_item_root)
+        val thumbnail: ImageView = view.findViewById(R.id.ep_thumbnail)
         val title: TextView = view.findViewById(R.id.ep_title)
         val desc: TextView = view.findViewById(R.id.ep_desc)
         val playIcon: ImageView = view.findViewById(R.id.ep_play_icon)
@@ -523,21 +740,36 @@ class InlineEpisodeAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val ep = episodes[position]
-        holder.number.text = (ep.episode ?: (position + 1)).toString()
-        holder.title.text = ep.name ?: "Episode ${ep.episode ?: (position + 1)}"
+        val epNum = ep.episode ?: (position + 1)
+        val epTitleText = if (!ep.name.isNullOrBlank() && ep.name != "Episode $epNum") {
+            "$epNum. ${ep.name}"
+        } else {
+            "Episode $epNum"
+        }
+        holder.title.text = epTitleText
         holder.desc.text = ep.description ?: ""
         holder.desc.visibility = if (ep.description.isNullOrBlank()) View.GONE else View.VISIBLE
 
-        val isSelected = position == currentPlayingIndex
-        holder.itemView.setBackgroundColor(if (isSelected) 0x25FFFFFF else 0x00000000)
-        holder.playIcon.alpha = if (isSelected) 1.0f else 0.4f
+        if (!ep.poster.isNullOrBlank()) {
+            holder.thumbnail.load(ep.poster)
+        } else {
+            holder.thumbnail.setImageResource(R.drawable.example_poster)
+        }
 
-        holder.itemView.setOnClickListener {
+        val isSelected = ep.index == currentPlayingIndex
+        if (isSelected) {
+            holder.root.setBackgroundResource(R.drawable.bg_episode_item_active)
+            holder.playIcon.imageTintList = ColorStateList.valueOf(Color.parseColor("#E50914"))
+        } else {
+            holder.root.setBackgroundResource(R.drawable.bg_episode_item_inactive)
+            holder.playIcon.imageTintList = ColorStateList.valueOf(Color.WHITE)
+        }
+
+        holder.root.setOnClickListener {
             val prev = currentPlayingIndex
-            currentPlayingIndex = position
-            notifyItemChanged(prev)
-            notifyItemChanged(currentPlayingIndex)
-            onEpisodeClick(position)
+            currentPlayingIndex = ep.index
+            notifyDataSetChanged()
+            onEpisodeClick(ep)
         }
     }
 
