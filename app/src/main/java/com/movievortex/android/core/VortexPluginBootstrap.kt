@@ -33,22 +33,22 @@ object VortexPluginBootstrap {
 
     val TARGET_PLUGINS = listOf(
         TargetPlugin(
-            name = "AniVortex",
+            name = ServerManager.MARK_1,
             internalName = "AniVortex",
             fallbackUrl = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/builds/AniVortex.cs3"
         ),
         TargetPlugin(
-            name = "IStreamFlare",
+            name = ServerManager.MARK_2,
             internalName = "IStreamFlare",
             fallbackUrl = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/builds/IStreamFlare.cs3"
         ),
         TargetPlugin(
-            name = "MovieBoxProvider",
+            name = ServerManager.MARK_3,
             internalName = "MovieBoxProvider",
             fallbackUrl = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/builds/MovieBoxProvider.cs3"
         ),
         TargetPlugin(
-            name = "SuperStream",
+            name = ServerManager.MARK_4,
             internalName = "SuperStream",
             fallbackUrl = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/builds/SuperStream.cs3"
         )

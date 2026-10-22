@@ -14,6 +14,9 @@ import com.lagradost.cloudstream3.APIHolder
 import com.lagradost.cloudstream3.CloudStreamApp
 import com.lagradost.cloudstream3.R
 import com.lagradost.cloudstream3.utils.DataStoreHelper
+import com.lagradost.cloudstream3.utils.Qualities
+import com.lagradost.cloudstream3.ui.subtitles.SubtitlesFragment
+import com.lagradost.cloudstream3.ui.subtitles.SubtitlesFragment.Companion.saveStyle
 import com.movievortex.android.core.ServerManager
 import com.movievortex.android.core.VortexPluginBootstrap
 import kotlinx.coroutines.Dispatchers
@@ -52,8 +55,7 @@ data class SettingsUiState(
     val resumePlayback: Boolean = true,
     val autoFullScreen: Boolean = false,
 
-    // 2. AUDIO & SUBTITLES
-    val preferredAudioLanguage: String = "English",
+    // 2. SUBTITLES
     val subtitleStyle: String = "Classic White",
     val subtitleSize: String = "Normal (100%)",
 
@@ -148,8 +150,7 @@ class SettingsController(private val context: Context) : ViewModel() {
             resumePlayback = settingsManager.getBoolean(PREF_RESUME_PLAYBACK, true),
             autoFullScreen = settingsManager.getBoolean(PREF_AUTO_FULLSCREEN, false),
 
-            // 2. Audio & Subtitles
-            preferredAudioLanguage = settingsManager.getString(PREF_PREFERRED_AUDIO_LANG, "English") ?: "English",
+            // 2. Subtitles
             subtitleStyle = settingsManager.getString(PREF_SUBTITLE_STYLE, "Classic White") ?: "Classic White",
             subtitleSize = settingsManager.getString(PREF_SUBTITLE_SIZE, "Normal (100%)") ?: "Normal (100%)",
 
@@ -195,11 +196,28 @@ class SettingsController(private val context: Context) : ViewModel() {
     // ─────────────────────────────────────────────────────────────────────────
     fun setDefaultPlaybackQuality(quality: String) {
         settingsManager.edit().putString(PREF_DEFAULT_PLAYBACK_QUALITY, quality).apply()
+        val qualityInt = when {
+            quality.contains("4K", true) || quality.contains("2160", true) -> Qualities.P2160.value
+            quality.contains("1080", true) -> Qualities.P1080.value
+            quality.contains("720", true) -> Qualities.P720.value
+            quality.contains("480", true) -> Qualities.P480.value
+            else -> Qualities.P1080.value
+        }
+        try {
+            settingsManager.edit().putInt(context.getString(R.string.quality_pref_key), qualityInt).apply()
+        } catch (e: Exception) {
+            Log.e("SettingsController", "Failed to write quality_pref_key", e)
+        }
         _uiState.value = _uiState.value.copy(defaultPlaybackQuality = quality)
     }
 
     fun setAutoPlayNext(enabled: Boolean) {
         settingsManager.edit().putBoolean(PREF_AUTO_PLAY_NEXT, enabled).apply()
+        try {
+            settingsManager.edit().putBoolean(context.getString(R.string.autoplay_next_key), enabled).apply()
+        } catch (e: Exception) {
+            Log.e("SettingsController", "Failed to write autoplay_next_key", e)
+        }
         _uiState.value = _uiState.value.copy(autoPlayNext = enabled)
     }
 
@@ -214,21 +232,51 @@ class SettingsController(private val context: Context) : ViewModel() {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 2. AUDIO & SUBTITLES
+    // 2. SUBTITLES
     // ─────────────────────────────────────────────────────────────────────────
-    fun setPreferredAudioLanguage(language: String) {
-        settingsManager.edit().putString(PREF_PREFERRED_AUDIO_LANG, language).apply()
-        _uiState.value = _uiState.value.copy(preferredAudioLanguage = language)
-    }
-
     fun setSubtitleStyle(style: String) {
         settingsManager.edit().putString(PREF_SUBTITLE_STYLE, style).apply()
         _uiState.value = _uiState.value.copy(subtitleStyle = style)
+        try {
+            val (fgColor, bgColor) = when (style) {
+                "Yellow on Black" -> Pair(android.graphics.Color.YELLOW, android.graphics.Color.BLACK)
+                "Translucent Background" -> Pair(android.graphics.Color.WHITE, android.graphics.Color.argb(128, 0, 0, 0))
+                "High Contrast Black Box" -> Pair(android.graphics.Color.WHITE, android.graphics.Color.BLACK)
+                else -> Pair(android.graphics.Color.WHITE, android.graphics.Color.TRANSPARENT)
+            }
+            val current = SubtitlesFragment.getCurrentSavedStyle()
+            val newStyle = current.copy(
+                foregroundColor = fgColor,
+                backgroundColor = bgColor
+            )
+            with(SubtitlesFragment) {
+                context.saveStyle(newStyle)
+            }
+        } catch (e: Exception) {
+            Log.e("SettingsController", "Error applying subtitle style", e)
+        }
     }
 
     fun setSubtitleSize(size: String) {
         settingsManager.edit().putString(PREF_SUBTITLE_SIZE, size).apply()
         _uiState.value = _uiState.value.copy(subtitleSize = size)
+        try {
+            val scale = when {
+                size.contains("75") -> 0.75f
+                size.contains("125") -> 1.25f
+                size.contains("150") -> 1.50f
+                else -> 1.0f
+            }
+            val current = SubtitlesFragment.getCurrentSavedStyle()
+            val newStyle = current.copy(
+                elevation = (scale * 20).toInt()
+            )
+            with(SubtitlesFragment) {
+                context.saveStyle(newStyle)
+            }
+        } catch (e: Exception) {
+            Log.e("SettingsController", "Error applying subtitle size", e)
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────

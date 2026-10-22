@@ -108,7 +108,7 @@ fun MovieVortexPlayerScreen(
     var isSpeedingUp by remember { mutableStateOf(false) }
     var showQualityPicker by remember { mutableStateOf(false) }
     var showSubtitlePicker by remember { mutableStateOf(false) }
-    var selectedServerName by remember { mutableStateOf("Anivortex Turbo") }
+    var selectedServerName by remember { mutableStateOf(ServerManager.DEFAULT_SERVER) }
 
     val allSeasons = remember(episodes) {
         if (episodes.isNotEmpty()) episodes.map { it.seasonNumber }.distinct().sorted() else listOf(1)
@@ -147,7 +147,7 @@ fun MovieVortexPlayerScreen(
     LaunchedEffect(state.currentSource) {
         state.currentSource?.let { source ->
             try {
-                selectedServerName = mapServerDisplayName(source.extractorName.ifBlank { "Anivortex Turbo" })
+                selectedServerName = mapServerDisplayName(source.extractorName.ifBlank { ServerManager.DEFAULT_SERVER })
                 val mediaItem = MediaItem.fromUri(source.url)
                 val dataSourceFactory = DefaultHttpDataSource.Factory()
                     .setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")

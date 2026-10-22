@@ -261,9 +261,9 @@ fun DetailScreen(
                             )
                         }
 
-                        // Provider Name
+                        // Server Name
                         Text(
-                            text = "• ${media.providerApiName}",
+                            text = "• ${ServerManager.toDisplayName(media.providerApiName)}",
                             color = VortexColors.MutedText,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium

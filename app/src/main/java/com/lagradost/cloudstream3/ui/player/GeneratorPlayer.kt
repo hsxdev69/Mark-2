@@ -1193,15 +1193,7 @@ class GeneratorPlayer : FullScreenPlayer() {
                         sourceIndex = startSource
 
                         fun mapServerDisplayName(rawName: String?): String {
-                            if (rawName == null) return "Mark-1"
-                            val lower = rawName.lowercase()
-                            return when {
-                                lower.contains("anivortex") || lower.contains("anvortex") || lower.contains("turbo") || lower.contains("mark-1") || lower.contains("mark1") -> "Mark-1"
-                                lower.contains("streamflare") || lower.contains("core") || lower.contains("istream") || lower.contains("mark-2") || lower.contains("mark2") -> "Mark-2"
-                                lower.contains("moviebox") || lower.contains("rive") || lower.contains("mark-3") || lower.contains("mark3") -> "Mark-3"
-                                lower.contains("superstream") || lower.contains("spiral") || lower.contains("mark-4") || lower.contains("mark4") -> "Mark-4"
-                                else -> rawName
-                            }
+                            return com.movievortex.android.core.ServerManager.toDisplayName(rawName)
                         }
 
                         val sourcesArrayAdapter =

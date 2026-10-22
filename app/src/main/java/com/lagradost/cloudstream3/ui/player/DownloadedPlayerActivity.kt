@@ -80,7 +80,11 @@ class DownloadedPlayerActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!isLayout(TV or EMULATOR)) {
+        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
+        val autoFullScreen = prefs.getBoolean("pref_auto_fullscreen", false)
+        if (autoFullScreen) {
+            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        } else if (!isLayout(TV or EMULATOR)) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
         }
         CommonActivity.loadThemes(this)

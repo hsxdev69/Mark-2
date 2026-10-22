@@ -181,21 +181,10 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         // ─────────────────────────────────────────────────────────────────────
-        // 2. AUDIO & SUBTITLES
+        // 2. SUBTITLES
         // ─────────────────────────────────────────────────────────────────────
-        SettingsSectionHeader(icon = VortexIcons.Subtitles, title = "2. AUDIO & SUBTITLES")
+        SettingsSectionHeader(icon = VortexIcons.Subtitles, title = "2. SUBTITLES")
         SettingsCard {
-            SettingsClickableRow(
-                title = "Preferred Audio Language",
-                subtitle = state.preferredAudioLanguage,
-                onClick = {
-                    singleSelectDialogTitle = "Preferred Audio Language"
-                    singleSelectOptions = listOf("English", "Hindi", "Tamil", "Telugu", "Japanese", "Korean", "Spanish", "Original Audio")
-                    singleSelectCurrent = state.preferredAudioLanguage
-                    onSingleSelectSubmit = { settingsController.setPreferredAudioLanguage(it) }
-                }
-            )
-            SettingsDivider()
             SettingsClickableRow(
                 title = "Subtitle Style",
                 subtitle = state.subtitleStyle,
