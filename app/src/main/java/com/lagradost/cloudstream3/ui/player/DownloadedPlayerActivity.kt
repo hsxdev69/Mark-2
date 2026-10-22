@@ -215,7 +215,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
 
                 if (api != null) {
                     val searchRes = api.search(title)
-                    val match = searchRes.firstOrNull()
+                    val match = searchRes?.firstOrNull()
                     if (match != null) {
                         main {
                             playProviderContent(providerName, match.url, intent)
