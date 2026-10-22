@@ -2748,32 +2748,14 @@ class GeneratorPlayer : FullScreenPlayer() {
             val sortedLinks = viewModel.state.sortLinks(currentQualityProfile)
             val usableLinks = sortedLinks.count { link -> link.shouldUseLink }
 
-            val turnVisible = usableLinks > 0 && viewModel.generator?.canSkipLoading == true
-            val wasGone = binding.overlayLoadingSkipButton.isGone
-
-            binding.overlayLoadingSkipButton.apply {
-                isVisible = turnVisible
-
-                if (usableLinks == 0) {
-                    setText(R.string.skip_loading)
-                } else {
-                    @SuppressLint("SetTextI18n")
-                    text = "${context.getString(R.string.skip_loading)} (${usableLinks})"
-                }
-            }
+            // Remove intermediate source selection overlay and skip buttons
+            binding.overlayLoadingSkipButton.isVisible = false
 
             safe {
-                if (!isPlayerActive.get() && viewModel.state.links.any { link ->
-                        getLinkPriority(currentQualityProfile, link.first) >=
-                                QualityDataHelper.AUTO_SKIP_PRIORITY
-                    }
-                ) {
+                // Instantly start playback with best available source as soon as links arrive
+                if (!isPlayerActive.get() && usableLinks > 0) {
                     startPlayer()
                 }
-            }
-
-            if (turnVisible && wasGone) {
-                binding.overlayLoadingSkipButton.requestFocus()
             }
         }
     }

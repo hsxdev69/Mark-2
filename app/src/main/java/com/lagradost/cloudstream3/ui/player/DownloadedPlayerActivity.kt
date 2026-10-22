@@ -200,7 +200,13 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                 val navHost = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
                 val navController = navHost?.navController
                 if (navController != null) {
-                    navController.navigate(R.id.global_to_navigation_player, args, navOptions)
+                    if (navController.currentDestination?.id == R.id.navigation_player) {
+                        navController.navigate(R.id.navigation_player, args, navOptions)
+                    } else {
+                        val graph = navController.navInflater.inflate(R.navigation.mobile_navigation)
+                        graph.setStartDestination(R.id.navigation_player)
+                        navController.setGraph(graph, args)
+                    }
                 } else {
                     this.navigate(R.id.global_to_navigation_player, args, navOptions)
                 }
@@ -347,14 +353,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
 
                     main {
                         spinner?.isVisible = false
-                        val replaceNavOptions = NavOptions.Builder()
-                            .setPopUpTo(R.id.navigation_player, inclusive = true, saveState = false)
-                            .build()
-                        this@DownloadedPlayerActivity.navigate(
-                            R.id.global_to_navigation_player,
-                            GeneratorPlayer.newInstance(generator, startIndex),
-                            replaceNavOptions
-                        )
+                        navigateToPlayer(GeneratorPlayer.newInstance(generator, startIndex))
                     }
                 } else {
                     main {

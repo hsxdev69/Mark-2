@@ -699,7 +699,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
             homeMasterRecycler.setRecycledViewPool(ParentItemAdapter.sharedPool)
             homeMasterRecycler.adapter = homeMasterAdapter
 
-            homeApiFab.isVisible = isLayout(PHONE)
+            homeApiFab.isVisible = false
 
             homePreviewReloadProvider.setOnClickListener {
                 homeViewModel.loadAndCancel(
@@ -756,7 +756,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>(
                             homeRandom.shrink()
                         } else if (dy < -5) {
                             if (isLayout(PHONE)) {
-                                homeApiFab.extend() // show
                                 homeRandom.extend()
                             }
                         }
