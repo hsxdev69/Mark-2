@@ -269,7 +269,8 @@ class GeneratorPlayer : FullScreenPlayer() {
         playerBinding?.playerTracksBtt?.isVisible =
             tracks.allVideoTracks.size > 1 || tracks.allAudioTracks.size > 1
 
-        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
+        val ctx = context ?: return
+        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
         val prefAudioLang = prefs.getString("pref_preferred_audio_lang", "Default / Original") ?: "Default / Original"
 
         val targetPreferredTrack = if (prefAudioLang != "Default / Original") {
@@ -313,8 +314,9 @@ class GeneratorPlayer : FullScreenPlayer() {
     }
 
     private fun getPos(): Long {
-        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
-        val shouldResume = prefs.getBoolean("pref_resume_playback", true)
+        val ctx = context
+        val prefs = ctx?.let { androidx.preference.PreferenceManager.getDefaultSharedPreferences(it) }
+        val shouldResume = prefs?.getBoolean("pref_resume_playback", true) ?: true
         if (!shouldResume) return 0L
 
         val durPos = getViewPos(viewModel.state.generatorState?.id) ?: return 0L

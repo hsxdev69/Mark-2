@@ -92,11 +92,12 @@ class PlayerController : ViewModel() {
             return
         }
 
-        // Check mobile data restriction
-        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
-        val mobileAllowed = prefs.getBoolean("pref_mobile_data_allowed", true)
-        if (!mobileAllowed && offlineFilePath.isNullOrBlank()) {
-            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
+        // Check mobile data restriction and resume preferences
+        val ctx = com.lagradost.cloudstream3.CommonActivity.activity?.applicationContext
+        val prefs = ctx?.let { androidx.preference.PreferenceManager.getDefaultSharedPreferences(it) }
+        val mobileAllowed = prefs?.getBoolean("pref_mobile_data_allowed", true) ?: true
+        if (!mobileAllowed && offlineFilePath.isNullOrBlank() && ctx != null) {
+            val cm = ctx.getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as? android.net.ConnectivityManager
             val isCellular = cm?.getNetworkCapabilities(cm.activeNetwork)?.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR) == true
             if (isCellular) {
                 _uiState.value = PlayerUiState(
@@ -110,7 +111,7 @@ class PlayerController : ViewModel() {
         }
 
         // Resume saved position only if Resume Playback is enabled in Settings
-        val shouldResume = prefs.getBoolean("pref_resume_playback", true)
+        val shouldResume = prefs?.getBoolean("pref_resume_playback", true) ?: true
         val lastPos = if (shouldResume) DataStoreHelper.getViewPos(activeDataUrl.hashCode()) else null
         val resumeMs = lastPos?.position ?: 0L
 
