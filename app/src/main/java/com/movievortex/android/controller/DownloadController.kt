@@ -290,7 +290,7 @@ class DownloadController : ViewModel() {
 
                 if (ctx != null) {
                     VideoDownloadManager.currentDownloads.value.forEach { activeId ->
-                        val resume = ctx.getKey<VideoDownloadManager.DownloadResumePackage>(VideoDownloadManager.KEY_RESUME_PACKAGES, activeId.toString())
+                        val resume = ctx.getKey<DownloadObjects.DownloadResumePackage>(VideoDownloadManager.KEY_RESUME_PACKAGES, activeId.toString())
                         if (resume != null) {
                             val ep = resume.item.ep
                             val title = ep.mainName ?: ep.name ?: "Downloading Stream"
