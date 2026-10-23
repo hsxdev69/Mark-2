@@ -669,7 +669,7 @@ class CS3IPlayer : IPlayer {
     }
 
     companion object {
-        private const val CRONET_TIMEOUT_MS = 15_000
+        private const val CRONET_TIMEOUT_MS = 30_000
 
         /**
          * Single shared engine, to minimize the overhead of maintaining many as:
@@ -777,13 +777,14 @@ class CS3IPlayer : IPlayer {
                 if (!cacheDirectory.exists()) {
                     cacheDirectory.mkdirs()
                 }
+                val effectiveDiskCache = if (diskCacheSize <= 0) 250L * 1024L * 1024L else diskCacheSize
                 CronetEngine.Builder(context)
                     .enableBrotli(true)
                     .enableHttp2(true)
                     .enableQuic(true)
                     .setStoragePath(cacheDirectory.absolutePath)
                     .setLibraryLoader(null)
-                    .enableHttpCache(CronetEngine.Builder.HTTP_CACHE_DISK, diskCacheSize)
+                    .enableHttpCache(CronetEngine.Builder.HTTP_CACHE_DISK, effectiveDiskCache)
                     .build().also { buildEngine ->
                         Log.d(
                             TAG,
@@ -851,11 +852,12 @@ class CS3IPlayer : IPlayer {
         private fun getCache(context: Context, cacheSize: Long): SimpleCache? {
             return try {
                 val databaseProvider = StandaloneDatabaseProvider(context)
+                val effectiveCacheSize = if (cacheSize <= 0) 250L * 1024L * 1024L else cacheSize
                 SimpleCache(
                     File(
                         context.cacheDir, "exoplayer"
                     ).also { deleteFileOnExit(it) }, // Ensures always fresh file
-                    LeastRecentlyUsedCacheEvictor(cacheSize),
+                    LeastRecentlyUsedCacheEvictor(effectiveCacheSize),
                     databaseProvider
                 )
             } catch (e: Exception) {
@@ -1263,7 +1265,7 @@ class CS3IPlayer : IPlayer {
                     DefaultLoadControl.Builder()
                         .setTargetBufferBytes(
                             if (cacheSize <= 0) {
-                                DefaultLoadControl.DEFAULT_TARGET_BUFFER_BYTES
+                                100 * 1024 * 1024
                             } else {
                                 if (cacheSize > Int.MAX_VALUE) Int.MAX_VALUE else cacheSize.toInt()
                             }
@@ -1272,15 +1274,16 @@ class CS3IPlayer : IPlayer {
                             30000,
                             true
                         )
+                        .setPrioritizeTimeOverSizeThresholds(true)
                         .setBufferDurationsMs(
-                            DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
+                            60000,
                             if (videoBufferMs <= 0) {
-                                DefaultLoadControl.DEFAULT_MAX_BUFFER_MS
+                                180000
                             } else {
-                                videoBufferMs.toInt()
+                                maxOf(180000, videoBufferMs.toInt())
                             },
-                            DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
-                            DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
+                            1500,
+                            3000
                         ).build()
                 )
 
@@ -1293,12 +1296,14 @@ class CS3IPlayer : IPlayer {
         val dataSourceFactory = if (onlineSource == null) {
             null
         } else {
+            val effectiveDiskCache = if (simpleCacheSize <= 0) 250L * 1024L * 1024L else simpleCacheSize
             if (simpleCache == null)
-                simpleCache = getCache(context, simpleCacheSize)
+                simpleCache = getCache(context, effectiveDiskCache)
 
             val cacheFactory = CacheDataSource.Factory().apply {
                 simpleCache?.let { setCache(it) }
                 setUpstreamDataSourceFactory(onlineSource)
+                setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
             }
             cacheFactory
         }

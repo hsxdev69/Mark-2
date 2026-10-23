@@ -37,10 +37,15 @@ fun buildDefaultClient(context: Context, ignoreSSL: Boolean = false): OkHttpClie
     safe { Security.insertProviderAt(Conscrypt.newProvider(), 1) }
     
     val settingsManager = PreferenceManager.getDefaultSharedPreferences(context)
-    val dns = settingsManager.getInt(context.getString(R.string.dns_key), 0)
+    val dns = settingsManager.getInt(context.getString(R.string.dns_key), 2)
     val baseClient = OkHttpClient.Builder()
         .followRedirects(true)
         .followSslRedirects(true)
+        .retryOnConnectionFailure(true)
+        .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .connectionPool(okhttp3.ConnectionPool(10, 5, java.util.concurrent.TimeUnit.MINUTES))
         .apply {
             if (ignoreSSL) {
                 ignoreAllSSLErrors()
@@ -51,7 +56,7 @@ fun buildDefaultClient(context: Context, ignoreSSL: Boolean = false): OkHttpClie
             // The server response dictates if and when stuff should be cached.
             Cache(
                 directory = File(context.cacheDir, "http_cache"),
-                maxSize = 50L * 1024L * 1024L // 50 MiB
+                maxSize = 100L * 1024L * 1024L // 100 MiB
             )
         ).apply {
             when (dns) {
@@ -63,6 +68,8 @@ fun buildDefaultClient(context: Context, ignoreSSL: Boolean = false): OkHttpClie
                 6 -> addQuad9Dns()
                 7 -> addDnsSbDns()
                 8 -> addCanadianShieldDns()
+                0 -> addCloudFlareDns() // Auto/System fallback: Cloudflare DoH bypasses Jio ISP throttling & packet inspection
+                else -> addCloudFlareDns()
             }
         }
         // Needs to be build as otherwise the other builders will change this object
