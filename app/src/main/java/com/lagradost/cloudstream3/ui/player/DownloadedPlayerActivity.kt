@@ -445,7 +445,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.inline_player_title)?.text = displayName
             findViewById<TextView>(R.id.inline_player_meta)?.text = "Offline Playback"
             findViewById<TextView>(R.id.inline_player_overview)?.text = displayName
-            findViewById<View>(R.id.inline_server_tabs_container)?.visibility = View.GONE
+            findViewById<View>(R.id.server_tabs_container)?.visibility = View.GONE
         }
         navigateToPlayer(args)
     }
