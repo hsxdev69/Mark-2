@@ -75,20 +75,37 @@ fun LiveTvScreen(
     val featuredChannels = remember {
         LiveChannelsRepository.AllChannels.filter { it.isFeatured }
     }
-    val sportsChannels = remember {
-        LiveChannelsRepository.AllChannels.filter { it.category == "Sports" }
-    }
-    val newsChannels = remember {
-        LiveChannelsRepository.AllChannels.filter { it.category == "News" }
+    val entertainmentChannels = remember {
+        LiveChannelsRepository.getChannelsByCategory("📺 Hindi Entertainment")
     }
     val moviesChannels = remember {
-        LiveChannelsRepository.AllChannels.filter { it.category == "Movies" }
+        LiveChannelsRepository.getChannelsByCategory("🎬 Hindi Movies")
+    }
+    val newsChannels = remember {
+        LiveChannelsRepository.getChannelsByCategory("📰 News")
+    }
+    val sportsChannels = remember {
+        LiveChannelsRepository.getChannelsByCategory("🏏 Sports")
     }
     val musicChannels = remember {
-        LiveChannelsRepository.AllChannels.filter { it.category == "Music" }
+        LiveChannelsRepository.getChannelsByCategory("🎵 Music")
     }
     val kidsChannels = remember {
-        LiveChannelsRepository.AllChannels.filter { it.category == "Kids & Anime" }
+        LiveChannelsRepository.getChannelsByCategory("👶 Kids")
+    }
+    val documentaryChannels = remember {
+        LiveChannelsRepository.getChannelsByCategory("🌍 Documentary")
+    }
+    val devotionalChannels = remember {
+        LiveChannelsRepository.getChannelsByCategory("🕉️ Devotional")
+    }
+    val regionalChannels = remember {
+        LiveChannelsRepository.AllChannels.filter {
+            it.category in listOf("Marathi", "Tamil", "Telugu", "Kannada", "Bengali", "Malayalam", "Punjabi")
+        }
+    }
+    val internationalChannels = remember {
+        LiveChannelsRepository.getChannelsByCategory("🌐 International")
     }
 
     val filteredChannels = remember(selectedCategory, searchQuery) {
@@ -156,49 +173,114 @@ fun LiveTvScreen(
                     )
                 }
 
-                // Section: Live Sports
-                item {
-                    LiveChannelSectionRow(
-                        title = "🏏 Live Sports & Tournaments",
-                        channels = sportsChannels,
-                        onChannelClick = onChannelClick
-                    )
+                // Section: Hindi Entertainment
+                if (entertainmentChannels.isNotEmpty()) {
+                    item {
+                        LiveChannelSectionRow(
+                            title = "📺 Hindi Entertainment",
+                            channels = entertainmentChannels,
+                            onChannelClick = onChannelClick
+                        )
+                    }
+                }
+
+                // Section: Hindi Movies
+                if (moviesChannels.isNotEmpty()) {
+                    item {
+                        LiveChannelSectionRow(
+                            title = "🎬 24/7 Movie Channels",
+                            channels = moviesChannels,
+                            onChannelClick = onChannelClick
+                        )
+                    }
                 }
 
                 // Section: Breaking News
-                item {
-                    LiveChannelSectionRow(
-                        title = "📰 24/7 Breaking News",
-                        channels = newsChannels,
-                        onChannelClick = onChannelClick
-                    )
+                if (newsChannels.isNotEmpty()) {
+                    item {
+                        LiveChannelSectionRow(
+                            title = "📰 24/7 Breaking News",
+                            channels = newsChannels,
+                            onChannelClick = onChannelClick
+                        )
+                    }
                 }
 
-                // Section: Movies
-                item {
-                    LiveChannelSectionRow(
-                        title = "🎬 24/7 Movie Channels",
-                        channels = moviesChannels,
-                        onChannelClick = onChannelClick
-                    )
+                // Section: Live Sports
+                if (sportsChannels.isNotEmpty()) {
+                    item {
+                        LiveChannelSectionRow(
+                            title = "🏏 Live Sports & Tournaments",
+                            channels = sportsChannels,
+                            onChannelClick = onChannelClick
+                        )
+                    }
                 }
 
                 // Section: Music
-                item {
-                    LiveChannelSectionRow(
-                        title = "🎵 Non-Stop Music & Hits",
-                        channels = musicChannels,
-                        onChannelClick = onChannelClick
-                    )
+                if (musicChannels.isNotEmpty()) {
+                    item {
+                        LiveChannelSectionRow(
+                            title = "🎵 Non-Stop Music & Hits",
+                            channels = musicChannels,
+                            onChannelClick = onChannelClick
+                        )
+                    }
                 }
 
-                // Section: Anime & Kids
-                item {
-                    LiveChannelSectionRow(
-                        title = "🎌 Anime & Cartoons",
-                        channels = kidsChannels,
-                        onChannelClick = onChannelClick
-                    )
+                // Section: Kids
+                if (kidsChannels.isNotEmpty()) {
+                    item {
+                        LiveChannelSectionRow(
+                            title = "👶 Anime & Kids",
+                            channels = kidsChannels,
+                            onChannelClick = onChannelClick
+                        )
+                    }
+                }
+
+                // Section: Documentary
+                if (documentaryChannels.isNotEmpty()) {
+                    item {
+                        LiveChannelSectionRow(
+                            title = "🌍 Documentaries & Nature",
+                            channels = documentaryChannels,
+                            onChannelClick = onChannelClick
+                        )
+                    }
+                }
+
+                // Section: Devotional
+                if (devotionalChannels.isNotEmpty()) {
+                    item {
+                        LiveChannelSectionRow(
+                            title = "🕉️ Devotional & Spiritual",
+                            channels = devotionalChannels,
+                            onChannelClick = onChannelClick
+                        )
+                    }
+                }
+
+                // Section: Regional Channels
+                if (regionalChannels.isNotEmpty()) {
+                    item {
+                        LiveChannelSectionRow(
+                            title = "🚩 Regional Favorites (Marathi, Punjabi, South)",
+                            channels = regionalChannels,
+                            onChannelClick = onChannelClick
+                        )
+                    }
+                }
+
+                // Section: International
+                if (internationalChannels.isNotEmpty()) {
+                    item {
+                        LiveChannelSectionRow(
+                            title = "🌐 World News & International",
+                            channels = internationalChannels,
+                            onChannelClick = onChannelClick
+                        )
+                    }
                 }
             }
         } else {
