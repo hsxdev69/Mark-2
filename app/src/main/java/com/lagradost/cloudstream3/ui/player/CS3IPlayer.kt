@@ -363,31 +363,64 @@ class CS3IPlayer : IPlayer {
     }
 
     override fun setMaxVideoSize(width: Int, height: Int, id: String?) {
-        if (id != null) {
-            val videoTrack =
-                exoPlayer?.currentTracks?.groups?.filter { it.type == TRACK_TYPE_VIDEO }
-                    ?.getTrack(id)
+        val player = exoPlayer ?: return
+        val isAuto = (width >= Int.MAX_VALUE || height >= Int.MAX_VALUE || height <= 0)
 
+        if (isAuto) {
+            player.trackSelectionParameters = player.trackSelectionParameters
+                .buildUpon()
+                .clearOverridesOfType(TRACK_TYPE_VIDEO)
+                .setMaxVideoSize(Int.MAX_VALUE, Int.MAX_VALUE)
+                .setMinVideoSize(0, 0)
+                .build()
+            return
+        }
+
+        val videoGroups = player.currentTracks.groups.filter { it.type == TRACK_TYPE_VIDEO }
+        var targetOverride: TrackSelectionOverride? = null
+
+        // 1. Try matching by id if available
+        if (id != null) {
+            val videoTrack = videoGroups.getTrack(id)
             if (videoTrack != null) {
-                exoPlayer?.trackSelectionParameters = exoPlayer?.trackSelectionParameters
-                    ?.buildUpon()
-                    ?.setOverrideForType(
-                        TrackSelectionOverride(
-                            videoTrack.first,
-                            videoTrack.second
-                        )
-                    )
-                    ?.build()
-                    ?: return
-                return
+                targetOverride = TrackSelectionOverride(videoTrack.first, videoTrack.second)
             }
         }
 
-        exoPlayer?.trackSelectionParameters = exoPlayer?.trackSelectionParameters
-            ?.buildUpon()
-            ?.setMaxVideoSize(width, height)
-            ?.build()
-            ?: return
+        // 2. Fallback to matching by target height if id was null or not found
+        if (targetOverride == null && videoGroups.isNotEmpty()) {
+            var bestDiff = Int.MAX_VALUE
+            var bestGroup: androidx.media3.common.TrackGroup? = null
+            var bestIndex = -1
+
+            for (group in videoGroups) {
+                for (i in 0 until group.mediaTrackGroup.length) {
+                    val format = group.getTrackFormat(i)
+                    val fHeight = format.height
+                    if (fHeight > 0) {
+                        val diff = kotlin.math.abs(fHeight - height)
+                        if (diff < bestDiff) {
+                            bestDiff = diff
+                            bestGroup = group.mediaTrackGroup
+                            bestIndex = i
+                        }
+                    }
+                }
+            }
+
+            if (bestGroup != null && bestIndex >= 0 && bestDiff <= 120) {
+                targetOverride = TrackSelectionOverride(bestGroup, bestIndex)
+            }
+        }
+
+        val builder = player.trackSelectionParameters.buildUpon()
+        builder.clearOverridesOfType(TRACK_TYPE_VIDEO)
+        if (targetOverride != null) {
+            builder.setOverrideForType(targetOverride)
+        }
+        builder.setMaxVideoSize(width, height)
+        builder.setMinVideoSize(0, 0)
+        player.trackSelectionParameters = builder.build()
     }
 
     override fun setPreferredAudioTrack(trackLanguage: String?, id: String?, formatIndex: Int?) {

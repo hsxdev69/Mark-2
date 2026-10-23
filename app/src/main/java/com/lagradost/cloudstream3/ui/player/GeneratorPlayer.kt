@@ -188,8 +188,16 @@ class GeneratorPlayer : FullScreenPlayer() {
     private var currentSelectedSubtitles: SubtitleData? = null
     private var userSelectedLanguage: String = "Hindi"
     private var userSelectedQuality: Int = 1080
+    private var isAutoQuality: Boolean = true
 
-    override fun getPlaybackQualityText(): String = "${userSelectedQuality}p"
+    override fun getPlaybackQualityText(): String {
+        if (isAutoQuality) {
+            val tracks = try { player.getVideoTracks() } catch (_: Exception) { null }
+            val currentVideoHeight = tracks?.currentVideoTrack?.height
+            return if (currentVideoHeight != null && currentVideoHeight > 0) "Auto (${currentVideoHeight}p)" else "Auto"
+        }
+        return "${userSelectedQuality}p"
+    }
     override fun getPlaybackAudioText(): String = userSelectedLanguage
 
     private fun extractLanguage(name: String?, url: String?): String? {
@@ -1547,65 +1555,114 @@ class GeneratorPlayer : FullScreenPlayer() {
             }
 
             if (hasLinkQualities) {
+                items.add(QualityItem(
+                    name = "Auto",
+                    isSelected = isAutoQuality,
+                    onSelect = {
+                        isAutoQuality = true
+                        userSelectedQuality = 0
+                        player.setMaxVideoSize(Int.MAX_VALUE, Int.MAX_VALUE, null)
+                        com.lagradost.cloudstream3.CommonActivity.showToast(act, "Quality: Auto", android.widget.Toast.LENGTH_SHORT)
+                    }
+                ))
+
                 val uniqueQualities = linksForCurrentLang.map {
                     extractQualityNumber(it.first?.quality, it.first?.name, it.first?.url)
                 }.distinct().sortedDescending()
 
                 uniqueQualities.forEach { q ->
-                    val isSelected = q == userSelectedQuality
+                    val isSelected = !isAutoQuality && q == userSelectedQuality
                     items.add(QualityItem(
                         name = "${q}p",
                         isSelected = isSelected,
                         onSelect = {
+                            isAutoQuality = false
                             userSelectedQuality = q
                             val matchedLink = linksForCurrentLang.minByOrNull {
                                 val linkQ = extractQualityNumber(it.first?.quality, it.first?.name, it.first?.url)
                                 Math.abs(linkQ - q)
                             }
-                            if (matchedLink != null) {
+                            if (matchedLink != null && matchedLink != currentSelectedLink) {
+                                val currentPos = player.getPosition()
                                 loadLink(matchedLink, true)
+                                if (currentPos != null && currentPos > 0) {
+                                    player.seekTo(currentPos)
+                                }
+                            } else {
+                                val w = when (q) {
+                                    1080 -> 1920
+                                    720 -> 1280
+                                    480 -> 854
+                                    360 -> 640
+                                    else -> 426
+                                }
+                                player.setMaxVideoSize(w, q, null)
                             }
+                            com.lagradost.cloudstream3.CommonActivity.showToast(act, "Quality: ${q}p", android.widget.Toast.LENGTH_SHORT)
                         }
                     ))
                 }
             } else if (currentVideoTracks.size > 1) {
-                val isAutoSelected = currentVideo == null
                 items.add(QualityItem(
                     name = "Auto",
-                    isSelected = isAutoSelected,
+                    isSelected = isAutoQuality,
                     onSelect = {
+                        isAutoQuality = true
+                        userSelectedQuality = 0
                         player.setMaxVideoSize(Int.MAX_VALUE, Int.MAX_VALUE, null)
+                        com.lagradost.cloudstream3.CommonActivity.showToast(act, "Quality: Auto", android.widget.Toast.LENGTH_SHORT)
                     }
                 ))
 
                 currentVideoTracks.forEach { track ->
-                    val label = if (track.height != null && track.height != NO_VALUE) {
-                        "${track.height}p"
+                    val trackHeight = track.height ?: NO_VALUE
+                    val label = if (trackHeight != NO_VALUE) {
+                        "${trackHeight}p"
                     } else {
                         track.label ?: "Standard"
                     }
-                    val isSelected = track.id == currentVideo?.id || (track.height == currentVideo?.height && currentVideo?.height != null)
+                    val isSelected = !isAutoQuality && (track.id == currentVideo?.id || (trackHeight == userSelectedQuality && trackHeight != NO_VALUE))
                     items.add(QualityItem(
                         name = label,
                         isSelected = isSelected,
                         onSelect = {
-                            if (track.height != null && track.height != NO_VALUE) {
-                                userSelectedQuality = track.height
+                            isAutoQuality = false
+                            if (trackHeight != NO_VALUE) {
+                                userSelectedQuality = trackHeight
                             }
                             val width = track.width ?: NO_VALUE
-                            val height = track.height ?: NO_VALUE
-                            if (width != NO_VALUE && height != NO_VALUE) {
-                                player.setMaxVideoSize(width, height, track.id)
+                            val height = trackHeight
+                            val targetW = if (width != NO_VALUE) width else when (height) {
+                                1080 -> 1920
+                                720 -> 1280
+                                480 -> 854
+                                360 -> 640
+                                else -> 1920
                             }
+                            val targetH = if (height != NO_VALUE) height else 1080
+                            player.setMaxVideoSize(targetW, targetH, track.id)
+                            com.lagradost.cloudstream3.CommonActivity.showToast(act, "Quality: $label", android.widget.Toast.LENGTH_SHORT)
                         }
                     ))
                 }
             } else {
+                items.add(QualityItem(
+                    name = "Auto",
+                    isSelected = isAutoQuality,
+                    onSelect = {
+                        isAutoQuality = true
+                        userSelectedQuality = 0
+                        player.setMaxVideoSize(Int.MAX_VALUE, Int.MAX_VALUE, null)
+                        com.lagradost.cloudstream3.CommonActivity.showToast(act, "Quality: Auto", android.widget.Toast.LENGTH_SHORT)
+                    }
+                ))
+
                 listOf(1080, 720, 480, 360, 240).forEach { q ->
                     items.add(QualityItem(
                         name = "${q}p",
-                        isSelected = q == userSelectedQuality,
+                        isSelected = !isAutoQuality && q == userSelectedQuality,
                         onSelect = {
+                            isAutoQuality = false
                             userSelectedQuality = q
                             val w = when (q) {
                                 1080 -> 1920
@@ -1615,6 +1672,7 @@ class GeneratorPlayer : FullScreenPlayer() {
                                 else -> 426
                             }
                             player.setMaxVideoSize(w, q, null)
+                            com.lagradost.cloudstream3.CommonActivity.showToast(act, "Quality: ${q}p", android.widget.Toast.LENGTH_SHORT)
                         }
                     ))
                 }

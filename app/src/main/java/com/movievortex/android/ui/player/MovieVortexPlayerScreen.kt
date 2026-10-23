@@ -66,6 +66,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
 import androidx.media3.common.MediaItem
 import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
@@ -265,6 +266,54 @@ fun MovieVortexPlayerScreen(
         } else {
             Toast.makeText(context, "Connecting to stream before downloading...", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    var selectedQualityLabel by remember { mutableStateOf("Auto") }
+
+    val onQualitySelected: (String, Int?, Int?) -> Unit = { label, w, h ->
+        selectedQualityLabel = label
+        if (h == null) {
+            exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters.buildUpon()
+                .clearOverridesOfType(androidx.media3.common.C.TRACK_TYPE_VIDEO)
+                .setMaxVideoSize(Int.MAX_VALUE, Int.MAX_VALUE)
+                .setMinVideoSize(0, 0)
+                .build()
+            Toast.makeText(context, "Quality: Auto", Toast.LENGTH_SHORT).show()
+        } else {
+            val videoGroups = exoPlayer.currentTracks.groups.filter { it.type == androidx.media3.common.C.TRACK_TYPE_VIDEO }
+            var targetOverride: androidx.media3.common.TrackSelectionOverride? = null
+            var bestDiff = Int.MAX_VALUE
+            for (group in videoGroups) {
+                for (i in 0 until group.mediaTrackGroup.length) {
+                    val format = group.getTrackFormat(i)
+                    if (format.height > 0) {
+                        val diff = kotlin.math.abs(format.height - h)
+                        if (diff < bestDiff) {
+                            bestDiff = diff
+                            targetOverride = androidx.media3.common.TrackSelectionOverride(group.mediaTrackGroup, i)
+                        }
+                    }
+                }
+            }
+            val builder = exoPlayer.trackSelectionParameters.buildUpon()
+            builder.clearOverridesOfType(androidx.media3.common.C.TRACK_TYPE_VIDEO)
+            if (targetOverride != null) {
+                builder.setOverrideForType(targetOverride)
+            }
+            builder.setMaxVideoSize(w ?: 1920, h)
+            builder.setMinVideoSize(0, 0)
+            exoPlayer.trackSelectionParameters = builder.build()
+            Toast.makeText(context, "Quality: ${h}p", Toast.LENGTH_SHORT).show()
+        }
+        showQualityPicker = false
+    }
+
+    if (showQualityPicker) {
+        QualityPickerDialog(
+            selectedQuality = selectedQualityLabel,
+            onDismiss = { showQualityPicker = false },
+            onSelectQuality = onQualitySelected
+        )
     }
 
     // Fullscreen Mode
@@ -1305,4 +1354,66 @@ private fun formatTime(millis: Long): String {
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return "%d:%02d".format(minutes, seconds)
+}
+
+@Composable
+private fun QualityPickerDialog(
+    selectedQuality: String,
+    onDismiss: () -> Unit,
+    onSelectQuality: (String, Int?, Int?) -> Unit
+) {
+    val options = listOf(
+        Triple("Auto", null, null),
+        Triple("1080p", 1920, 1080),
+        Triple("720p", 1280, 720),
+        Triple("480p", 854, 480),
+        Triple("360p", 640, 360)
+    )
+
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color(0xFF16191F))
+                .border(1.dp, Color(0xFF292D35), RoundedCornerShape(16.dp))
+                .padding(20.dp)
+        ) {
+            Text(
+                text = "Select Quality",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            options.forEach { (label, w, h) ->
+                val isSelected = label.equals(selectedQuality, ignoreCase = true)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onSelectQuality(label, w, h) }
+                        .padding(vertical = 12.dp, horizontal = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = label,
+                        color = if (isSelected) Color(0xFF6EA8FE) else Color.White,
+                        fontSize = 15.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                    )
+                    if (isSelected) {
+                        Icon(
+                            imageVector = VortexIcons.Check,
+                            contentDescription = "Selected",
+                            tint = Color(0xFF6EA8FE),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
