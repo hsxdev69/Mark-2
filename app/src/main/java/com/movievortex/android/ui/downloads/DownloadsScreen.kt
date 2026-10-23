@@ -285,11 +285,14 @@ fun DownloadsScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Filter items based on selected tab
-        val displayItems = if (selectedTab == 0) {
-            state.items.filter { it.state == MediaDownloadState.Completed }
-        } else {
-            state.items.filter { it.state != MediaDownloadState.Completed }
+        // Filter items based on selected tab with strict deduplication
+        val displayItems = remember(state.items, selectedTab) {
+            val filtered = if (selectedTab == 0) {
+                state.items.filter { it.state == MediaDownloadState.Completed }
+            } else {
+                state.items.filter { it.state != MediaDownloadState.Completed }
+            }
+            com.movievortex.android.controller.deduplicateList(filtered)
         }
 
         if (displayItems.isEmpty()) {
@@ -338,7 +341,10 @@ fun DownloadsScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(displayItems) { item ->
+                items(
+                    items = displayItems,
+                    key = { it.id }
+                ) { item ->
                     DownloadItemCard(
                         item = item,
                         onPause = { downloadController.pauseDownload(item.id) },
@@ -388,14 +394,24 @@ fun DownloadItemCard(
                         .size(width = 62.dp, height = 76.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(Color(0xFF18181D))
-                        .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(10.dp))
+                        .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(10.dp)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    AsyncImage(
-                        model = item.poster,
-                        contentDescription = item.title,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    if (!item.poster.isNullOrBlank()) {
+                        AsyncImage(
+                            model = item.poster,
+                            contentDescription = item.title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Icon(
+                            imageVector = VortexIcons.Movie,
+                            contentDescription = item.title,
+                            tint = Color(0xFF666675),
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))

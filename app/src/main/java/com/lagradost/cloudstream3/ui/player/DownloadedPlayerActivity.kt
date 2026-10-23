@@ -744,6 +744,29 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         try {
             // Save cache keys so MovieVortex and CloudStream download screens discover this immediately
             val parentId = (resp.apiName + resp.url).hashCode()
+            val posterUrl = ep.poster ?: resp.posterUrl
+            val norm = com.movievortex.android.controller.normalizeTitle(title)
+            val cleanName = title.replace(Regex("[^a-zA-Z0-9.-]"), "_")
+
+            try {
+                setKey("vortex_download_posters", ep.id.toString(), posterUrl)
+                setKey("vortex_download_posters", norm, posterUrl)
+                setKey("vortex_download_posters", cleanName, posterUrl)
+                setKey("vortex_download_posters", title, posterUrl)
+            } catch (_: Exception) {}
+
+            val epCached = DownloadObjects.DownloadEpisodeCached(
+                name = title,
+                poster = posterUrl,
+                episode = ep.episode,
+                season = ep.season,
+                id = ep.id,
+                parentId = parentId,
+                score = ep.score,
+                description = ep.description,
+                cacheTime = System.currentTimeMillis()
+            )
+
             setKey(
                 DOWNLOAD_HEADER_CACHE,
                 parentId.toString(),
@@ -757,21 +780,8 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                     cacheTime = System.currentTimeMillis()
                 )
             )
-            setKey(
-                DOWNLOAD_EPISODE_CACHE,
-                ep.id.toString(),
-                DownloadObjects.DownloadEpisodeCached(
-                    name = title,
-                    poster = ep.poster ?: resp.posterUrl,
-                    episode = ep.episode,
-                    season = ep.season,
-                    id = ep.id,
-                    parentId = parentId,
-                    score = ep.score,
-                    description = ep.description,
-                    cacheTime = System.currentTimeMillis()
-                )
-            )
+            setKey(DOWNLOAD_EPISODE_CACHE, ep.id.toString(), epCached)
+            setKey(getFolderName(DOWNLOAD_EPISODE_CACHE, parentId.toString()), ep.id.toString(), epCached)
         } catch (_: Exception) {}
 
         try {
