@@ -10,12 +10,12 @@
 
 <p align="center">
   <a href="https://github.com/hsxdev69/Mark-2/releases/latest"><img src="https://img.shields.io/github/v/release/hsxdev69/Mark-2?style=for-the-badge&amp;color=white&amp;labelColor=101014&amp;label=Latest%20Release" alt="Latest Release" /></a>
-  <a href="https://github.com/hsxdev69/Mark-2/actions"><img src="https://img.shields.io/github/actions/workflow/status/hsxdev69/Mark-2/build.yml?style=for-the-badge&amp;color=white&amp;labelColor=101014&amp;label=Build" alt="Build Status" /></a>
+  <a href="https://github.com/hsxdev69/Mark-2/actions"><img src="https://img.shields.io/github/actions/workflow/status/hsxdev69/Mark-2/build-movievortex.yml?style=for-the-badge&amp;color=white&amp;labelColor=101014&amp;label=Build" alt="Build Status" /></a>
   <a href="https://github.com/hsxdev69/Mark-2/releases"><img src="https://img.shields.io/github/downloads/hsxdev69/Mark-2/total?style=for-the-badge&amp;color=white&amp;labelColor=101014&amp;label=Downloads" alt="Total Downloads" /></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/hsxdev69/Mark-2/releases/download/v2.0-flutter/app-release.apk">
+  <a href="https://github.com/hsxdev69/Mark-2/releases/latest">
     <img src="https://img.shields.io/badge/Download-APK-white?style=for-the-badge&amp;logo=android&amp;logoColor=black&amp;labelColor=white" alt="Download APK" />
   </a>
 </p>
@@ -58,7 +58,7 @@
 
 ## 📲 Download & Installation
 
-1. Download the latest **[app-release.apk](https://github.com/hsxdev69/Mark-2/releases/download/v2.0-flutter/app-release.apk)** from the [Releases](https://github.com/hsxdev69/Mark-2/releases) section.
+1. Download the latest **APK** from the [Releases](https://github.com/hsxdev69/Mark-2/releases/latest) section.
 2. Open the downloaded `.apk` file on your Android device (Android 7.0+ supported).
 3. If prompted, allow "Install from Unknown Sources" in your device settings.
 4. Launch **MovieVortex** and enjoy instant streaming!
