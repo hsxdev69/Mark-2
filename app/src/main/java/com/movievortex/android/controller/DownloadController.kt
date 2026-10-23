@@ -87,6 +87,9 @@ class DownloadController : ViewModel() {
     private val _uiState = MutableStateFlow(DownloadsUiState())
     val uiState: StateFlow<DownloadsUiState> = _uiState.asStateFlow()
 
+    private val speedTracker = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, Long>>()
+    private val speedMap = java.util.concurrent.ConcurrentHashMap<String, Long>()
+
     private val downloadProgressListener: (Triple<Int, Long, Long>) -> Unit = { (id, downloaded, total) ->
         updateProgressForQueueItem(id.toString(), downloaded, total)
     }
@@ -386,6 +389,24 @@ class DownloadController : ViewModel() {
 
     private fun updateProgressForQueueItem(id: String, downloaded: Long, total: Long) {
         val prog = if (total > 0L) (downloaded.toFloat() / total.toFloat()).coerceIn(0f, 1f) else 0f
+
+        val now = System.currentTimeMillis()
+        val last = speedTracker[id]
+        if (last != null) {
+            val dt = (now - last.first) / 1000f
+            if (dt >= 0.5f) {
+                val dBytes = downloaded - last.second
+                if (dBytes > 0) {
+                    val spd = (dBytes / dt).toLong()
+                    speedMap[id] = spd
+                }
+                speedTracker[id] = Pair(now, downloaded)
+            }
+        } else {
+            speedTracker[id] = Pair(now, downloaded)
+        }
+        val currentSpeed = speedMap[id] ?: 0L
+
         val exists = _uiState.value.items.any { it.id == id || it.id == (it.title.hashCode()).toString() }
         val newItems = if (exists) {
             _uiState.value.items.map { item ->
@@ -394,6 +415,7 @@ class DownloadController : ViewModel() {
                         downloadedBytes = downloaded,
                         fileSizeBytes = if (total > 0L) total else item.fileSizeBytes,
                         progress = prog,
+                        speedBytesPerSec = currentSpeed,
                         state = if (prog >= 1.0f) MediaDownloadState.Completed else MediaDownloadState.Downloading
                     )
                 } else item
@@ -410,6 +432,7 @@ class DownloadController : ViewModel() {
                 downloadedBytes = downloaded,
                 fileSizeBytes = total,
                 progress = prog,
+                speedBytesPerSec = currentSpeed,
                 state = if (prog >= 1.0f) MediaDownloadState.Completed else MediaDownloadState.Downloading
             )
             listOf(newItem) + _uiState.value.items
@@ -457,6 +480,8 @@ class DownloadController : ViewModel() {
     }
 
     private fun handleQueueItemDeleted(id: String) {
+        speedTracker.remove(id)
+        speedMap.remove(id)
         _uiState.value = _uiState.value.copy(
             items = _uiState.value.items.filter { it.id != id },
             activeDownloadsCount = _uiState.value.items.count { it.state == MediaDownloadState.Downloading }
