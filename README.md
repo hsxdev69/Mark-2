@@ -15,8 +15,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hsxdev69/Mark-2/releases/latest">
-    <img src="https://img.shields.io/badge/Download-APK-white?style=for-the-badge&amp;logo=android&amp;logoColor=black&amp;labelColor=white" alt="Download APK" />
+  <a href="https://github.com/hsxdev69/Mark-2/releases/download/v2.0-latest/MovieVortex.apk">
+    <img src="https://img.shields.io/badge/Direct_Download-MovieVortex.apk-white?style=for-the-badge&amp;logo=android&amp;logoColor=black&amp;labelColor=white" alt="Download MovieVortex APK" />
   </a>
 </p>
 
@@ -58,10 +58,12 @@
 
 ## 📲 Download & Installation
 
-1. Download the latest **APK** from the [Releases](https://github.com/hsxdev69/Mark-2/releases/latest) section.
-2. Open the downloaded `.apk` file on your Android device (Android 7.0+ supported).
+1. Click **[Direct Download MovieVortex.apk](https://github.com/hsxdev69/Mark-2/releases/download/v2.0-latest/MovieVortex.apk)** to directly download the raw `.apk` file (no zip, no extraction needed).
+2. Open the downloaded `MovieVortex.apk` file on your Android device (Android 7.0+ supported).
 3. If prompted, allow "Install from Unknown Sources" in your device settings.
 4. Launch **MovieVortex** and enjoy instant streaming!
+
+> You can also browse previous release notes and updates in the [Releases](https://github.com/hsxdev69/Mark-2/releases) section.
 
 ---
 
