@@ -285,119 +285,47 @@ object VideoDownloadManager {
                 builder.setContentIntent(pendingIntent)
             }
 
+            val cleanTitle = ep.mainName
+            val epSubtitle = if (ep.season != null && ep.episode != null) {
+                "S${ep.season}:E${ep.episode}" + (if (!ep.name.isNullOrBlank()) " - ${ep.name}" else "")
+            } else if (ep.episode != null) {
+                "EP ${ep.episode}" + (if (!ep.name.isNullOrBlank()) " - ${ep.name}" else "")
+            } else {
+                ep.name ?: ""
+            }
+
+            val progressPercentage: Long = if (hlsProgress != null && hlsTotal != null && hlsTotal > 0) {
+                (hlsProgress * 100 / hlsTotal).coerceIn(0, 100)
+            } else if (total > 0) {
+                (progress * 100 / total).coerceIn(0, 100)
+            } else 0L
+
+            val downloadedMb = "%.1f MB".format(progress / 1_000_000f)
+            val totalMb = "%.1f MB".format(total / 1_000_000f)
+            val speedMb = "%.1f MB/s".format(bytesPerSecond.toFloat() / 1_000_000f)
+
+            val summaryLine = when (state) {
+                DownloadType.IsDownloading -> {
+                    val spd = if (bytesPerSecond > 0) " • $speedMb" else ""
+                    "$progressPercentage% • $downloadedMb / $totalMb$spd"
+                }
+                DownloadType.IsPaused -> "Paused • $progressPercentage% ($downloadedMb / $totalMb)"
+                DownloadType.IsPending -> "Queued • Starting download..."
+                DownloadType.IsDone -> "Download complete • Tap to watch"
+                DownloadType.IsFailed -> "Download failed"
+                DownloadType.IsStopped -> "Download canceled"
+            }
+
+            val finalTitle = if (epSubtitle.isNotBlank() && cleanTitle != epSubtitle) "$cleanTitle • $epSubtitle" else cleanTitle
+            builder.setContentTitle(finalTitle)
+            builder.setContentText(summaryLine)
+
             if (state == DownloadType.IsDownloading || state == DownloadType.IsPaused) {
-                builder.setProgress((total / 1000).toInt(), (progress / 1000).toInt(), false)
+                builder.setProgress(100, progressPercentage.toInt(), false)
             } else if (state == DownloadType.IsPending) {
                 builder.setProgress(0, 0, true)
-            }
-
-            val rowTwoExtra = if (ep.name != null) " - ${ep.name}\n" else ""
-            val rowTwo = if (ep.season != null && ep.episode != null) {
-                "${context.getString(R.string.season_short)}${ep.season}:${context.getString(R.string.episode_short)}${ep.episode}" + rowTwoExtra
-            } else if (ep.episode != null) {
-                "${context.getString(R.string.episode)} ${ep.episode}" + rowTwoExtra
             } else {
-                (ep.name ?: "") + ""
-            }
-            val downloadFormat = context.getString(R.string.download_format)
-
-            if (SDK_INT >= Build.VERSION_CODES.O) {
-                if (ep.poster != null) {
-                    val poster = withContext(Dispatchers.IO) {
-                        context.getImageBitmapFromUrl(ep.poster)
-                    }
-                    if (poster != null)
-                        builder.setLargeIcon(poster)
-                }
-
-                val progressPercentage: Long
-                val progressMbString: String
-                val totalMbString: String
-                val suffix: String
-
-                val mbFormat = "%.1f MB"
-
-                if (hlsProgress != null && hlsTotal != null) {
-                    progressPercentage = hlsProgress * 100 / hlsTotal
-                    progressMbString = hlsProgress.toString()
-                    totalMbString = hlsTotal.toString()
-                    suffix = " - $mbFormat".format(progress / 1000000f)
-                } else {
-                    progressPercentage = progress * 100 / total
-                    progressMbString = mbFormat.format(progress / 1000000f)
-                    totalMbString = mbFormat.format(total / 1000000f)
-                    suffix = ""
-                }
-
-                val mbPerSecondString =
-                    if (state == DownloadType.IsDownloading) {
-                        " ($mbFormat/s)".format(bytesPerSecond.toFloat() / 1000000f)
-                    } else ""
-
-                val remainingTime =
-                    if (state == DownloadType.IsDownloading) {
-                        getEstimatedTimeLeft(context, bytesPerSecond, progress, total)
-                    } else ""
-
-                val bigText =
-                    when (state) {
-                        DownloadType.IsDownloading, DownloadType.IsPaused -> {
-                            (if (linkName == null) "" else "$linkName\n") + "$rowTwo\n$progressPercentage % ($progressMbString/$totalMbString)$suffix$mbPerSecondString $remainingTime"
-                        }
-
-                        DownloadType.IsPending -> {
-                            (if (linkName == null) "" else "$linkName\n") + rowTwo
-                        }
-
-                        DownloadType.IsFailed -> {
-                            downloadFormat.format(
-                                context.getString(R.string.download_failed),
-                                rowTwo
-                            )
-                        }
-
-                        DownloadType.IsDone -> {
-                            downloadFormat.format(context.getString(R.string.download_done), rowTwo)
-                        }
-
-                        DownloadType.IsStopped -> {
-                            downloadFormat.format(
-                                context.getString(R.string.download_canceled),
-                                rowTwo
-                            )
-                        }
-                    }
-
-                val bodyStyle = NotificationCompat.BigTextStyle()
-                bodyStyle.bigText(bigText)
-                builder.setStyle(bodyStyle)
-            } else {
-                val txt =
-                    when (state) {
-                        DownloadType.IsDownloading, DownloadType.IsPaused, DownloadType.IsPending -> {
-                            rowTwo
-                        }
-
-                        DownloadType.IsFailed -> {
-                            downloadFormat.format(
-                                context.getString(R.string.download_failed),
-                                rowTwo
-                            )
-                        }
-
-                        DownloadType.IsDone -> {
-                            downloadFormat.format(context.getString(R.string.download_done), rowTwo)
-                        }
-
-                        DownloadType.IsStopped -> {
-                            downloadFormat.format(
-                                context.getString(R.string.download_canceled),
-                                rowTwo
-                            )
-                        }
-                    }
-
-                builder.setContentText(txt)
+                builder.setProgress(0, 0, false)
             }
 
             if ((state == DownloadType.IsDownloading || state == DownloadType.IsPaused || state == DownloadType.IsPending) && SDK_INT >= Build.VERSION_CODES.O) {

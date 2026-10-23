@@ -109,13 +109,50 @@ fun launchLiveStreamPlayer(context: Context, channel: LiveChannel) {
     }
 }
 
-fun launchOfflinePlayer(context: Context, localFilePath: String?, title: String? = null) {
-    if (localFilePath.isNullOrBlank()) return
+fun launchOfflinePlayer(context: Context, localFilePath: String?, title: String? = null, itemId: String? = null) {
+    var resolvedPath: String? = localFilePath?.takeIf { it.isNotBlank() && (it.startsWith("content://") || File(it).exists()) }
+
+    if (resolvedPath.isNullOrBlank()) {
+        val appDirs = listOfNotNull(
+            context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS),
+            context.filesDir,
+            File("/storage/emulated/0/Download/MovieVortex")
+        )
+        val clean = title?.replace(Regex("[^a-zA-Z0-9]"), "")?.lowercase()
+        for (dir in appDirs) {
+            if (dir.exists()) {
+                val match = dir.walkTopDown().firstOrNull { f ->
+                    f.isFile && (f.extension.equals("mp4", true) || f.extension.equals("mkv", true)) &&
+                            (clean != null && f.nameWithoutExtension.replace(Regex("[^a-zA-Z0-9]"), "").lowercase().contains(clean))
+                }
+                if (match != null) {
+                    resolvedPath = match.absolutePath
+                    break
+                }
+            }
+        }
+    }
+
+    if (resolvedPath.isNullOrBlank()) {
+        val intId = itemId?.toIntOrNull()
+        if (intId != null) {
+            val info = com.lagradost.cloudstream3.utils.downloader.VideoDownloadManager.getDownloadFileInfo(context, intId)
+            if (info != null) {
+                resolvedPath = info.path.toString()
+            }
+        }
+    }
+
+    if (resolvedPath.isNullOrBlank()) {
+        android.widget.Toast.makeText(context, "Downloaded media file not found on device", android.widget.Toast.LENGTH_SHORT).show()
+        return
+    }
+
     try {
-        val uri = if (localFilePath.startsWith("content://")) {
-            Uri.parse(localFilePath)
+        val uri = if (resolvedPath.startsWith("content://")) {
+            Uri.parse(resolvedPath)
         } else {
-            val file = File(localFilePath)
+            val file = File(resolvedPath)
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                 try {
                     androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
@@ -127,7 +164,7 @@ fun launchOfflinePlayer(context: Context, localFilePath: String?, title: String?
             }
         }
         val intent = Intent(context, com.lagradost.cloudstream3.ui.player.DownloadedPlayerActivity::class.java).apply {
-            putExtra("OFFLINE_PATH", localFilePath)
+            putExtra("OFFLINE_PATH", resolvedPath)
             if (!title.isNullOrBlank()) {
                 putExtra("TITLE", title)
             }
@@ -262,7 +299,7 @@ fun MovieVortexNavGraph(
                                         downloadController = downloadController,
                                         onBrowseClick = { currentDestination = MainDestination.Home },
                                         onPlayOffline = { item ->
-                                            launchOfflinePlayer(context, item.localFilePath, item.title)
+                                            launchOfflinePlayer(context, item.localFilePath, item.title, item.id)
                                         }
                                     )
                                 }

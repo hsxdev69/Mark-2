@@ -400,14 +400,40 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     }
 
     private fun playOfflineDirect(path: String, title: String?) {
-        val uri = if (path.startsWith("content://")) {
+        val resolvedUri: Uri = try {
+            if (path.startsWith("content://")) {
+                Uri.parse(path)
+            } else {
+                val f = File(path)
+                if (f.exists()) {
+                    Uri.fromFile(f)
+                } else {
+                    val appDirs = listOfNotNull(
+                        getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+                        filesDir,
+                        File("/storage/emulated/0/Download/MovieVortex")
+                    )
+                    val clean = title?.replace(Regex("[^a-zA-Z0-9]"), "")?.lowercase() ?: ""
+                    var found: File? = null
+                    for (dir in appDirs) {
+                        if (dir.exists()) {
+                            found = dir.walkTopDown().firstOrNull { file ->
+                                file.isFile && (file.extension.equals("mp4", true) || file.extension.equals("mkv", true)) &&
+                                        (clean.isNotBlank() && file.nameWithoutExtension.replace(Regex("[^a-zA-Z0-9]"), "").lowercase().contains(clean))
+                            }
+                            if (found != null) break
+                        }
+                    }
+                    if (found != null) Uri.fromFile(found) else Uri.fromFile(f)
+                }
+            }
+        } catch (_: Exception) {
             Uri.parse(path)
-        } else {
-            Uri.fromFile(File(path))
         }
+
         val displayName = title ?: (if (!path.startsWith("content://")) File(path).nameWithoutExtension.replace("_", " ") else "Downloaded Movie")
         val extractorUri = ExtractorUri(
-            uri = uri,
+            uri = resolvedUri,
             name = displayName,
             id = path.hashCode()
         )
@@ -417,8 +443,9 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         )
         runOnUiThread {
             findViewById<TextView>(R.id.inline_player_title)?.text = displayName
-            findViewById<TextView>(R.id.inline_player_meta)?.text = "Offline Download"
+            findViewById<TextView>(R.id.inline_player_meta)?.text = "Offline Playback"
             findViewById<TextView>(R.id.inline_player_overview)?.text = displayName
+            findViewById<View>(R.id.inline_server_tabs_container)?.visibility = View.GONE
         }
         navigateToPlayer(args)
     }

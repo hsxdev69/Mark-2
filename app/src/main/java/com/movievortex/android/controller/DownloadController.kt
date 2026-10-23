@@ -42,23 +42,87 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 fun normalizeTitle(title: String): String {
-    return title.lowercase()
+    val clean = if (title.contains(" - ")) {
+        val parts = title.split(" - ")
+        if (parts.size >= 2 && parts[0].trim().equals(parts[1].trim(), ignoreCase = true)) {
+            parts[0].trim()
+        } else {
+            title
+        }
+    } else {
+        title
+    }
+
+    return clean.lowercase()
         .replace(Regex("\\b(1080p|720p|480p|360p|4k|uhd|hd|sd|mp4|mkv|web-dl|bluray)\\b"), "")
         .replace(Regex("[^a-z0-9]"), "")
 }
 
 fun areSameItem(a: DownloadUiItem, b: DownloadUiItem): Boolean {
     if (a.id.isNotBlank() && b.id.isNotBlank() && a.id == b.id) return true
-    if (!a.localFilePath.isNullOrBlank() && !b.localFilePath.isNullOrBlank() && a.localFilePath == b.localFilePath) return true
+    if (!a.localFilePath.isNullOrBlank() && !b.localFilePath.isNullOrBlank()) {
+        val nameA = a.localFilePath.substringAfterLast('/')
+        val nameB = b.localFilePath.substringAfterLast('/')
+        if (a.localFilePath == b.localFilePath || nameA == nameB) return true
+    }
     val normA = normalizeTitle(a.title)
     val normB = normalizeTitle(b.title)
-    return normA.isNotBlank() && normA == normB
+    if (normA.isNotBlank() && normB.isNotBlank()) {
+        if (normA == normB) return true
+        if (normA.startsWith(normB) || normB.startsWith(normA) || normA.contains(normB) || normB.contains(normA)) {
+            return true
+        }
+    }
+    return false
+}
+
+fun findLocalMediaFile(ctx: Context?, title: String): File? {
+    if (ctx == null) return null
+    val dirs = listOfNotNull(
+        ctx.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+        ctx.filesDir,
+        File("/storage/emulated/0/Download/MovieVortex")
+    )
+    val norm = normalizeTitle(title)
+    for (dir in dirs) {
+        if (dir.exists()) {
+            val match = dir.walkTopDown().firstOrNull { f ->
+                if (f.isFile && (f.extension.equals("mp4", true) || f.extension.equals("mkv", true) || f.extension.equals("webm", true))) {
+                    val fNorm = normalizeTitle(f.nameWithoutExtension)
+                    fNorm == norm || (norm.isNotBlank() && (fNorm.contains(norm) || norm.contains(fNorm)))
+                } else false
+            }
+            if (match != null) return match
+        }
+    }
+    return null
+}
+
+const val VORTEX_DOWNLOADS_STORE = "vortex_saved_downloads_store"
+
+fun persistDownloadsList(items: List<DownloadUiItem>) {
+    try {
+        val ctx = CloudStreamApp.context ?: return
+        ctx.setKey(VORTEX_DOWNLOADS_STORE, items.toTypedArray())
+    } catch (_: Exception) {}
+}
+
+fun loadPersistedDownloadsList(): List<DownloadUiItem> {
+    return try {
+        val ctx = CloudStreamApp.context ?: return emptyList()
+        val arr = ctx.getKey<Array<DownloadUiItem>>(VORTEX_DOWNLOADS_STORE)
+        arr?.toList() ?: emptyList()
+    } catch (_: Exception) {
+        emptyList()
+    }
 }
 
 fun mergeItems(existing: DownloadUiItem, update: DownloadUiItem): DownloadUiItem {
     val bestPoster = update.poster?.takeIf { it.isNotBlank() }
         ?: existing.poster?.takeIf { it.isNotBlank() }
-    val bestPath = update.localFilePath?.takeIf { it.isNotBlank() }
+    val bestPath = update.localFilePath?.takeIf { it.isNotBlank() && (File(it).exists() || it.startsWith("content://")) }
+        ?: existing.localFilePath?.takeIf { it.isNotBlank() && (File(it).exists() || it.startsWith("content://")) }
+        ?: update.localFilePath?.takeIf { it.isNotBlank() }
         ?: existing.localFilePath?.takeIf { it.isNotBlank() }
     val bestQuality = if (update.quality.isNotBlank() && update.quality != "1080p") update.quality else existing.quality
     val isCompleted = update.state == MediaDownloadState.Completed ||
@@ -66,14 +130,28 @@ fun mergeItems(existing: DownloadUiItem, update: DownloadUiItem): DownloadUiItem
             update.progress >= 1.0f ||
             existing.progress >= 1.0f
 
-    val finalState = if (isCompleted) MediaDownloadState.Completed else update.state
+    val finalState = if (isCompleted) MediaDownloadState.Completed else (if (update.state != MediaDownloadState.Completed) update.state else existing.state)
     val finalProgress = if (isCompleted) 1.0f else maxOf(update.progress, existing.progress)
     val finalDownloaded = maxOf(update.downloadedBytes, existing.downloadedBytes)
     val finalTotal = maxOf(update.fileSizeBytes, existing.fileSizeBytes)
 
+    val chosenTitle = if (existing.title.contains(" - ") && !update.title.contains(" - ")) {
+        update.title
+    } else if (update.title.contains(" - ") && !existing.title.contains(" - ")) {
+        existing.title
+    } else if (update.title.length > existing.title.length) {
+        update.title
+    } else {
+        existing.title
+    }
+
+    val chosenId = if (existing.id.toIntOrNull() != null) existing.id
+    else if (update.id.toIntOrNull() != null) update.id
+    else existing.id
+
     return existing.copy(
-        id = if (update.id.length < existing.id.length || existing.id.contains("-")) update.id else existing.id,
-        title = if (update.title.length > existing.title.length) update.title else existing.title,
+        id = chosenId,
+        title = chosenTitle,
         poster = bestPoster,
         quality = bestQuality,
         fileSizeBytes = finalTotal,
@@ -161,6 +239,7 @@ class DownloadController : ViewModel() {
                 items = deduped,
                 activeDownloadsCount = deduped.count { it.state == MediaDownloadState.Downloading }
             )
+            persistDownloadsList(deduped)
         }
     }
 
@@ -230,7 +309,11 @@ class DownloadController : ViewModel() {
             val downloadItems = mutableListOf<DownloadUiItem>()
             val posterLookup = mutableMapOf<String, String>()
 
-            // 0. Load all persisted posters from DataStore
+            // 0. Load all persisted items from dedicated MovieVortex storage first (prevents disappearance across restarts)
+            val persisted = loadPersistedDownloadsList()
+            downloadItems.addAll(persisted)
+
+            // 1. Load all persisted posters from DataStore
             if (ctx != null) {
                 try {
                     ctx.getKeys(DOWNLOAD_POSTER_CACHE)?.forEach { key ->
@@ -244,7 +327,7 @@ class DownloadController : ViewModel() {
                 } catch (_: Exception) {}
             }
 
-            // 1. Scan internal Download cache FIRST (so we get full title, poster, id)
+            // 2. Scan internal Download cache (so we get full title, poster, id)
             if (ctx != null) {
                 try {
                     ctx.getKeys(DOWNLOAD_EPISODE_CACHE)?.forEach { key ->
@@ -271,13 +354,11 @@ class DownloadController : ViewModel() {
 
                             val fileLength = info?.fileLength ?: 0L
                             val totalBytes = info?.totalBytes ?: 0L
-                            val isDone = totalBytes > 0 && fileLength >= totalBytes
-                            val prog = if (totalBytes > 0) (fileLength.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f) else (if (fileLength > 1024L) 1.0f else 0.05f)
+                            val isDone = (totalBytes > 0 && fileLength >= totalBytes) || fileLength > 1024L * 1024L
+                            val prog = if (totalBytes > 0) (fileLength.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f) else (if (isDone) 1.0f else 0.05f)
 
-                            val appDir = ctx.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: ctx.filesDir
-                            val cleanName = fullTitle.replace(Regex("[^a-zA-Z0-9.-]"), "_")
-                            val expectedFile = File(appDir, "$cleanName.mp4")
-                            val resolvedPath = if (expectedFile.exists()) expectedFile.absolutePath else info?.path?.toString()
+                            val localFound = findLocalMediaFile(ctx, fullTitle)
+                            val resolvedPath = localFound?.absolutePath ?: info?.path?.toString()
 
                             downloadItems.add(
                                 DownloadUiItem(
@@ -299,7 +380,7 @@ class DownloadController : ViewModel() {
                 }
             }
 
-            // 2. Scan app-specific private downloads directory for verified files
+            // 3. Scan app-specific private downloads directory for verified files
             try {
                 val appDirs = listOfNotNull(
                     ctx?.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
@@ -320,7 +401,7 @@ class DownloadController : ViewModel() {
 
                                 downloadItems.add(
                                     DownloadUiItem(
-                                        id = file.absolutePath.hashCode().toString(),
+                                        id = file.nameWithoutExtension,
                                         title = displayTitle,
                                         poster = resolvedPoster,
                                         quality = "1080p",
@@ -356,7 +437,7 @@ class DownloadController : ViewModel() {
 
                             downloadItems.add(
                                 DownloadUiItem(
-                                    id = file.absolutePath.hashCode().toString(),
+                                    id = file.nameWithoutExtension,
                                     title = displayTitle,
                                     poster = resolvedPoster,
                                     quality = "1080p",
@@ -374,7 +455,7 @@ class DownloadController : ViewModel() {
                 Log.e(TAG, "Error scanning local downloads", e)
             }
 
-            // 3. Active downloads from persistent queue & current active downloads
+            // 4. Active downloads from persistent queue & current active downloads
             try {
                 val queue = DownloadQueueManager.queue.value
                 queue.forEach { queueWrapper ->
@@ -427,14 +508,37 @@ class DownloadController : ViewModel() {
                 Log.e(TAG, "Error loading internal queue", e)
             }
 
-            // 4. Merge existing in-memory items (preserving active download states & posters)
+            // 5. Merge existing in-memory items (preserving active download states & posters)
             val inMemoryItems = _uiState.value.items
             for (memItem in inMemoryItems) {
                 downloadItems.add(memItem)
             }
 
-            // 5. Strict deduplication: merges items with matching id, path, or normalized title!
-            val deduplicated = deduplicateList(downloadItems)
+            // 6. Resolve actual file path for all completed items
+            val validatedItems = downloadItems.map { item ->
+                if (item.state == MediaDownloadState.Completed || item.progress >= 1.0f) {
+                    val currentPath = item.localFilePath
+                    val isPathValid = !currentPath.isNullOrBlank() && (currentPath.startsWith("content://") || File(currentPath).exists())
+                    if (!isPathValid) {
+                        val realFile = findLocalMediaFile(ctx, item.title)
+                        if (realFile != null) {
+                            item.copy(
+                                localFilePath = realFile.absolutePath,
+                                fileSizeBytes = if (item.fileSizeBytes > 0) item.fileSizeBytes else realFile.length(),
+                                downloadedBytes = if (item.downloadedBytes > 0) item.downloadedBytes else realFile.length(),
+                                state = MediaDownloadState.Completed,
+                                progress = 1.0f
+                            )
+                        } else item
+                    } else item
+                } else item
+            }
+
+            // 7. Strict deduplication
+            val deduplicated = deduplicateList(validatedItems)
+
+            // 8. Persist permanently to disk so they never disappear on restart
+            persistDownloadsList(deduplicated)
 
             val (dlBytes, availBytes, totBytes) = calculateStorageStats(deduplicated)
             _uiState.value = DownloadsUiState(
@@ -524,11 +628,16 @@ class DownloadController : ViewModel() {
             currentItems.mapIndexed { idx, item ->
                 if (idx == existingIndex) {
                     val newState = if (isCompleted) MediaDownloadState.Completed else MediaDownloadState.Downloading
+                    val resolvedPath = if (isCompleted && (item.localFilePath.isNullOrBlank() || !File(item.localFilePath).exists())) {
+                        findLocalMediaFile(CloudStreamApp.context, item.title)?.absolutePath ?: item.localFilePath
+                    } else item.localFilePath
+
                     item.copy(
                         downloadedBytes = if (isCompleted && total > 0L) total else downloaded,
                         fileSizeBytes = if (total > 0L) total else item.fileSizeBytes,
                         progress = if (isCompleted) 1.0f else prog,
                         speedBytesPerSec = currentSpeed,
+                        localFilePath = resolvedPath,
                         state = newState
                     )
                 } else item
@@ -547,6 +656,10 @@ class DownloadController : ViewModel() {
                 ?: ctx?.getKey<String>(DOWNLOAD_POSTER_CACHE, id)
                 ?: ctx?.getKey<String>(DOWNLOAD_POSTER_CACHE, normalizeTitle(title))
 
+            val resolvedPath = if (isCompleted) {
+                findLocalMediaFile(ctx, title)?.absolutePath
+            } else null
+
             val newItem = DownloadUiItem(
                 id = id,
                 title = title,
@@ -556,6 +669,7 @@ class DownloadController : ViewModel() {
                 fileSizeBytes = total,
                 progress = if (isCompleted) 1.0f else prog,
                 speedBytesPerSec = currentSpeed,
+                localFilePath = resolvedPath,
                 state = if (isCompleted) MediaDownloadState.Completed else MediaDownloadState.Downloading
             )
             listOf(newItem) + currentItems
@@ -566,6 +680,9 @@ class DownloadController : ViewModel() {
             items = finalItems,
             activeDownloadsCount = finalItems.count { it.state == MediaDownloadState.Downloading }
         )
+        if (isCompleted) {
+            persistDownloadsList(finalItems)
+        }
     }
 
     private fun handleQueueStatusChanged(id: String, status: VideoDownloadManager.DownloadType) {
@@ -573,11 +690,16 @@ class DownloadController : ViewModel() {
             if (item.id == id || item.title.hashCode().toString() == id || normalizeTitle(item.title) == normalizeTitle(id)) {
                 when (status) {
                     VideoDownloadManager.DownloadType.IsDone -> {
+                        val realPath = if (item.localFilePath.isNullOrBlank() || !File(item.localFilePath).exists()) {
+                            findLocalMediaFile(CloudStreamApp.context, item.title)?.absolutePath ?: item.localFilePath
+                        } else item.localFilePath
+
                         item.copy(
                             state = MediaDownloadState.Completed,
                             progress = 1.0f,
                             downloadedBytes = if (item.fileSizeBytes > 0) item.fileSizeBytes else item.downloadedBytes,
                             speedBytesPerSec = 0L,
+                            localFilePath = realPath,
                             errorMessage = null
                         )
                     }
@@ -606,6 +728,7 @@ class DownloadController : ViewModel() {
             items = finalItems,
             activeDownloadsCount = finalItems.count { it.state == MediaDownloadState.Downloading }
         )
+        persistDownloadsList(finalItems)
     }
 
     private fun handleQueueItemDeleted(id: String) {
@@ -615,6 +738,7 @@ class DownloadController : ViewModel() {
             items = _uiState.value.items.filter { it.id != id },
             activeDownloadsCount = _uiState.value.items.count { it.state == MediaDownloadState.Downloading }
         )
+        persistDownloadsList(_uiState.value.items)
         loadDownloads()
     }
 
@@ -629,6 +753,7 @@ class DownloadController : ViewModel() {
             },
             activeDownloadsCount = _uiState.value.items.count { it.state == MediaDownloadState.Downloading }
         )
+        persistDownloadsList(_uiState.value.items)
     }
 
     fun resumeDownload(id: String) {
@@ -642,6 +767,7 @@ class DownloadController : ViewModel() {
             },
             activeDownloadsCount = _uiState.value.items.count { it.state == MediaDownloadState.Downloading }
         )
+        persistDownloadsList(_uiState.value.items)
     }
 
     fun retryDownload(context: Context, item: DownloadUiItem) {
@@ -650,6 +776,7 @@ class DownloadController : ViewModel() {
             _uiState.value = _uiState.value.copy(
                 items = _uiState.value.items.filter { it.id != item.id }
             )
+            persistDownloadsList(_uiState.value.items)
             downloadMedia(context, media, item.originalEpisode)
         } else {
             Toast.makeText(context, "Cannot retry: original source details missing.", Toast.LENGTH_SHORT).show()
@@ -684,6 +811,7 @@ class DownloadController : ViewModel() {
             items = _uiState.value.items.filter { it.id != id },
             activeDownloadsCount = _uiState.value.items.count { it.state == MediaDownloadState.Downloading }
         )
+        persistDownloadsList(_uiState.value.items)
         loadDownloads()
     }
 
