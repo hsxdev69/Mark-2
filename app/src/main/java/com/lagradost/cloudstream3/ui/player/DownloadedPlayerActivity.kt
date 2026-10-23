@@ -303,10 +303,33 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         }
     }
 
+    private fun showSkeletonLoading() {
+        val skeleton = findViewById<com.facebook.shimmer.ShimmerFrameLayout>(R.id.player_skeleton_loading)
+        val details = findViewById<View>(R.id.player_details_scroll)
+        if (resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE && !isLayout(TV or EMULATOR)) {
+            skeleton?.visibility = View.VISIBLE
+            skeleton?.startShimmer()
+            details?.visibility = View.GONE
+        }
+    }
+
+    private fun showContentHideSkeleton() {
+        val skeleton = findViewById<com.facebook.shimmer.ShimmerFrameLayout>(R.id.player_skeleton_loading)
+        val details = findViewById<View>(R.id.player_details_scroll)
+        skeleton?.stopShimmer()
+        skeleton?.visibility = View.GONE
+        if (resources.configuration.orientation != Configuration.ORIENTATION_LANDSCAPE && !isLayout(TV or EMULATOR)) {
+            details?.visibility = View.VISIBLE
+            details?.alpha = 0f
+            details?.animate()?.alpha(1f)?.setDuration(220)?.start()
+        }
+    }
+
     private fun updateLayoutForOrientation(orientation: Int) {
         val root = findViewById<ConstraintLayout>(R.id.player_root_layout) ?: return
         val navHost = findViewById<View>(R.id.nav_host_fragment) ?: return
         val detailsScroll = findViewById<View>(R.id.player_details_scroll) ?: return
+        val skeleton = findViewById<com.facebook.shimmer.ShimmerFrameLayout>(R.id.player_skeleton_loading)
 
         val set = ConstraintSet()
         set.clone(root)
@@ -314,6 +337,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         if (orientation == Configuration.ORIENTATION_LANDSCAPE || isLayout(TV or EMULATOR)) {
             // Fullscreen landscape
             detailsScroll.visibility = View.GONE
+            skeleton?.visibility = View.GONE
             set.clear(R.id.nav_host_fragment, ConstraintSet.BOTTOM)
             set.connect(R.id.nav_host_fragment, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
             set.connect(R.id.nav_host_fragment, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
@@ -325,7 +349,16 @@ class DownloadedPlayerActivity : AppCompatActivity() {
             hideSystemUI()
         } else {
             // Portrait inline: 16:9 at top, details & episodes below
-            detailsScroll.visibility = View.VISIBLE
+            if (currentLoadResponse == null) {
+                skeleton?.visibility = View.VISIBLE
+                skeleton?.startShimmer()
+                detailsScroll.visibility = View.GONE
+            } else {
+                skeleton?.stopShimmer()
+                skeleton?.visibility = View.GONE
+                detailsScroll.visibility = View.VISIBLE
+            }
+
             set.clear(R.id.nav_host_fragment, ConstraintSet.BOTTOM)
             set.connect(R.id.nav_host_fragment, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
             set.connect(R.id.nav_host_fragment, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
@@ -333,6 +366,13 @@ class DownloadedPlayerActivity : AppCompatActivity() {
             set.setDimensionRatio(R.id.nav_host_fragment, "16:9")
             set.constrainHeight(R.id.nav_host_fragment, 0)
             set.constrainWidth(R.id.nav_host_fragment, 0)
+
+            set.connect(R.id.player_skeleton_loading, ConstraintSet.TOP, R.id.nav_host_fragment, ConstraintSet.BOTTOM)
+            set.connect(R.id.player_skeleton_loading, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+            set.connect(R.id.player_skeleton_loading, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+            set.connect(R.id.player_skeleton_loading, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+            set.constrainHeight(R.id.player_skeleton_loading, 0)
+            set.constrainWidth(R.id.player_skeleton_loading, 0)
 
             set.connect(R.id.player_details_scroll, ConstraintSet.TOP, R.id.nav_host_fragment, ConstraintSet.BOTTOM)
             set.connect(R.id.player_details_scroll, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
@@ -513,6 +553,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     }
 
     private fun playProviderContent(apiName: String, url: String, intent: Intent) {
+        showSkeletonLoading()
         ioSafe {
             try {
                 var api = APIHolder.getApiFromNameNull(apiName)
@@ -629,6 +670,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                     val generator = RepoLinkGenerator(episodes, page = loadResponse)
 
                     main {
+                        showContentHideSkeleton()
                         currentLoadResponse = loadResponse
                         currentMediaTitle = loadResponse.name
                         currentAllEpisodes = episodes
@@ -880,7 +922,8 @@ class DownloadedPlayerActivity : AppCompatActivity() {
             return
         }
         relatedSection.visibility = View.VISIBLE
-        relatedRecycler.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        relatedRecycler.layoutManager = androidx.recyclerview.widget.GridLayoutManager(this, 2)
+        relatedRecycler.isNestedScrollingEnabled = false
         relatedRecycler.adapter = InlineRelatedAdapter(recommendations) { item ->
             currentContentUrl = item.url
             currentMediaTitle = item.name
@@ -888,6 +931,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
             updateServerTabsUI(currentMarkServer)
             triedServers.clear()
             triedServers.add(currentMarkServer)
+            showSkeletonLoading()
             playProviderContent(item.apiName, item.url, intent)
         }
     }
