@@ -809,26 +809,16 @@ class CS3IPlayer : IPlayer {
                 it.key.equals("User-Agent", ignoreCase = true)
             }?.value ?: USER_AGENT
 
-            val source = if (interceptor == null) {
-                if (engine == null) {
-                    Log.d(TAG, "Using DefaultHttpDataSource for $link")
-                    OkHttpDataSource.Factory(app.baseClient).setUserAgent(userAgent)
-                } else {
-                    Log.d(TAG, "Using CronetDataSource for $link")
-                    CronetDataSource.Factory(engine, Executors.newSingleThreadExecutor())
-                        .setUserAgent(userAgent)
-                        .setConnectionTimeoutMs(CRONET_TIMEOUT_MS)
-                        .setReadTimeoutMs(CRONET_TIMEOUT_MS)
-                        .setResetTimeoutOnRedirects(true)
-                        .setHandleSetCookieRequests(true)
-                }
+            // Use OkHttp with Cloudflare DoH to bypass ISP throttling, DNS hijacking, and broken QUIC
+            val client = if (interceptor == null) {
+                app.baseClient
             } else {
-                Log.d(TAG, "Using OkHttpDataSource for $link")
-                val client = app.baseClient.newBuilder()
+                app.baseClient.newBuilder()
                     .addInterceptor(interceptor)
                     .build()
-                OkHttpDataSource.Factory(client).setUserAgent(userAgent)
             }
+            Log.d(TAG, "Using OkHttpDataSource with DoH for $link")
+            val source = OkHttpDataSource.Factory(client).setUserAgent(userAgent)
 
             // Do no include empty referer, if the provider wants those they can use the header map.
             val refererMap =
@@ -1284,16 +1274,16 @@ class CS3IPlayer : IPlayer {
                             30000,
                             true
                         )
-                        .setPrioritizeTimeOverSizeThresholds(true)
+                        .setPrioritizeTimeOverSizeThresholds(false)
                         .setBufferDurationsMs(
-                            60000,
+                            30000,
                             if (videoBufferMs <= 0) {
                                 180000
                             } else {
                                 maxOf(180000, videoBufferMs.toInt())
                             },
-                            1500,
-                            3000
+                            1000,
+                            2500
                         ).build()
                 )
 
