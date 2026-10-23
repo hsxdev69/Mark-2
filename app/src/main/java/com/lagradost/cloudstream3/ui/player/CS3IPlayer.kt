@@ -180,6 +180,7 @@ class CS3IPlayer : IPlayer {
 
     private var currentWindow: Int = 0
     private var playbackPosition: Long = 0
+    private var autoCorruptSkipAttempts: Int = 0
 
     private val subtitleHelper = PlayerSubtitleHelper()
 
@@ -883,12 +884,21 @@ class CS3IPlayer : IPlayer {
 
         private fun getTrackSelector(context: Context, maxVideoHeight: Int?): TrackSelector {
             val trackSelector = DefaultTrackSelector(context)
-            trackSelector.parameters = trackSelector.buildUponParameters()
+            val lang = preferredAudioTrackLanguage
+            val paramsBuilder = trackSelector.buildUponParameters()
                 // This will not force higher quality videos to fail
                 // but will make the m3u8 pick the correct preferred
                 .setMaxVideoSize(Int.MAX_VALUE, maxVideoHeight ?: Int.MAX_VALUE)
-                .setPreferredAudioLanguage(null)
-                .build()
+            if (!lang.isNullOrBlank()) {
+                if (lang.equals("hi", true) || lang.equals("hin", true)) {
+                    paramsBuilder.setPreferredAudioLanguages("hi", "hin")
+                } else {
+                    paramsBuilder.setPreferredAudioLanguage(lang)
+                }
+            } else {
+                paramsBuilder.setPreferredAudioLanguages("hi", "hin")
+            }
+            trackSelector.parameters = paramsBuilder.build()
             return trackSelector
         }
 
@@ -1601,6 +1611,19 @@ class CS3IPlayer : IPlayer {
                             exoPlayer?.prepare()
                         }
 
+                        // Auto-skip corrupt container chunk if playback is already active (> 5 seconds in)
+                        (error.errorCode == PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED ||
+                         error.errorCode == PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED)
+                                && (exoPlayer?.currentPosition ?: 0L) > 5000L
+                                && autoCorruptSkipAttempts < 2 -> {
+                            autoCorruptSkipAttempts++
+                            val currentPos = exoPlayer?.currentPosition ?: 0L
+                            Log.w(TAG, "Corrupt stream segment encountered at ${currentPos}ms, attempting skip forward 2s")
+                            exoPlayer?.seekTo(currentPos + 2000L)
+                            exoPlayer?.prepare()
+                            exoPlayer?.play()
+                        }
+
                         // PlaylistStuckException usually happens when the player position is ahead of the live window.
                         // Seek to the default location in that case
                         error.cause is HlsPlaylistTracker.PlaylistStuckException -> {
@@ -1633,6 +1656,7 @@ class CS3IPlayer : IPlayer {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     super.onIsPlayingChanged(isPlaying)
                     if (isPlaying) {
+                        autoCorruptSkipAttempts = 0
                         event(RequestAudioFocusEvent())
                         onRenderFirst()
                     }

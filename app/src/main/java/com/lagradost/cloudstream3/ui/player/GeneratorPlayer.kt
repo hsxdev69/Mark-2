@@ -264,6 +264,28 @@ class GeneratorPlayer : FullScreenPlayer() {
         viewModel.addSubtitles(subtitles.toSet())
     }
 
+    private fun isMatchingAudioTrack(track: AudioTrack, targetLang: String?): Boolean {
+        if (targetLang.isNullOrBlank()) return false
+        val lang = track.language?.lowercase() ?: ""
+        val label = track.label?.lowercase() ?: ""
+        val target = targetLang.lowercase()
+
+        return when {
+            target == "hindi" || target == "hi" || target == "hin" ->
+                lang == "hi" || lang == "hin" || lang.startsWith("hi") || label.contains("hindi") || label.contains("hin")
+            target == "english" || target == "en" || target == "eng" ->
+                lang == "en" || lang == "eng" || lang.startsWith("en") || label.contains("english") || label.contains("eng")
+            target == "japanese" || target == "ja" || target == "jpn" ->
+                lang == "ja" || lang == "jpn" || lang.startsWith("ja") || label.contains("japanese") || label.contains("jpn")
+            target == "spanish" || target == "es" || target == "spa" ->
+                lang == "es" || lang == "spa" || lang.startsWith("es") || label.contains("spanish") || label.contains("spa")
+            target == "french" || target == "fr" || target == "fra" ->
+                lang == "fr" || lang == "fra" || lang.startsWith("fr") || label.contains("french") || label.contains("fra")
+            else ->
+                lang == target || lang.startsWith(target) || label.contains(target)
+        }
+    }
+
     override fun onTracksInfoChanged() {
         val tracks = player.getVideoTracks()
         playerBinding?.playerTracksBtt?.isVisible =
@@ -273,31 +295,19 @@ class GeneratorPlayer : FullScreenPlayer() {
         val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(ctx)
         val prefAudioLang = prefs.getString("pref_preferred_audio_lang", "Default / Original") ?: "Default / Original"
 
-        val targetPreferredTrack = if (prefAudioLang != "Default / Original") {
-            tracks.allAudioTracks.firstOrNull { track ->
-                track.language?.equals(prefAudioLang, ignoreCase = true) == true ||
-                track.label?.contains(prefAudioLang, ignoreCase = true) == true ||
-                (prefAudioLang.equals("Hindi", true) && (track.language?.startsWith("hi", true) == true || track.label?.contains("hin", true) == true)) ||
-                (prefAudioLang.equals("Japanese", true) && (track.language?.startsWith("ja", true) == true || track.label?.contains("jpn", true) == true)) ||
-                (prefAudioLang.equals("English", true) && (track.language?.startsWith("en", true) == true || track.label?.contains("eng", true) == true)) ||
-                (prefAudioLang.equals("Spanish", true) && (track.language?.startsWith("es", true) == true || track.label?.contains("spa", true) == true)) ||
-                (prefAudioLang.equals("French", true) && (track.language?.startsWith("fr", true) == true || track.label?.contains("fra", true) == true))
-            }
-        } else null
+        // Desired language priority: userSelectedLanguage > preferredAudioTrackLanguage > prefAudioLang > "Hindi"
+        val desiredLang = when {
+            userSelectedLanguage.isNotBlank() && !userSelectedLanguage.equals("Default", ignoreCase = true) -> userSelectedLanguage
+            preferredAudioTrackLanguage != null -> preferredAudioTrackLanguage
+            prefAudioLang != "Default / Original" -> prefAudioLang
+            else -> "Hindi"
+        }
+
+        val targetPreferredTrack = tracks.allAudioTracks.firstOrNull { isMatchingAudioTrack(it, desiredLang) }
+            ?: tracks.allAudioTracks.firstOrNull { isMatchingAudioTrack(it, "Hindi") }
 
         if (targetPreferredTrack != null) {
             player.setPreferredAudioTrack(targetPreferredTrack.language, targetPreferredTrack.id, targetPreferredTrack.formatIndex)
-        } else {
-            val hindiTrack = tracks.allAudioTracks.firstOrNull {
-                it.language?.equals("hin", ignoreCase = true) == true ||
-                it.language?.equals("hi", ignoreCase = true) == true ||
-                it.label?.contains("hindi", ignoreCase = true) == true
-            }
-            if (hindiTrack != null && (userSelectedLanguage == "Hindi" || preferredAudioTrackLanguage == null)) {
-                player.setPreferredAudioTrack(hindiTrack.language, hindiTrack.id, hindiTrack.formatIndex)
-            } else if (tracks.allAudioTracks.any { it.language == preferredAudioTrackLanguage }) {
-                player.setPreferredAudioTrack(preferredAudioTrackLanguage)
-            }
         }
         updatePlayerInfo()
     }
@@ -1928,15 +1938,30 @@ class GeneratorPlayer : FullScreenPlayer() {
             currentSelectedLink?.let { it.first?.url ?: it.second?.uri?.toString() } ?: "unknown"
         val headers = currentSelectedLink?.first?.headers?.toString() ?: "none"
         val referer = currentSelectedLink?.first?.referer ?: "none"
+        val currentPosition = player.getPosition() ?: 0L
         Log.e(
             TAG,
             "playerError: $currentSelectedLink, " +
                     "type=${exception::class.qualifiedName}, " +
                     "message=${exception.message}, url=$currentUrl, headers=$headers, " +
-                    "referer=$referer, position=${player.getPosition() ?: "unknown"}, " +
+                    "referer=$referer, position=$currentPosition, " +
                     "duration=${player.getDuration() ?: "unknown"}, " +
                     "isPlaying=${player.getIsPlaying()}", exception
         )
+
+        // Auto-switch to next mirror seamlessly if link expired (30-min token) or failed mid-stream
+        if (hasNextMirror()) {
+            val nextLink = getNextLink()
+            if (nextLink != null) {
+                activity?.runOnUiThread {
+                    context?.let { ctx ->
+                        showToast("Stream expired • Switching to backup server...", Toast.LENGTH_SHORT)
+                    }
+                    loadLink(nextLink.link, true)
+                }
+                return
+            }
+        }
 
         if (!hasNextMirror()) {
             viewModel.forceClearCache = true
@@ -2076,9 +2101,33 @@ class GeneratorPlayer : FullScreenPlayer() {
         }
     }
 
+    private fun isHindiLink(link: VideoLink): Boolean {
+        val name = link.first?.name ?: ""
+        val url = link.first?.url ?: ""
+        val lang = extractLanguage(name, url)
+        return lang?.equals("Hindi", ignoreCase = true) == true ||
+                name.contains("hin", ignoreCase = true) ||
+                url.contains("hindi", ignoreCase = true)
+    }
+
     private fun getNextLink(): DisplayLink? {
         val links = viewModel.state.sortLinks(currentQualityProfile)
         val currentIndex = links.indexOfFirst { it.link == currentSelectedLink }
+
+        // 1. Try to find the next mirror in the CURRENT active language first!
+        if (userSelectedLanguage.isNotBlank() && !userSelectedLanguage.equals("Default", ignoreCase = true)) {
+            val sameLangLink = links.withIndex().firstOrNull { (index, item) ->
+                index > currentIndex && item.shouldUseLink && (
+                    extractLanguage(item.link.first?.name, item.link.first?.url).equals(userSelectedLanguage, ignoreCase = true) ||
+                    (userSelectedLanguage.equals("Hindi", ignoreCase = true) && isHindiLink(item.link))
+                )
+            }
+            if (sameLangLink != null) {
+                return sameLangLink.value
+            }
+        }
+
+        // 2. Fallback to next usable link
         val nextPotentialLink =
             links.withIndex().firstOrNull { it.index > currentIndex && it.value.shouldUseLink }
         return nextPotentialLink?.value

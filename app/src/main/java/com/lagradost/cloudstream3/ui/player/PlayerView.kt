@@ -674,7 +674,7 @@ class PlayerView @JvmOverloads constructor(
 
                     PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED,
                     PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED ->
-                        showErrorToast("${context.getString(R.string.encoding_error)}\n$errorName ($code)\n$msg")
+                        showErrorToast("Stream expired or malformed\n$errorName ($code)\n$msg")
 
                     else ->
                         showErrorToast("${context.getString(R.string.unexpected_error)}\n$errorName ($code)\n$msg")
