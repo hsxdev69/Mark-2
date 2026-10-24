@@ -304,7 +304,7 @@ class CS3IPlayer : IPlayer {
         }
 
         // we want autoplay because of TV and UX
-        isPlaying = autoPlay ?: isPlaying
+        isPlaying = autoPlay ?: true
 
         // release the current exoplayer and cache
         releasePlayer()
@@ -1475,7 +1475,7 @@ class CS3IPlayer : IPlayer {
             val playWhenReady = if (settings.player.startPaused.get()) {
                 false
             } else {
-                isPlaying // this keep the current state of the player
+                true // Auto-play by default on stream load
             }
 
             // ye this has to be a val for whatever reason

@@ -538,7 +538,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         val navOptions = NavOptions.Builder()
             .setPopUpTo(R.id.navigation_player, inclusive = true, saveState = false)
             .build()
-        window.decorView.post {
+        main {
             try {
                 val navHost = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
                 val navController = navHost?.navController
@@ -551,12 +551,12 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                         navController.setGraph(graph, args)
                     }
                 } else {
-                    this.navigate(R.id.global_to_navigation_player, args, navOptions)
+                    this@DownloadedPlayerActivity.navigate(R.id.global_to_navigation_player, args, navOptions)
                 }
             } catch (e: Exception) {
                 Log.e(TAG, "Error navigating to player fragment", e)
                 try {
-                    this.navigate(R.id.global_to_navigation_player, args)
+                    this@DownloadedPlayerActivity.navigate(R.id.global_to_navigation_player, args)
                 } catch (t: Throwable) {
                     Log.e(TAG, "Fallback navigation failed", t)
                 }

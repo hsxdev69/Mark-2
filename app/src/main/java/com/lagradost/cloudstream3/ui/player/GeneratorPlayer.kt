@@ -640,6 +640,7 @@ class GeneratorPlayer : FullScreenPlayer() {
                 (if (sameEpisode) currentSelectedSubtitles else null) ?: getAutoSelectSubtitle(
                     subtitles, settings = true, downloads = true
                 ),
+                autoPlay = true,
                 preview = true
             )
         }
@@ -2095,6 +2096,7 @@ class GeneratorPlayer : FullScreenPlayer() {
         }
         loadLink(linkToLoad, false)
         showPlayerMetadata()
+        player.handleEvent(CSPlayerEvent.Play, PlayerEventSource.Player)
     }
 
     private fun showPlayerMetadata() {
