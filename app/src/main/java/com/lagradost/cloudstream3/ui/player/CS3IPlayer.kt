@@ -313,7 +313,11 @@ class CS3IPlayer : IPlayer {
             // only video support atm
             (imageGenerator as? PreviewGenerator)?.let { gen ->
                 if (preview) {
-                    gen.load(link, sameEpisode)
+                    // Defer thumbnail generation by 4s to allow 100% bandwidth for initial video chunk buffering
+                    ioSafe {
+                        kotlinx.coroutines.delay(4000)
+                        gen.load(link, sameEpisode)
+                    }
                 } else {
                     gen.clear(sameEpisode)
                 }
@@ -1315,8 +1319,8 @@ class CS3IPlayer : IPlayer {
                             } else {
                                 maxOf(180000, videoBufferMs.toInt())
                             },
-                            1000,
-                            2500
+                            400,
+                            1500
                         ).build()
                 )
 

@@ -57,8 +57,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil3.load
 import com.movievortex.android.core.ServerManager
+import com.lagradost.cloudstream3.Actor
 import com.lagradost.cloudstream3.ActorData
 import com.lagradost.cloudstream3.SearchResponse
+import com.movievortex.android.model.MovieVortexMedia
 import com.lagradost.cloudstream3.utils.downloader.DownloadQueueManager
 import com.lagradost.cloudstream3.utils.downloader.DownloadObjects
 import android.os.Environment
@@ -553,7 +555,65 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     }
 
     private fun playProviderContent(apiName: String, url: String, intent: Intent) {
-        showSkeletonLoading()
+        val media = intent.getSafeSerializable<MovieVortexMedia>("MEDIA_OBJECT")
+        var hasEarlyMountedPlayer = false
+
+        if (media != null) {
+            val fallbackTitle = media.title
+            val fallbackYear = media.year?.toString()
+            val fallbackScore = media.rating?.let { "★ $it" }
+            val fallbackPlot = media.synopsis ?: ""
+
+            currentMediaTitle = fallbackTitle
+            findViewById<TextView>(R.id.inline_player_title)?.text = fallbackTitle
+            val meta = buildString {
+                fallbackYear?.let { append("$it  •  ") }
+                if (media.type == MediaType.TvSeries) append("TV Series") else append("Movie")
+                fallbackScore?.let { append("  •  $it") }
+            }
+            findViewById<TextView>(R.id.inline_player_meta)?.text = meta
+            findViewById<TextView>(R.id.inline_player_overview)?.text = fallbackPlot
+            findViewById<TextView>(R.id.inline_download_text)?.text = if (media.type == MediaType.TvSeries) "Download Episode" else "Download Movie"
+
+            if (media.cast.isNotEmpty()) {
+                val actors = media.cast.map { ActorData(Actor(it.name, it.avatarUrl), role = it.role) }
+                setupCast(actors)
+            }
+
+            if (media.type != MediaType.TvSeries) {
+                showContentHideSkeleton()
+                val targetEpData = intent.getStringExtra("EPISODE_DATA")
+                val streamData = targetEpData?.takeIf { it.isNotBlank() } ?: url
+                val initialEp = ResultEpisode(
+                    headerName = fallbackTitle,
+                    name = fallbackTitle,
+                    poster = media.poster,
+                    episode = 1,
+                    seasonIndex = null,
+                    season = null,
+                    data = streamData,
+                    apiName = apiName,
+                    id = (apiName + streamData).hashCode(),
+                    index = 0,
+                    position = 0L,
+                    duration = 0L,
+                    score = media.rating?.toDouble() ?: 0.0,
+                    description = fallbackPlot,
+                    isFiller = false,
+                    tvType = TvType.Movie,
+                    parentId = streamData.hashCode(),
+                    videoWatchState = VideoWatchState.None
+                )
+                val initialGen = RepoLinkGenerator(listOf(initialEp))
+                navigateToPlayer(GeneratorPlayer.newInstance(initialGen, 0))
+                hasEarlyMountedPlayer = true
+            } else {
+                showSkeletonLoading()
+            }
+        } else {
+            showSkeletonLoading()
+        }
+
         ioSafe {
             try {
                 var api = APIHolder.getApiFromNameNull(apiName)
@@ -686,7 +746,9 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                         findViewById<TextView>(R.id.inline_download_text)?.text = if (loadResponse is MovieLoadResponse) "Download Movie" else "Download Episode"
 
                         // Star Cast Details
-                        setupCast(loadResponse.actors)
+                        if (!loadResponse.actors.isNullOrEmpty()) {
+                            setupCast(loadResponse.actors)
+                        }
 
                         // Related Movies Recommendations
                         setupRelatedMovies(loadResponse.recommendations)
@@ -695,11 +757,13 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                             val seasons = episodes.mapNotNull { it.season }.distinct().sorted()
                             val availableSeasons = if (seasons.isEmpty()) listOf(1) else seasons
                             setupSeasonTabs(availableSeasons, episodes, loadResponse, startIndex)
+                            navigateToPlayer(GeneratorPlayer.newInstance(generator, startIndex))
                         } else {
                             findViewById<View>(R.id.inline_seasons_section)?.visibility = View.GONE
+                            if (!hasEarlyMountedPlayer) {
+                                navigateToPlayer(GeneratorPlayer.newInstance(generator, startIndex))
+                            }
                         }
-
-                        navigateToPlayer(GeneratorPlayer.newInstance(generator, startIndex))
                     }
                 } else {
                     triggerAutoServerFallback("Failed to resolve stream on $currentMarkServer.")
@@ -931,8 +995,14 @@ class DownloadedPlayerActivity : AppCompatActivity() {
             updateServerTabsUI(currentMarkServer)
             triedServers.clear()
             triedServers.add(currentMarkServer)
+            val clickedIntent = Intent(intent).apply {
+                removeExtra("MEDIA_OBJECT")
+                putExtra("TITLE", item.name)
+                putExtra("CONTENT_URL", item.url)
+                putExtra(MainActivity.API_NAME_EXTRA_KEY, item.apiName)
+            }
             showSkeletonLoading()
-            playProviderContent(item.apiName, item.url, intent)
+            playProviderContent(item.apiName, item.url, clickedIntent)
         }
     }
 
@@ -1142,3 +1212,11 @@ class InlineRelatedAdapter(
 
     override fun getItemCount(): Int = items.size
 }
+
+@Suppress("DEPRECATION")
+private inline fun <reified T : java.io.Serializable> Intent.getSafeSerializable(key: String): T? =
+    if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) {
+        getSerializableExtra(key) as? T
+    } else {
+        getSerializableExtra(key, T::class.java)
+    }

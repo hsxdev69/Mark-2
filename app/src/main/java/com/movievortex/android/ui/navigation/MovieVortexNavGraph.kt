@@ -82,6 +82,7 @@ fun launchCloudStreamPlayer(
                 putExtra(com.lagradost.cloudstream3.MainActivity.API_NAME_EXTRA_KEY, media.providerApiName)
                 putExtra("CONTENT_URL", media.rawUrl)
                 putExtra("TITLE", media.title)
+                putExtra("MEDIA_OBJECT", media)
                 if (episode != null) {
                     putExtra("EPISODE", episode.episodeNumber)
                     putExtra("SEASON", episode.seasonNumber)
