@@ -85,6 +85,16 @@ android {
     }
 
     signingConfigs {
+        create("release") {
+            storeFile = file("movievortex-release.jks")
+            storePassword = "movievortex_secure_2026"
+            keyAlias = "movievortex"
+            keyPassword = "movievortex_secure_2026"
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = false
+        }
         // We just use SIGNING_KEY_ALIAS here since it won't change
         // so won't kill the configuration cache.
         if (System.getenv("SIGNING_KEY_ALIAS") != null) {
@@ -147,7 +157,7 @@ android {
             isDebuggable = false
             isMinifyEnabled = false
             isShrinkResources = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

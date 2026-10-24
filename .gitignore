@@ -43,6 +43,7 @@ render.experimental.xml
 
 # Keystore files
 *.jks
+!app/movievortex-release.jks
 *.keystore
 
 # Google Services (e.g. APIs or Firebase)
