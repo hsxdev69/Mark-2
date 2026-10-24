@@ -1313,14 +1313,14 @@ class CS3IPlayer : IPlayer {
                         )
                         .setPrioritizeTimeOverSizeThresholds(false)
                         .setBufferDurationsMs(
-                            30000,
+                            15000,
                             if (videoBufferMs <= 0) {
-                                180000
+                                60000
                             } else {
-                                maxOf(180000, videoBufferMs.toInt())
+                                maxOf(60000, videoBufferMs.toInt())
                             },
-                            400,
-                            1500
+                            500,
+                            1000
                         ).build()
                 )
 
@@ -1824,7 +1824,13 @@ class CS3IPlayer : IPlayer {
         interceptor: Interceptor?,
     ): Pair<List<SingleSampleMediaSource>, List<SubtitleData>> {
         val activeSubtitles = ArrayList<SubtitleData>()
-        val subSources = subHelper.getAllSubtitles().mapNotNull { sub ->
+        val allSubs = subHelper.getAllSubtitles()
+        // Only merge the selected/preferred subtitle source at startup so MergingMediaSource
+        // does not block playback while waiting for dozens of slow/dead external subtitle servers
+        val preferredSub = currentSubtitles ?: allSubs.firstOrNull { it.name.contains("English", true) || it.name.contains("Hindi", true) }
+        val targetSubs = if (preferredSub != null) listOf(preferredSub) else allSubs.take(1)
+
+        val subSources = targetSubs.mapNotNull { sub ->
             val subConfig = MediaItem.SubtitleConfiguration.Builder(sub.getFixedUrl().toUri())
                 .setMimeType(sub.mimeType)
                 .setLanguage("_${sub.name}")

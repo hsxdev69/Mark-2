@@ -42,9 +42,9 @@ fun buildDefaultClient(context: Context, ignoreSSL: Boolean = false): OkHttpClie
         .followRedirects(true)
         .followSslRedirects(true)
         .retryOnConnectionFailure(true)
-        .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-        .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-        .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .writeTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
         .connectionPool(okhttp3.ConnectionPool(32, 5, java.util.concurrent.TimeUnit.MINUTES))
         .dispatcher(okhttp3.Dispatcher().apply {
             maxRequests = 64
