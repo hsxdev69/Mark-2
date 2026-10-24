@@ -213,6 +213,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
 
     fun showUnavailableOverlay(message: String = "The Movie is not available this server plese switch another") {
         main {
+            showContentHideSkeleton()
             findViewById<View>(R.id.player_unavailable_overlay)?.visibility = View.VISIBLE
             findViewById<TextView>(R.id.player_unavailable_message)?.text = message
         }
@@ -565,6 +566,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
 
     private fun playProviderContent(apiName: String, url: String, intent: Intent) {
         hideUnavailableOverlay()
+        showSkeletonLoading()
         val media = intent.getSafeSerializable<MovieVortexMedia>("MEDIA_OBJECT")
 
         if (media != null) {
@@ -588,10 +590,6 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                 val actors = media.cast.map { ActorData(Actor(it.name, it.avatarUrl), roleString = it.role) }
                 setupCast(actors)
             }
-
-            showContentHideSkeleton()
-        } else {
-            showSkeletonLoading()
         }
 
         ioSafe {
