@@ -576,7 +576,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.inline_download_text)?.text = if (media.type == MediaType.TvSeries) "Download Episode" else "Download Movie"
 
             if (media.cast.isNotEmpty()) {
-                val actors = media.cast.map { ActorData(Actor(it.name, it.avatarUrl), role = it.role) }
+                val actors = media.cast.map { ActorData(Actor(it.name, it.avatarUrl), roleString = it.role) }
                 setupCast(actors)
             }
 
@@ -597,7 +597,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                     index = 0,
                     position = 0L,
                     duration = 0L,
-                    score = media.rating?.toDouble() ?: 0.0,
+                    score = null,
                     description = fallbackPlot,
                     isFiller = false,
                     tvType = TvType.Movie,
