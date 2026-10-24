@@ -211,6 +211,19 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         }
     }
 
+    fun showUnavailableOverlay(message: String = "The Movie is not available this server plese switch another") {
+        main {
+            findViewById<View>(R.id.player_unavailable_overlay)?.visibility = View.VISIBLE
+            findViewById<TextView>(R.id.player_unavailable_message)?.text = message
+        }
+    }
+
+    fun hideUnavailableOverlay() {
+        main {
+            findViewById<View>(R.id.player_unavailable_overlay)?.visibility = View.GONE
+        }
+    }
+
     private fun triggerAutoServerFallback(reason: String) {
         triedServers.add(currentMarkServer)
         val nextMark = ServerManager.ALL_SERVERS.firstOrNull { it !in triedServers }
@@ -226,17 +239,13 @@ class DownloadedPlayerActivity : AppCompatActivity() {
             }
         } else {
             main {
-                android.widget.Toast.makeText(
-                    this@DownloadedPlayerActivity,
-                    "All streaming servers unavailable. Please try another title.",
-                    android.widget.Toast.LENGTH_LONG
-                ).show()
-                finish()
+                showUnavailableOverlay("The Movie is not available this server plese switch another")
             }
         }
     }
 
     private fun onServerSwitched(markName: String) {
+        hideUnavailableOverlay()
         triedServers.add(markName)
         val providerName = ServerManager.toProviderName(markName)
         val title = currentMediaTitle ?: intent.getStringExtra("TITLE")
@@ -555,8 +564,8 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     }
 
     private fun playProviderContent(apiName: String, url: String, intent: Intent) {
+        hideUnavailableOverlay()
         val media = intent.getSafeSerializable<MovieVortexMedia>("MEDIA_OBJECT")
-        var hasEarlyMountedPlayer = false
 
         if (media != null) {
             val fallbackTitle = media.title
@@ -580,36 +589,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                 setupCast(actors)
             }
 
-            if (media.type != MediaType.TvSeries) {
-                showContentHideSkeleton()
-                val targetEpData = intent.getStringExtra("EPISODE_DATA")
-                val streamData = targetEpData?.takeIf { it.isNotBlank() } ?: url
-                val initialEp = ResultEpisode(
-                    headerName = fallbackTitle,
-                    name = fallbackTitle,
-                    poster = media.poster,
-                    episode = 1,
-                    seasonIndex = null,
-                    season = null,
-                    data = streamData,
-                    apiName = apiName,
-                    id = (apiName + streamData).hashCode(),
-                    index = 0,
-                    position = 0L,
-                    duration = 0L,
-                    score = null,
-                    description = fallbackPlot,
-                    isFiller = false,
-                    tvType = TvType.Movie,
-                    parentId = streamData.hashCode(),
-                    videoWatchState = VideoWatchState.None
-                )
-                val initialGen = RepoLinkGenerator(listOf(initialEp))
-                navigateToPlayer(GeneratorPlayer.newInstance(initialGen, 0))
-                hasEarlyMountedPlayer = true
-            } else {
-                showSkeletonLoading()
-            }
+            showContentHideSkeleton()
         } else {
             showSkeletonLoading()
         }
@@ -760,9 +740,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                             navigateToPlayer(GeneratorPlayer.newInstance(generator, startIndex))
                         } else {
                             findViewById<View>(R.id.inline_seasons_section)?.visibility = View.GONE
-                            if (!hasEarlyMountedPlayer) {
-                                navigateToPlayer(GeneratorPlayer.newInstance(generator, startIndex))
-                            }
+                            navigateToPlayer(GeneratorPlayer.newInstance(generator, startIndex))
                         }
                     }
                 } else {

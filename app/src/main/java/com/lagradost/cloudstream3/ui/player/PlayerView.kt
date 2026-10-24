@@ -632,11 +632,11 @@ class PlayerView @JvmOverloads constructor(
                 showToast(message, Toast.LENGTH_SHORT)
                 callbacks?.nextMirror()
             } else {
+                (context as? DownloadedPlayerActivity)?.showUnavailableOverlay("The Movie is not available this server plese switch another")
                 showToast(
-                    context.getString(R.string.no_links_found_toast) + "\n" + message,
+                    "The Movie is not available this server plese switch another",
                     Toast.LENGTH_LONG
                 )
-                (context as? FragmentActivity)?.popCurrentPage()
             }
         }
 

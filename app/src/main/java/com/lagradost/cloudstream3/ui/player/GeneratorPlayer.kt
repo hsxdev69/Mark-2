@@ -2045,7 +2045,10 @@ class GeneratorPlayer : FullScreenPlayer() {
             }
         }
 
-        activity?.popCurrentPage()
+        activity?.runOnUiThread {
+            (activity as? DownloadedPlayerActivity)?.showUnavailableOverlay("The Movie is not available this server plese switch another")
+            showToast("The Movie is not available this server plese switch another", Toast.LENGTH_LONG)
+        }
     }
 
     private fun startPlayer() {
