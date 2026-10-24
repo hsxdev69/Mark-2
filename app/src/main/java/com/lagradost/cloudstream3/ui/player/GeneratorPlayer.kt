@@ -2271,18 +2271,22 @@ class GeneratorPlayer : FullScreenPlayer() {
             }
         }
 
-        playerBinding?.playerSkipOp?.isVisible = false
+        // 1. Skip Intro Button (Both Movies and TV Series):
+        // Embedded at bottom right during opening intro window (1s - 85s).
+        // Disappears after 85s or immediately when user taps it.
+        val showSkipOp = position in 1000L..85000L && duration > 95000L && !hasUserSkippedIntro
+        playerBinding?.playerSkipOp?.isVisible = showSkipOp
 
-        when {
-            isLayout(PHONE) ->
-                playerBinding?.playerSkipEpisode?.isVisible = false
+        // 2. Next Episode Button (Series Only - when end credits start):
+        // Only shown for TV series when there is an actual next episode available and remaining time is <= 85s.
+        val hasNext = viewModel.hasNextEpisode() == true
+        val remainingMs = duration - position
+        val showNextEpisode = hasNext && duration > 180000L && remainingMs in 1000L..85000L
+        playerBinding?.playerSkipEpisode?.isVisible = showNextEpisode
 
-            else -> {
-                val hasNextEpisode = viewModel.hasNextEpisode() == true
-                playerBinding?.playerGoForward?.isVisible = hasNextEpisode
-                playerBinding?.playerGoForwardRoot?.isVisible = hasNextEpisode
-            }
-
+        if (!isLayout(PHONE)) {
+            playerBinding?.playerGoForward?.isVisible = hasNext
+            playerBinding?.playerGoForwardRoot?.isVisible = hasNext
         }
 
         if (percentage >= PRELOAD_NEXT_EPISODE_PERCENTAGE) {

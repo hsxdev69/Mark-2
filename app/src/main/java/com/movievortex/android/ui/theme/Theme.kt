@@ -1,5 +1,6 @@
 package com.movievortex.android.ui.theme
 
+import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -15,6 +16,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.preference.PreferenceManager
 import com.lagradost.cloudstream3.R
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -43,12 +45,30 @@ object VortexColors {
 
         val accent = when {
             accentName.contains("Crimson", true) || accentName.contains("Red", true) -> Color(0xFFE50914)
+            accentName.contains("Cyan", true) -> Color(0xFF00E5FF)
             accentName.contains("Blue", true) -> Color(0xFF0070F3)
             accentName.contains("Green", true) -> Color(0xFF10B981)
             accentName.contains("Gold", true) || accentName.contains("Amber", true) -> Color(0xFFF59E0B)
+            accentName.contains("Purple", true) || accentName.contains("Violet", true) -> Color(0xFF8B5CF6)
+            accentName.contains("Pink", true) -> Color(0xFFFF2A85)
             else -> if (dark) Color(0xFFFFFFFF) else Color(0xFF0F172A) // Pure White / Dark Slate
         }
         currentAccent.value = accent
+    }
+
+    fun getPlayerAccentColorInt(context: Context): Int {
+        val sp = PreferenceManager.getDefaultSharedPreferences(context)
+        val name = sp.getString("pref_accent_color", "Pure White (Cinematic)") ?: "Pure White (Cinematic)"
+        return when {
+            name.contains("Crimson", true) || name.contains("Red", true) -> android.graphics.Color.parseColor("#E50914")
+            name.contains("Cyan", true) -> android.graphics.Color.parseColor("#00E5FF")
+            name.contains("Blue", true) -> android.graphics.Color.parseColor("#0070F3")
+            name.contains("Green", true) -> android.graphics.Color.parseColor("#10B981")
+            name.contains("Gold", true) || name.contains("Amber", true) -> android.graphics.Color.parseColor("#F59E0B")
+            name.contains("Purple", true) || name.contains("Violet", true) -> android.graphics.Color.parseColor("#8B5CF6")
+            name.contains("Pink", true) -> android.graphics.Color.parseColor("#FF2A85")
+            else -> android.graphics.Color.WHITE
+        }
     }
 
     // ── Core Surfaces ────────────────────────────────────────────────────────

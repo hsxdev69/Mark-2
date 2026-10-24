@@ -566,8 +566,13 @@ open class FullScreenPlayer : AbstractPlayerFragment<FragmentPlayerBinding>(
         player.setPlaybackSpeed(speed)
     }
 
+    var hasUserSkippedIntro = false
+
     private fun skipOp() {
-        player.seekTime(85000) // skip 85s
+        hasUserSkippedIntro = true
+        val current = player.getPosition()
+        val target = if (current < 85000L) 85000L else current + 85000L
+        player.seekTo(target)
     }
 
     private fun showSubtitleOffsetDialog() {
@@ -1482,6 +1487,7 @@ open class FullScreenPlayer : AbstractPlayerFragment<FragmentPlayerBinding>(
             it.isVisible = false
         }
         isShowing = false
+        hasUserSkippedIntro = false
         toggleEpisodesOverlay(false)
         // if nothing has loaded these buttons should not be visible
         playerBinding?.apply {
@@ -1650,11 +1656,14 @@ open class FullScreenPlayer : AbstractPlayerFragment<FragmentPlayerBinding>(
             }
 
             playerSkipOp.setOnClickListener {
+                hasUserSkippedIntro = true
+                playerSkipOp.isVisible = false
                 autoHide()
                 skipOp()
             }
 
             playerSkipEpisode.setOnClickListener {
+                playerSkipEpisode.isVisible = false
                 autoHide()
                 player.handleEvent(CSPlayerEvent.NextEpisode)
             }
@@ -1702,6 +1711,29 @@ open class FullScreenPlayer : AbstractPlayerFragment<FragmentPlayerBinding>(
             }
 
             exoProgress.registerPlayerView(playerView)
+
+            context?.let { ctx ->
+                try {
+                    val accentColor = com.movievortex.android.ui.theme.VortexColors.getPlayerAccentColorInt(ctx)
+                    exoProgress.setPlayedColor(accentColor)
+                    exoProgress.setScrubberColor(accentColor)
+
+                    val colorState = android.content.res.ColorStateList.valueOf(accentColor)
+                    playerSkipOp.strokeColor = colorState
+                    playerSkipOp.iconTint = colorState
+                    playerSkipOp.setTextColor(accentColor)
+
+                    playerSkipEpisode.strokeColor = colorState
+                    playerSkipEpisode.iconTint = colorState
+                    playerSkipEpisode.setTextColor(accentColor)
+
+                    playerPausePlay.setColorFilter(accentColor)
+                    videoFastForwardText.setTextColor(accentColor)
+                    videoRewindText.setTextColor(accentColor)
+                } catch (e: Exception) {
+                    logError(e)
+                }
+            }
 
             @SuppressLint("ClickableViewAccessibility")
             exoProgress.setOnTouchListener { _, event ->

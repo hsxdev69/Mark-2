@@ -173,6 +173,26 @@ fun SettingsScreen(
                 checked = state.autoFullScreen,
                 onCheckedChange = { settingsController.setAutoFullScreen(it) }
             )
+            SettingsDivider()
+            SettingsClickableRow(
+                title = "Player UI Theme Color",
+                subtitle = state.accentColor,
+                onClick = {
+                    singleSelectDialogTitle = "Player UI Theme Color"
+                    singleSelectOptions = listOf(
+                        "Pure White (Cinematic)",
+                        "Crimson Red (Netflix)",
+                        "Electric Blue (Cyber)",
+                        "Emerald Green (Vibrant)",
+                        "Amber Gold (Luxury)",
+                        "Neon Purple (Synthwave)",
+                        "Hot Pink (Sunset)",
+                        "Cyan Glow (Futuristic)"
+                    )
+                    singleSelectCurrent = state.accentColor
+                    onSingleSelectSubmit = { settingsController.setAccentColor(it) }
+                }
+            )
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -307,11 +327,20 @@ fun SettingsScreen(
             )
             SettingsDivider()
             SettingsClickableRow(
-                title = "Accent Color",
+                title = "Accent & Player UI Color",
                 subtitle = state.accentColor,
                 onClick = {
-                    singleSelectDialogTitle = "Accent Color"
-                    singleSelectOptions = listOf("Pure White (Cinematic)", "Crimson Red", "Electric Blue", "Emerald Green", "Amber Gold")
+                    singleSelectDialogTitle = "Accent & Player UI Color"
+                    singleSelectOptions = listOf(
+                        "Pure White (Cinematic)",
+                        "Crimson Red (Netflix)",
+                        "Electric Blue (Cyber)",
+                        "Emerald Green (Vibrant)",
+                        "Amber Gold (Luxury)",
+                        "Neon Purple (Synthwave)",
+                        "Hot Pink (Sunset)",
+                        "Cyan Glow (Futuristic)"
+                    )
                     singleSelectCurrent = state.accentColor
                     onSingleSelectSubmit = { settingsController.setAccentColor(it) }
                 }

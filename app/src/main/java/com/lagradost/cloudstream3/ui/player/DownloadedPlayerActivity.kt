@@ -196,12 +196,21 @@ class DownloadedPlayerActivity : AppCompatActivity() {
             ServerManager.MARK_4 to mark4Tab
         )
 
+        val accentColor = com.movievortex.android.ui.theme.VortexColors.getPlayerAccentColorInt(this)
         for ((mark, view) in tabs) {
             if (view == null) continue
             if (mark == selectedMark) {
-                // Pure B&W: Solid White pill with Black text
-                view.setBackgroundResource(R.drawable.bg_server_tab_active)
-                view.setTextColor(Color.BLACK)
+                val drawable = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                    cornerRadius = 18f * resources.displayMetrics.density
+                    setColor(accentColor)
+                }
+                view.background = drawable
+                val r = Color.red(accentColor)
+                val g = Color.green(accentColor)
+                val b = Color.blue(accentColor)
+                val isBright = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0 > 0.6
+                view.setTextColor(if (isBright) Color.BLACK else Color.WHITE)
                 view.setTypeface(null, Typeface.BOLD)
             } else {
                 view.setBackgroundResource(R.drawable.bg_server_tab_inactive)
