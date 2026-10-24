@@ -570,7 +570,7 @@ open class FullScreenPlayer : AbstractPlayerFragment<FragmentPlayerBinding>(
 
     private fun skipOp() {
         hasUserSkippedIntro = true
-        val current = player.getPosition()
+        val current = player.getPosition() ?: 0L
         val target = if (current < 85000L) 85000L else current + 85000L
         player.seekTo(target)
     }
@@ -1728,8 +1728,6 @@ open class FullScreenPlayer : AbstractPlayerFragment<FragmentPlayerBinding>(
                     playerSkipEpisode.setTextColor(accentColor)
 
                     playerPausePlay.setColorFilter(accentColor)
-                    videoFastForwardText.setTextColor(accentColor)
-                    videoRewindText.setTextColor(accentColor)
                 } catch (e: Exception) {
                     logError(e)
                 }
