@@ -846,15 +846,19 @@ class CS3IPlayer : IPlayer {
                 it.key.equals("User-Agent", ignoreCase = true)
             }?.value ?: USER_AGENT
 
-            // Use OkHttp with Cloudflare DoH to bypass ISP throttling, DNS hijacking, and broken QUIC
-            val client = if (interceptor == null) {
-                app.baseClient
-            } else {
-                app.baseClient.newBuilder()
-                    .addInterceptor(interceptor)
-                    .build()
+            // Use dedicated video streaming OkHttp client with generous readTimeout and auto-retry
+            // to prevent stalls and dropped connections on slow or throttled video CDNs
+            val builder = app.baseClient.newBuilder()
+                .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .retryOnConnectionFailure(true)
+
+            if (interceptor != null) {
+                builder.addInterceptor(interceptor)
             }
-            Log.d(TAG, "Using OkHttpDataSource with DoH for $link")
+            val client = builder.build()
+            Log.d(TAG, "Using dedicated video OkHttpDataSource for $link")
             val source = OkHttpDataSource.Factory(client).setUserAgent(userAgent)
 
             // Do no include empty referer, if the provider wants those they can use the header map.
@@ -1302,7 +1306,7 @@ class CS3IPlayer : IPlayer {
                     DefaultLoadControl.Builder()
                         .setTargetBufferBytes(
                             if (cacheSize <= 0) {
-                                100 * 1024 * 1024
+                                64 * 1024 * 1024
                             } else {
                                 if (cacheSize > Int.MAX_VALUE) Int.MAX_VALUE else cacheSize.toInt()
                             }
@@ -1311,7 +1315,7 @@ class CS3IPlayer : IPlayer {
                             30000,
                             true
                         )
-                        .setPrioritizeTimeOverSizeThresholds(false)
+                        .setPrioritizeTimeOverSizeThresholds(true)
                         .setBufferDurationsMs(
                             15000,
                             if (videoBufferMs <= 0) {
@@ -1319,8 +1323,8 @@ class CS3IPlayer : IPlayer {
                             } else {
                                 maxOf(60000, videoBufferMs.toInt())
                             },
-                            500,
-                            1000
+                            800,
+                            2500
                         ).build()
                 )
 
