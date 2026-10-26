@@ -1797,15 +1797,22 @@ class CS3IPlayer : IPlayer {
         try {
             currentDownloadedFile = data
 
+            val pathStr = (data.relativePath ?: data.displayName ?: data.uri.path ?: data.uri.toString()).lowercase()
             val uriStr = data.uri.toString().lowercase()
-            val mimeType = when {
-                uriStr.endsWith(".mkv") -> MimeTypes.VIDEO_MATROSKA
-                uriStr.endsWith(".webm") -> MimeTypes.VIDEO_WEBM
-                uriStr.endsWith(".m3u8") -> MimeTypes.APPLICATION_M3U8
-                uriStr.endsWith(".mpd") -> MimeTypes.APPLICATION_MPD
-                else -> MimeTypes.VIDEO_MP4
+            val detectedMime = when {
+                pathStr.endsWith(".mkv") || uriStr.endsWith(".mkv") -> MimeTypes.VIDEO_MATROSKA
+                pathStr.endsWith(".webm") || uriStr.endsWith(".webm") -> MimeTypes.VIDEO_WEBM
+                pathStr.endsWith(".m3u8") || uriStr.endsWith(".m3u8") -> MimeTypes.APPLICATION_M3U8
+                pathStr.endsWith(".mpd") || uriStr.endsWith(".mpd") -> MimeTypes.APPLICATION_MPD
+                pathStr.endsWith(".mp4") || uriStr.endsWith(".mp4") -> MimeTypes.VIDEO_MP4
+                data.uri.scheme == "content" -> context.contentResolver?.getType(data.uri)
+                else -> null
             }
-            val mediaItem = getMediaItem(mimeType, data.uri)
+            val mediaItem = if (detectedMime != null) {
+                getMediaItem(detectedMime, data.uri)
+            } else {
+                MediaItem.Builder().setUri(data.uri).build()
+            }
             val offlineSourceFactory = context.createOfflineSource()
 
             val (subSources, activeSubtitles) = getSubSources(

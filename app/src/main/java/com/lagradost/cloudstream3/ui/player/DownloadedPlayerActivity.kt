@@ -124,6 +124,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     private var currentSelectedSeason: Int = 1
     private var currentLoadResponse: com.lagradost.cloudstream3.LoadResponse? = null
     private val triedServers: MutableSet<String> = mutableSetOf()
+    private var isOfflineMode: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -370,7 +371,11 @@ class DownloadedPlayerActivity : AppCompatActivity() {
             hideSystemUI()
         } else {
             // Portrait inline: 16:9 at top, details & episodes below
-            if (currentLoadResponse == null) {
+            if (isOfflineMode) {
+                skeleton?.stopShimmer()
+                skeleton?.visibility = View.GONE
+                detailsScroll.visibility = View.VISIBLE
+            } else if (currentLoadResponse == null) {
                 skeleton?.visibility = View.VISIBLE
                 skeleton?.startShimmer()
                 detailsScroll.visibility = View.GONE
@@ -461,6 +466,14 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     }
 
     private fun playOfflineDirect(path: String, title: String?) {
+        isOfflineMode = true
+        hideUnavailableOverlay()
+        val skeleton = findViewById<com.facebook.shimmer.ShimmerFrameLayout>(R.id.player_skeleton_loading)
+        val detailsScroll = findViewById<View>(R.id.player_details_scroll)
+        skeleton?.stopShimmer()
+        skeleton?.visibility = View.GONE
+        detailsScroll?.visibility = View.VISIBLE
+
         val resolvedUri: Uri = try {
             if (path.startsWith("content://")) {
                 Uri.parse(path)
@@ -479,7 +492,7 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                     for (dir in appDirs) {
                         if (dir.exists()) {
                             found = dir.walkTopDown().firstOrNull { file ->
-                                file.isFile && (file.extension.equals("mp4", true) || file.extension.equals("mkv", true)) &&
+                                file.isFile && (file.extension.equals("mp4", true) || file.extension.equals("mkv", true) || file.extension.equals("webm", true)) &&
                                         (clean.isNotBlank() && file.nameWithoutExtension.replace(Regex("[^a-zA-Z0-9]"), "").lowercase().contains(clean))
                             }
                             if (found != null) break
@@ -489,12 +502,13 @@ class DownloadedPlayerActivity : AppCompatActivity() {
                 }
             }
         } catch (_: Exception) {
-            Uri.parse(path)
+            intent.data ?: Uri.parse(path)
         }
 
         val displayName = title ?: (if (!path.startsWith("content://")) File(path).nameWithoutExtension.replace("_", " ") else "Downloaded Movie")
+        val finalUri = if (intent.data != null && intent.data?.scheme == "content") intent.data!! else resolvedUri
         val extractorUri = ExtractorUri(
-            uri = resolvedUri,
+            uri = finalUri,
             name = displayName,
             id = path.hashCode()
         )
@@ -504,9 +518,10 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         )
         runOnUiThread {
             findViewById<TextView>(R.id.inline_player_title)?.text = displayName
-            findViewById<TextView>(R.id.inline_player_meta)?.text = "Offline Playback"
+            findViewById<TextView>(R.id.inline_player_meta)?.text = "Offline Download"
             findViewById<TextView>(R.id.inline_player_overview)?.text = displayName
             findViewById<View>(R.id.server_tabs_container)?.visibility = View.GONE
+            findViewById<View>(R.id.inline_episodes_section)?.visibility = View.GONE
         }
         navigateToPlayer(args)
     }

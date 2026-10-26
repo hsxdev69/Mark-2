@@ -41,6 +41,37 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+fun extractSeasonEpisode(title: String): Pair<Int?, Int?> {
+    val sRegex = Regex("[sS](\\d+)[eE](\\d+)")
+    val sMatch = sRegex.find(title)
+    if (sMatch != null) {
+        val s = sMatch.groupValues[1].toIntOrNull()
+        val e = sMatch.groupValues[2].toIntOrNull()
+        return Pair(s, e)
+    }
+    val xRegex = Regex("(\\d+)[xX](\\d+)")
+    val xMatch = xRegex.find(title)
+    if (xMatch != null) {
+        val s = xMatch.groupValues[1].toIntOrNull()
+        val e = xMatch.groupValues[2].toIntOrNull()
+        return Pair(s, e)
+    }
+    val seRegex = Regex("[sS]eason\\s*(\\d+).*?[eE]pisode\\s*(\\d+)", RegexOption.IGNORE_CASE)
+    val seMatch = seRegex.find(title)
+    if (seMatch != null) {
+        val s = seMatch.groupValues[1].toIntOrNull()
+        val e = seMatch.groupValues[2].toIntOrNull()
+        return Pair(s, e)
+    }
+    val epRegex = Regex("[eE]pisode\\s*(\\d+)", RegexOption.IGNORE_CASE)
+    val epMatch = epRegex.find(title)
+    if (epMatch != null) {
+        val e = epMatch.groupValues[1].toIntOrNull()
+        return Pair(null, e)
+    }
+    return Pair(null, null)
+}
+
 fun normalizeTitle(title: String): String {
     val clean = if (title.contains(" - ")) {
         val parts = title.split(" - ")
@@ -53,26 +84,47 @@ fun normalizeTitle(title: String): String {
         title
     }
 
-    return clean.lowercase()
+    val normalizedSe = clean.replace(Regex("(?i)[sS](\\d{1,2})[eE](\\d{1,2})")) { m ->
+        val s = m.groupValues[1].padStart(2, '0')
+        val e = m.groupValues[2].padStart(2, '0')
+        "s${s}e${e}"
+    }
+
+    return normalizedSe.lowercase()
         .replace(Regex("\\b(1080p|720p|480p|360p|4k|uhd|hd|sd|mp4|mkv|web-dl|bluray)\\b"), "")
         .replace(Regex("[^a-z0-9]"), "")
 }
 
 fun areSameItem(a: DownloadUiItem, b: DownloadUiItem): Boolean {
+    // 1. Exact ID match
     if (a.id.isNotBlank() && b.id.isNotBlank() && a.id == b.id) return true
+
+    // 2. Exact file path match or filename match
     if (!a.localFilePath.isNullOrBlank() && !b.localFilePath.isNullOrBlank()) {
         val nameA = a.localFilePath.substringAfterLast('/')
         val nameB = b.localFilePath.substringAfterLast('/')
-        if (a.localFilePath == b.localFilePath || nameA == nameB) return true
-    }
-    val normA = normalizeTitle(a.title)
-    val normB = normalizeTitle(b.title)
-    if (normA.isNotBlank() && normB.isNotBlank()) {
-        if (normA == normB) return true
-        if (normA.startsWith(normB) || normB.startsWith(normA) || normA.contains(normB) || normB.contains(normA)) {
+        if (a.localFilePath.equals(b.localFilePath, ignoreCase = true) || nameA.equals(nameB, ignoreCase = true)) {
             return true
         }
     }
+
+    // 3. Season & Episode check - IF either specifies different season or episode, they are NOT the same!
+    val seA = extractSeasonEpisode(a.title)
+    val seB = extractSeasonEpisode(b.title)
+    if (seA.second != null && seB.second != null && seA.second != seB.second) {
+        return false
+    }
+    if (seA.first != null && seB.first != null && seA.first != seB.first) {
+        return false
+    }
+
+    // 4. Exact normalized title match
+    val normA = normalizeTitle(a.title)
+    val normB = normalizeTitle(b.title)
+    if (normA.isNotBlank() && normB.isNotBlank() && normA == normB) {
+        return true
+    }
+
     return false
 }
 
@@ -84,12 +136,27 @@ fun findLocalMediaFile(ctx: Context?, title: String): File? {
         File("/storage/emulated/0/Download/MovieVortex")
     )
     val norm = normalizeTitle(title)
+    val (targetSeason, targetEpisode) = extractSeasonEpisode(title)
+
     for (dir in dirs) {
         if (dir.exists()) {
             val match = dir.walkTopDown().firstOrNull { f ->
                 if (f.isFile && (f.extension.equals("mp4", true) || f.extension.equals("mkv", true) || f.extension.equals("webm", true))) {
-                    val fNorm = normalizeTitle(f.nameWithoutExtension)
-                    fNorm == norm || (norm.isNotBlank() && (fNorm.contains(norm) || norm.contains(fNorm)))
+                    val fName = f.nameWithoutExtension
+                    val fNorm = normalizeTitle(fName)
+                    if (fNorm == norm) return@firstOrNull true
+
+                    val (fSeason, fEpisode) = extractSeasonEpisode(fName)
+                    if (targetEpisode != null && fEpisode != null) {
+                        if (targetEpisode == fEpisode && (targetSeason == null || fSeason == null || targetSeason == fSeason)) {
+                            val baseTarget = norm.replace(Regex("s\\d+e\\d+"), "")
+                            val baseFile = fNorm.replace(Regex("s\\d+e\\d+"), "")
+                            if (baseTarget.isNotBlank() && baseFile.isNotBlank() && (baseTarget == baseFile || baseFile.contains(baseTarget) || baseTarget.contains(baseFile))) {
+                                return@firstOrNull true
+                            }
+                        }
+                    }
+                    false
                 } else false
             }
             if (match != null) return match
@@ -330,7 +397,15 @@ class DownloadController : ViewModel() {
             // 2. Scan internal Download cache (so we get full title, poster, id)
             if (ctx != null) {
                 try {
-                    ctx.getKeys(DOWNLOAD_EPISODE_CACHE)?.forEach { key ->
+                    val allKeys = mutableSetOf<String>()
+                    ctx.getKeys(DOWNLOAD_EPISODE_CACHE)?.let { allKeys.addAll(it) }
+                    ctx.getKeys(DOWNLOAD_HEADER_CACHE)?.forEach { headerKey ->
+                        val parentId = headerKey.substringAfterLast("/")
+                        ctx.getKeys(com.lagradost.cloudstream3.utils.DataStore.getFolderName(DOWNLOAD_EPISODE_CACHE, parentId))?.let {
+                            allKeys.addAll(it)
+                        }
+                    }
+                    allKeys.forEach { key ->
                         val cachedEp = ctx.getKey<DownloadObjects.DownloadEpisodeCached>(key)
                         if (cachedEp != null) {
                             val info = VideoDownloadManager.getDownloadFileInfo(ctx, cachedEp.id)
@@ -620,8 +695,24 @@ class DownloadController : ViewModel() {
         val currentSpeed = if (isCompleted) 0L else (speedMap[id] ?: 0L)
 
         val currentItems = _uiState.value.items
-        val existingIndex = currentItems.indexOfFirst {
-            it.id == id || it.id == (it.title.hashCode()).toString() || normalizeTitle(it.title) == normalizeTitle(id)
+        var existingIndex = currentItems.indexOfFirst {
+            it.id == id || it.id == (it.title.hashCode()).toString()
+        }
+
+        val ctx = CloudStreamApp.context
+        val epCached = if (existingIndex < 0 && ctx != null) {
+            ctx.getKey<DownloadObjects.DownloadEpisodeCached>(DOWNLOAD_EPISODE_CACHE, id)
+                ?: ctx.getKeys(DOWNLOAD_EPISODE_CACHE)?.firstNotNullOfOrNull { key ->
+                    if (key.endsWith("/$id") || key == id) ctx.getKey<DownloadObjects.DownloadEpisodeCached>(key) else null
+                }
+        } else null
+
+        if (existingIndex < 0 && epCached != null) {
+            val epTitle = epCached.name
+            if (!epTitle.isNullOrBlank()) {
+                val dummy = DownloadUiItem(id = id, title = epTitle)
+                existingIndex = currentItems.indexOfFirst { areSameItem(it, dummy) }
+            }
         }
 
         val updatedList = if (existingIndex >= 0) {
@@ -633,6 +724,7 @@ class DownloadController : ViewModel() {
                     } else item.localFilePath
 
                     item.copy(
+                        id = id,
                         downloadedBytes = if (isCompleted && total > 0L) total else downloaded,
                         fileSizeBytes = if (total > 0L) total else item.fileSizeBytes,
                         progress = if (isCompleted) 1.0f else prog,
@@ -643,11 +735,6 @@ class DownloadController : ViewModel() {
                 } else item
             }
         } else {
-            val ctx = CloudStreamApp.context
-            val epCached = ctx?.getKey<DownloadObjects.DownloadEpisodeCached>(DOWNLOAD_EPISODE_CACHE, id)
-                ?: ctx?.getKeys(DOWNLOAD_EPISODE_CACHE)?.firstNotNullOfOrNull { key ->
-                    if (key.endsWith("/$id") || key == id) ctx.getKey<DownloadObjects.DownloadEpisodeCached>(key) else null
-                }
             val headerName = epCached?.parentId?.let {
                 ctx?.getKey<DownloadObjects.DownloadHeaderCached>(DOWNLOAD_HEADER_CACHE, it.toString())?.name
             }
@@ -687,7 +774,7 @@ class DownloadController : ViewModel() {
 
     private fun handleQueueStatusChanged(id: String, status: VideoDownloadManager.DownloadType) {
         val updated = _uiState.value.items.map { item ->
-            if (item.id == id || item.title.hashCode().toString() == id || normalizeTitle(item.title) == normalizeTitle(id)) {
+            if (item.id == id || item.title.hashCode().toString() == id) {
                 when (status) {
                     VideoDownloadManager.DownloadType.IsDone -> {
                         val realPath = if (item.localFilePath.isNullOrBlank() || !File(item.localFilePath).exists()) {
@@ -866,9 +953,10 @@ class DownloadController : ViewModel() {
             return
         }
 
-        val newId = System.currentTimeMillis().toString()
+        val stableRawId = (media.rawUrl + (episode?.dataUrl ?: title)).hashCode()
+        val stableId = stableRawId.toString()
         val newItem = DownloadUiItem(
-            id = newId,
+            id = stableId,
             title = title,
             mediaType = media.type,
             poster = episode?.poster ?: media.poster,
@@ -882,10 +970,12 @@ class DownloadController : ViewModel() {
             originalEpisode = episode
         )
 
+        val updatedItems = deduplicateList(listOf(newItem) + _uiState.value.items.filter { !areSameItem(it, newItem) })
         _uiState.value = _uiState.value.copy(
-            items = listOf(newItem) + _uiState.value.items.filter { it.title != title },
-            activeDownloadsCount = _uiState.value.activeDownloadsCount + 1
+            items = updatedItems,
+            activeDownloadsCount = updatedItems.count { it.state == MediaDownloadState.Downloading || it.state == MediaDownloadState.Queued }
         )
+        persistDownloadsList(updatedItems)
 
         Toast.makeText(context, "Resolving video links for: $title...", Toast.LENGTH_SHORT).show()
 
@@ -900,7 +990,7 @@ class DownloadController : ViewModel() {
                     Log.e(TAG, errMsg)
                     withContext(Dispatchers.Main) {
                         Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show()
-                        updateItemState(newId, MediaDownloadState.Failed, errMsg)
+                        updateItemState(stableId, MediaDownloadState.Failed, errMsg)
                     }
                     return@launch
                 }
@@ -946,12 +1036,48 @@ class DownloadController : ViewModel() {
                     )
                 }
 
-                if (extractedLinks.isEmpty() && streamUrl.isNullOrBlank()) {
+                // Fallback to parent media url if episode dataUrl failed to yield links
+                if (extractedLinks.isEmpty() && targetDataUrl != media.rawUrl && media.rawUrl.isNotBlank()) {
+                    repo.loadLinks(
+                        data = media.rawUrl,
+                        isCasting = false,
+                        subtitleCallback = { sub ->
+                            extractedSubs.add(PlayerSubtitleHelper.getSubtitleData(sub))
+                        },
+                        callback = { link ->
+                            val urlLower = link.url.lowercase()
+                            if (link.url.isNotBlank() &&
+                                (urlLower.startsWith("http://") || urlLower.startsWith("https://")) &&
+                                !urlLower.contains(".html") && !urlLower.contains("/embed/")
+                            ) {
+                                extractedLinks.add(link)
+                            }
+                        }
+                    )
+                }
+
+                // Direct streamUrl fallback
+                if (extractedLinks.isEmpty() && !streamUrl.isNullOrBlank()) {
+                    extractedLinks.add(
+                        ExtractorLink(
+                            source = media.providerApiName,
+                            name = "Direct Stream",
+                            url = streamUrl,
+                            referer = media.rawUrl,
+                            quality = 1080
+                        )
+                    )
+                }
+
+                val finalEpId = (media.rawUrl + targetDataUrl).hashCode()
+                val finalEpIdStr = finalEpId.toString()
+
+                if (extractedLinks.isEmpty()) {
                     val errMsg = "No downloadable media stream found for $title."
                     Log.w(TAG, errMsg)
                     withContext(Dispatchers.Main) {
                         Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show()
-                        updateItemState(newId, MediaDownloadState.Failed, errMsg)
+                        updateItemState(stableId, MediaDownloadState.Failed, errMsg)
                     }
                     return@launch
                 }
@@ -969,7 +1095,7 @@ class DownloadController : ViewModel() {
                     season = seasonNumber,
                     data = targetDataUrl,
                     apiName = media.providerApiName,
-                    id = (media.rawUrl + targetDataUrl).hashCode(),
+                    id = finalEpId,
                     index = epNumber - 1,
                     position = 0L,
                     duration = 0L,
@@ -980,6 +1106,43 @@ class DownloadController : ViewModel() {
                     parentId = media.rawUrl.hashCode(),
                     videoWatchState = VideoWatchState.None
                 )
+
+                // Save persistent cache headers so CloudStream and MovieVortex download layers synchronize
+                val parentId = media.rawUrl.hashCode()
+                val posterUrl = episode?.poster ?: media.poster
+                try {
+                    val appCtx = CloudStreamApp.context
+                    if (appCtx != null) {
+                        appCtx.setKey(DOWNLOAD_POSTER_CACHE, finalEpIdStr, posterUrl)
+                        appCtx.setKey(DOWNLOAD_POSTER_CACHE, normalizeTitle(title), posterUrl)
+                        appCtx.setKey(
+                            DOWNLOAD_HEADER_CACHE,
+                            parentId.toString(),
+                            DownloadObjects.DownloadHeaderCached(
+                                apiName = media.providerApiName,
+                                url = media.rawUrl,
+                                type = tvType,
+                                name = media.title,
+                                poster = media.poster,
+                                id = parentId,
+                                cacheTime = System.currentTimeMillis()
+                            )
+                        )
+                        val epCached = DownloadObjects.DownloadEpisodeCached(
+                            name = title,
+                            poster = posterUrl,
+                            episode = epNumber,
+                            season = seasonNumber,
+                            id = finalEpId,
+                            parentId = parentId,
+                            score = null,
+                            description = media.synopsis,
+                            cacheTime = System.currentTimeMillis()
+                        )
+                        appCtx.setKey(DOWNLOAD_EPISODE_CACHE, finalEpIdStr, epCached)
+                        appCtx.setKey(com.lagradost.cloudstream3.utils.DataStore.getFolderName(DOWNLOAD_EPISODE_CACHE, parentId.toString()), finalEpIdStr, epCached)
+                    }
+                } catch (_: Exception) {}
 
                 // Sort extracted links based on configured download quality preference
                 val qualityPref = prefs.getString("pref_download_quality", "Highest (1080p)") ?: "Highest (1080p)"
@@ -1005,7 +1168,15 @@ class DownloadController : ViewModel() {
                 )
 
                 DownloadQueueManager.addToQueue(queueItem.toWrapper())
-                updateItemState(newId, MediaDownloadState.Downloading, null)
+                _uiState.value = _uiState.value.copy(
+                    items = _uiState.value.items.map {
+                        if (it.id == stableId || it.id == finalEpIdStr || it.title == title) {
+                            it.copy(id = finalEpIdStr, state = MediaDownloadState.Downloading, errorMessage = null)
+                        } else it
+                    },
+                    activeDownloadsCount = _uiState.value.items.count { it.state == MediaDownloadState.Downloading }
+                )
+                persistDownloadsList(_uiState.value.items)
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, "MovieVortex download started: $title", Toast.LENGTH_SHORT).show()
@@ -1015,7 +1186,7 @@ class DownloadController : ViewModel() {
                 Log.e(TAG, "Download resolution error", e)
                 withContext(Dispatchers.Main) {
                     Toast.makeText(context, errMsg, Toast.LENGTH_LONG).show()
-                    updateItemState(newId, MediaDownloadState.Failed, errMsg)
+                    updateItemState(stableId, MediaDownloadState.Failed, errMsg)
                 }
             }
         }
