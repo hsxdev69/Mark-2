@@ -26,6 +26,7 @@ import com.lagradost.cloudstream3.utils.DataStore.getKey
 import com.lagradost.cloudstream3.utils.DataStore.getKeys
 import com.lagradost.cloudstream3.utils.DataStore.setKey
 import com.lagradost.cloudstream3.utils.ExtractorLink
+import com.lagradost.cloudstream3.utils.newExtractorLink
 import com.lagradost.cloudstream3.utils.downloader.DownloadObjects
 import com.lagradost.cloudstream3.utils.downloader.DownloadQueueManager
 import com.lagradost.cloudstream3.utils.downloader.VideoDownloadManager
@@ -1059,13 +1060,14 @@ class DownloadController : ViewModel() {
                 // Direct streamUrl fallback
                 if (extractedLinks.isEmpty() && !streamUrl.isNullOrBlank()) {
                     extractedLinks.add(
-                        ExtractorLink(
+                        newExtractorLink(
                             source = media.providerApiName,
                             name = "Direct Stream",
                             url = streamUrl,
-                            referer = media.rawUrl,
-                            quality = 1080
-                        )
+                        ) {
+                            this.referer = media.rawUrl
+                            this.quality = 1080
+                        }
                     )
                 }
 
