@@ -373,6 +373,11 @@ object UIHelper {
         // edge-to-edge is very buggy on earlier versions
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
         WindowCompat.enableEdgeToEdge(window)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val lp = window.attributes
+            lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            window.attributes = lp
+        }
     }
 
     fun Activity.setNavigationBarColorCompat(@AttrRes resourceId: Int) {

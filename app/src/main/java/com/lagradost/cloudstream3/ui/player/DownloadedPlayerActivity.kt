@@ -138,6 +138,11 @@ class DownloadedPlayerActivity : AppCompatActivity() {
         CommonActivity.loadThemes(this)
         CommonActivity.init(this)
         enableEdgeToEdgeCompat()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val lp = window.attributes
+            lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            window.attributes = lp
+        }
         setContentView(R.layout.empty_layout)
         Log.i(TAG, "onCreate")
 
