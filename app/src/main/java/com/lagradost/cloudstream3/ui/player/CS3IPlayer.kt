@@ -1317,14 +1317,14 @@ class CS3IPlayer : IPlayer {
                         )
                         .setPrioritizeTimeOverSizeThresholds(true)
                         .setBufferDurationsMs(
-                            15000,
+                            5000, // Reduced initial minimum buffer for instant CloudStream-speed start
                             if (videoBufferMs <= 0) {
                                 60000
                             } else {
                                 maxOf(60000, videoBufferMs.toInt())
                             },
-                            800,
-                            2500
+                            400,  // Fast playback start buffer (400ms)
+                            1200  // Quick rebuffer threshold (1.2s)
                         ).build()
                 )
 

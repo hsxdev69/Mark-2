@@ -164,67 +164,46 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     }
 
     private fun setupServerTabs() {
-        val mark1Tab = findViewById<TextView>(R.id.server_tab_mark_1) ?: return
-        val mark2Tab = findViewById<TextView>(R.id.server_tab_mark_2) ?: return
-        val mark3Tab = findViewById<TextView>(R.id.server_tab_mark_3) ?: return
-        val mark4Tab = findViewById<TextView>(R.id.server_tab_mark_4) ?: return
-
-        val tabs = listOf(
-            ServerManager.MARK_1 to mark1Tab,
-            ServerManager.MARK_2 to mark2Tab,
-            ServerManager.MARK_3 to mark3Tab,
-            ServerManager.MARK_4 to mark4Tab
-        )
-
-        for ((mark, view) in tabs) {
-            view.setOnClickListener {
-                if (currentMarkServer != mark) {
-                    triedServers.clear()
-                    triedServers.add(mark)
-                    updateServerTabsUI(mark)
-                    onServerSwitched(mark)
-                }
-            }
-        }
-
-        updateServerTabsUI(currentMarkServer)
-    }
-
-    private fun updateServerTabsUI(selectedMark: String) {
-        currentMarkServer = selectedMark
         val mark1Tab = findViewById<TextView>(R.id.server_tab_mark_1)
         val mark2Tab = findViewById<TextView>(R.id.server_tab_mark_2)
         val mark3Tab = findViewById<TextView>(R.id.server_tab_mark_3)
         val mark4Tab = findViewById<TextView>(R.id.server_tab_mark_4)
 
-        val tabs = listOf(
-            ServerManager.MARK_1 to mark1Tab,
-            ServerManager.MARK_2 to mark2Tab,
-            ServerManager.MARK_3 to mark3Tab,
-            ServerManager.MARK_4 to mark4Tab
-        )
+        // Only keep AniVortex active, hide all other removed server tabs
+        mark2Tab?.visibility = View.GONE
+        mark3Tab?.visibility = View.GONE
+        mark4Tab?.visibility = View.GONE
 
-        val accentColor = com.movievortex.android.ui.theme.VortexColors.getPlayerAccentColorInt(this)
-        for ((mark, view) in tabs) {
-            if (view == null) continue
-            if (mark == selectedMark) {
-                val drawable = android.graphics.drawable.GradientDrawable().apply {
-                    shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                    cornerRadius = 18f * resources.displayMetrics.density
-                    setColor(accentColor)
-                }
-                view.background = drawable
-                val r = Color.red(accentColor)
-                val g = Color.green(accentColor)
-                val b = Color.blue(accentColor)
-                val isBright = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0 > 0.6
-                view.setTextColor(if (isBright) Color.BLACK else Color.WHITE)
-                view.setTypeface(null, Typeface.BOLD)
-            } else {
-                view.setBackgroundResource(R.drawable.bg_server_tab_inactive)
-                view.setTextColor(Color.parseColor("#B0B0C0"))
-                view.setTypeface(null, Typeface.NORMAL)
+        mark1Tab?.text = "AniVortex"
+        updateServerTabsUI(ServerManager.MARK_1)
+    }
+
+    private fun updateServerTabsUI(selectedMark: String) {
+        currentMarkServer = ServerManager.MARK_1
+        val mark1Tab = findViewById<TextView>(R.id.server_tab_mark_1)
+        val mark2Tab = findViewById<TextView>(R.id.server_tab_mark_2)
+        val mark3Tab = findViewById<TextView>(R.id.server_tab_mark_3)
+        val mark4Tab = findViewById<TextView>(R.id.server_tab_mark_4)
+
+        mark2Tab?.visibility = View.GONE
+        mark3Tab?.visibility = View.GONE
+        mark4Tab?.visibility = View.GONE
+
+        if (mark1Tab != null) {
+            val accentColor = com.movievortex.android.ui.theme.VortexColors.getPlayerAccentColorInt(this)
+            val drawable = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = 18f * resources.displayMetrics.density
+                setColor(accentColor)
             }
+            mark1Tab.background = drawable
+            mark1Tab.text = "AniVortex"
+            val r = Color.red(accentColor)
+            val g = Color.green(accentColor)
+            val b = Color.blue(accentColor)
+            val isBright = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0 > 0.6
+            mark1Tab.setTextColor(if (isBright) Color.BLACK else Color.WHITE)
+            mark1Tab.setTypeface(null, Typeface.BOLD)
         }
     }
 
@@ -243,22 +222,8 @@ class DownloadedPlayerActivity : AppCompatActivity() {
     }
 
     private fun triggerAutoServerFallback(reason: String) {
-        triedServers.add(currentMarkServer)
-        val nextMark = ServerManager.ALL_SERVERS.firstOrNull { it !in triedServers }
-        if (nextMark != null) {
-            main {
-                android.widget.Toast.makeText(
-                    this@DownloadedPlayerActivity,
-                    "Switching automatically to $nextMark...",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
-                updateServerTabsUI(nextMark)
-                onServerSwitched(nextMark)
-            }
-        } else {
-            main {
-                showUnavailableOverlay("The Movie is not available this server plese switch another")
-            }
+        main {
+            showUnavailableOverlay("Stream unavailable on AniVortex. Please check your network or try again.")
         }
     }
 
