@@ -6,9 +6,11 @@ import java.io.File
 import androidx.navigation.fragment.NavHostFragment
 import com.lagradost.safefile.SafeFile
 import android.content.pm.ActivityInfo
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
+import android.view.WindowManager
 import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
