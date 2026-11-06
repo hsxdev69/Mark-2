@@ -600,11 +600,3 @@ private fun MetadataChip(text: String) {
         )
     }
 }
-            text = text,
-            color = Color(0xFFCCD0CF),
-            fontSize = 11.sp,
-            fontFamily = ManropeFontFamily,
-            fontWeight = FontWeight.SemiBold
-        )
-    }
-}
