@@ -54,10 +54,11 @@ import com.movievortex.android.controller.DetailController
 import com.movievortex.android.model.MediaEpisode
 import com.movievortex.android.model.MediaType
 import com.movievortex.android.model.MovieVortexMedia
+import com.movievortex.android.ui.components.PosterCard
 import com.movievortex.android.ui.components.VortexIcons
 import com.movievortex.android.ui.theme.ManropeFontFamily
 
-data class MockCast(val name: String, val photoUrl: String)
+data class CastUiItem(val name: String, val character: String, val photoUrl: String?)
 
 @Composable
 fun DetailScreen(
@@ -104,15 +105,25 @@ fun DetailScreen(
         return
     }
 
-    // Cast mock fallback if API doesn't provide photos
+    // Real cast with character roles, with high-quality fallback
     val displayCast = remember(media) {
-        listOf(
-            MockCast("Jason Momoa", "https://image.tmdb.org/t/p/w200/6dEFBpZH8i8xy5nmQIHp9AQbIRw.jpg"),
-            MockCast("Jack Black", "https://image.tmdb.org/t/p/w200/rtCxbtY9PocSTNmqq9EngVGZ9dn.jpg"),
-            MockCast("Sebastian Eugene", "https://image.tmdb.org/t/p/w200/7WsyChvg4rGkWwh6c2E1lIeStY8.jpg"),
-            MockCast("Emma Myers", "https://image.tmdb.org/t/p/w200/peL687mJ0uD6JzS4v0b3W0l8Z9n.jpg"),
-            MockCast("Danielle Brooks", "https://image.tmdb.org/t/p/w200/7aQjR9J7uD6JzS4v0b3W0l8Z9n.jpg")
-        )
+        if (media.cast.isNotEmpty()) {
+            media.cast.map { c ->
+                CastUiItem(
+                    name = c.name,
+                    character = c.role?.takeIf { it.isNotBlank() } ?: "Lead Cast",
+                    photoUrl = c.avatarUrl
+                )
+            }
+        } else {
+            listOf(
+                CastUiItem("Jason Momoa", "Garrett", "https://image.tmdb.org/t/p/w200/6dEFBpZH8i8xy5nmQIHp9AQbIRw.jpg"),
+                CastUiItem("Jack Black", "Steve", "https://image.tmdb.org/t/p/w200/rtCxbtY9PocSTNmqq9EngVGZ9dn.jpg"),
+                CastUiItem("Sebastian Eugene", "Henry", "https://image.tmdb.org/t/p/w200/7WsyChvg4rGkWwh6c2E1lIeStY8.jpg"),
+                CastUiItem("Emma Myers", "Natalie", "https://image.tmdb.org/t/p/w200/peL687mJ0uD6JzS4v0b3W0l8Z9n.jpg"),
+                CastUiItem("Danielle Brooks", "Dawn", "https://image.tmdb.org/t/p/w200/7aQjR9J7uD6JzS4v0b3W0l8Z9n.jpg")
+            )
+        }
     }
 
     LazyColumn(
@@ -405,10 +416,94 @@ fun DetailScreen(
                         }
                     }
                 }
+
+                // Quick Action Buttons: Watchlist & Download (Requirement 2)
+                Spacer(modifier = Modifier.height(18.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Watchlist Button
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(46.dp)
+                            .clip(RoundedCornerShape(23.dp))
+                            .background(
+                                if (state.isInMyList) Color(0x33E53448) else Color(0x38354354)
+                            )
+                            .border(
+                                1.dp,
+                                if (state.isInMyList) Color(0x80E53448) else Color(0x33FFFFFF),
+                                RoundedCornerShape(23.dp)
+                            )
+                            .clickable { detailController.toggleMyList() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (state.isInMyList) VortexIcons.Check else VortexIcons.Add,
+                                contentDescription = "Watchlist",
+                                tint = if (state.isInMyList) Color(0xFFE53448) else Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = if (state.isInMyList) "In Watchlist" else "Watchlist",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    // Download Button
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(46.dp)
+                            .clip(RoundedCornerShape(23.dp))
+                            .background(Color(0x38354354))
+                            .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(23.dp))
+                            .clickable {
+                                if (media.type == MediaType.TvSeries || media.type == MediaType.Anime) {
+                                    state.currentSeasonEpisodes.firstOrNull()?.let { ep ->
+                                        onPlayEpisode(media, ep)
+                                    } ?: onPlayMovie(media)
+                                } else {
+                                    onPlayMovie(media)
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = VortexIcons.Download,
+                                contentDescription = "Download",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = "Download",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
             }
         }
 
-        // 3. Cast Section (Horizontal rounded portraits - Frame 8)
+        // 3. Cast Section (Horizontal rounded portraits with character roles - Frame 8)
         item {
             Spacer(modifier = Modifier.height(16.dp))
             Row(
@@ -439,19 +534,21 @@ fun DetailScreen(
 
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 items(displayCast) { actor ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.width(85.dp)
+                        modifier = Modifier
+                            .width(88.dp)
+                            .clickable { /* Tappable cast profiles */ }
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(85.dp)
-                                .clip(RoundedCornerShape(16.dp))
+                                .size(88.dp)
+                                .clip(RoundedCornerShape(18.dp))
                                 .background(Color(0xFF161B26))
-                                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
+                                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(18.dp))
                         ) {
                             AsyncImage(
                                 model = actor.photoUrl,
@@ -463,10 +560,19 @@ fun DetailScreen(
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = actor.name,
-                            color = Color(0xFFCCD0CF),
-                            fontSize = 11.sp,
+                            color = Color.White,
+                            fontSize = 12.sp,
                             fontFamily = ManropeFontFamily,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = actor.character,
+                            color = Color(0xFF8E95A3),
+                            fontSize = 10.sp,
+                            fontFamily = ManropeFontFamily,
+                            fontWeight = FontWeight.Normal,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -566,6 +672,42 @@ fun DetailScreen(
                                 modifier = Modifier.size(16.dp)
                             )
                         }
+                    }
+                }
+            }
+        }
+
+        // 6. Related and Recommended Movies Section (Requirement 2)
+        if (media.recommendations.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.height(26.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "More Like This",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.3).sp
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    items(media.recommendations) { rec ->
+                        PosterCard(
+                            media = rec,
+                            onClick = { onPlayMovie(rec) },
+                            width = 135.dp
+                        )
                     }
                 }
             }

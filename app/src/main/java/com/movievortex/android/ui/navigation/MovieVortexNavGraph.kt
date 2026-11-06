@@ -57,6 +57,7 @@ import com.movievortex.android.ui.downloads.DownloadsScreen
 import com.movievortex.android.ui.home.HomeScreen
 import com.movievortex.android.ui.livetv.LiveTvScreen
 import com.movievortex.android.ui.library.HistoryScreen
+import com.movievortex.android.ui.library.LibraryScreen
 import com.movievortex.android.ui.library.WatchlistScreen
 import com.movievortex.android.ui.player.MovieVortexPlayerScreen
 import com.movievortex.android.ui.search.SearchScreen
@@ -308,12 +309,15 @@ fun MovieVortexNavGraph(
                                 }
 
                                 MainDestination.Bookmarks -> {
-                                    WatchlistScreen(
+                                    LibraryScreen(
                                         libraryController = libraryController,
+                                        downloadController = downloadController,
                                         onMediaClick = { media ->
-                                            launchCloudStreamPlayer(context, media, null)
+                                            currentScreen = AppScreen.Detail(media)
                                         },
-                                        onBackClick = { currentDestination = MainDestination.Home }
+                                        onPlayOffline = { filePath, title, id ->
+                                            launchOfflinePlayer(context, filePath, title, id)
+                                        }
                                     )
                                 }
 
@@ -336,11 +340,11 @@ fun MovieVortexNavGraph(
                         }
                     }
 
-                    // 2. Optional top bar for non-Home tabs
-                    if (currentDestination != MainDestination.Home) {
+                    // 2. Optional top bar for LiveTv tab
+                    if (currentDestination == MainDestination.LiveTv) {
                         MovieVortexTopBar(
                             onSearchClick = { currentDestination = MainDestination.Search },
-                            isTransparent = currentDestination == MainDestination.LiveTv,
+                            isTransparent = true,
                             modifier = Modifier.align(Alignment.TopCenter)
                         )
                     }

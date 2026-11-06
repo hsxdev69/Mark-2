@@ -244,26 +244,26 @@ fun MovieVortexBottomBar(
                     onClick = { onDestinationSelected(MainDestination.Search) }
                 )
 
-                // 3. Favorites / Heart (Watchlist)
-                val isBookmarks = currentDestination == MainDestination.Bookmarks || currentDestination == MainDestination.Downloads
+                // 3. Downloads
+                val isDownloads = currentDestination == MainDestination.Downloads
+                VideoPillNavItem(
+                    icon = VortexIcons.Download,
+                    contentDescription = "Downloads",
+                    isSelected = isDownloads,
+                    activeColor = activeColor,
+                    inactiveColor = inactiveColor,
+                    onClick = { onDestinationSelected(MainDestination.Downloads) }
+                )
+
+                // 4. Library (Watchlist, History & Saved)
+                val isLibrary = currentDestination == MainDestination.Bookmarks
                 VideoPillNavItem(
                     icon = VortexIcons.VideoHeart,
-                    contentDescription = "Favorites",
-                    isSelected = isBookmarks,
+                    contentDescription = "Library",
+                    isSelected = isLibrary,
                     activeColor = activeColor,
                     inactiveColor = inactiveColor,
                     onClick = { onDestinationSelected(MainDestination.Bookmarks) }
-                )
-
-                // 4. Profile
-                val isProfile = currentDestination == MainDestination.Me
-                VideoPillNavItem(
-                    icon = VortexIcons.VideoProfile,
-                    contentDescription = "Profile",
-                    isSelected = isProfile,
-                    activeColor = activeColor,
-                    inactiveColor = inactiveColor,
-                    onClick = { onDestinationSelected(MainDestination.Me) }
                 )
             }
         }

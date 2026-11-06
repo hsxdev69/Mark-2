@@ -129,6 +129,14 @@ object CoreAdapter {
             )
         } ?: emptyList()
 
+        val recs = response.recommendations?.mapNotNull { recItem ->
+            try {
+                fromSearchResponse(recItem)
+            } catch (_: Exception) {
+                null
+            }
+        } ?: emptyList()
+
         return MovieVortexMedia(
             id = id,
             title = response.name,
@@ -146,6 +154,7 @@ object CoreAdapter {
             trailerUrl = response.trailers.firstOrNull()?.extractorUrl,
             seasons = seasons,
             episodes = episodesList,
+            recommendations = recs,
             watchProgress = progress,
             isInMyList = isBookmarked,
             rawUrl = response.url,

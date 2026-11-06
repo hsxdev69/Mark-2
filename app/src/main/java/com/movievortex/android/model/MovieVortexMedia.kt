@@ -82,6 +82,7 @@ data class MovieVortexMedia(
     val trailerUrl: String? = null,
     val seasons: List<MediaSeason> = emptyList(),
     val episodes: List<MediaEpisode> = emptyList(),
+    val recommendations: List<MovieVortexMedia> = emptyList(),
     val availableQualities: List<String> = emptyList(),
     val subtitles: List<SubtitleTrack> = emptyList(),
     val downloadState: MediaDownloadState = MediaDownloadState.None,
