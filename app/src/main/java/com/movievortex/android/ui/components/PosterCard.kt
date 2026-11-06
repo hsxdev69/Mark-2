@@ -1,6 +1,10 @@
 package com.movievortex.android.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -75,9 +79,24 @@ fun PosterCard(
     }
 
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1f,
-        animationSpec = tween(durationMillis = 150),
+        targetValue = if (isPressed) 0.93f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
         label = "posterCardScale"
+    )
+
+    val shadowElevation by animateDpAsState(
+        targetValue = if (isPressed) 4.dp else 12.dp,
+        animationSpec = tween(durationMillis = 150),
+        label = "posterElevation"
+    )
+
+    val borderColor by animateColorAsState(
+        targetValue = if (isPressed) Color(0x66FFFFFF) else Color(0x22FFFFFF),
+        animationSpec = tween(durationMillis = 150),
+        label = "posterBorder"
     )
 
     // Animate watch progress for smooth fill
@@ -105,10 +124,10 @@ fun PosterCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(2f / 3f)
-                .shadow(8.dp, RoundedCornerShape(16.dp))
+                .shadow(shadowElevation, RoundedCornerShape(16.dp), spotColor = Color(0xAA000000))
                 .clip(RoundedCornerShape(16.dp))
                 .background(VortexColors.CardSurface)
-                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
+                .border(1.dp, borderColor, RoundedCornerShape(16.dp))
         ) {
             // Poster image
             SubcomposeAsyncImage(

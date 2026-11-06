@@ -1,10 +1,23 @@
 package com.movievortex.android.ui.home
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -279,12 +292,29 @@ fun VideoStyle3DHeroCarousel(
 ) {
     if (items.isEmpty()) return
 
+    // Infinite Virtual Page Count (allows continuous looping in both directions)
+    val virtualCount = 10000
+    val initialPage = (virtualCount / (2 * items.size)) * items.size
     val pagerState = rememberPagerState(
-        initialPage = 0,
-        pageCount = { items.size }
+        initialPage = initialPage,
+        pageCount = { virtualCount }
     )
 
-    val currentItem = items.getOrNull(pagerState.currentPage) ?: items.first()
+    // 1. Automatic horizontal poster sliding every 4.5 seconds (smooth infinite carousel)
+    LaunchedEffect(pagerState, items.size) {
+        while (true) {
+            kotlinx.coroutines.delay(4500)
+            if (!pagerState.isScrollInProgress) {
+                pagerState.animateScrollToPage(
+                    page = pagerState.currentPage + 1,
+                    animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
+                )
+            }
+        }
+    }
+
+    val activeIndex = (pagerState.currentPage % items.size).let { if (it < 0) it + items.size else it }
+    val currentItem = items.getOrNull(activeIndex) ?: items.first()
 
     Column(
         modifier = modifier
@@ -298,47 +328,75 @@ fun VideoStyle3DHeroCarousel(
                 .height(320.dp),
             contentAlignment = Alignment.Center
         ) {
-            // 1. Dynamic Ambient Colorful Aura Glow behind the carousel (Video Concept - Frame 4)
-            AsyncImage(
-                model = currentItem.poster ?: currentItem.backdrop,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(240.dp, 290.dp)
-                    .blur(50.dp)
-                    .graphicsLayer {
-                        alpha = 0.42f
-                        scaleX = 1.15f
-                        scaleY = 1.15f
-                    }
-            )
+            // Dynamic Ambient Colorful Aura Glow with smooth Crossfade
+            Crossfade(
+                targetState = currentItem.poster ?: currentItem.backdrop,
+                animationSpec = tween(600),
+                label = "hero_aura_crossfade"
+            ) { auraUrl ->
+                AsyncImage(
+                    model = auraUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(240.dp, 290.dp)
+                        .blur(50.dp)
+                        .graphicsLayer {
+                            alpha = 0.45f
+                            scaleX = 1.15f
+                            scaleY = 1.15f
+                        }
+                )
+            }
 
-            // 2. 3D Overlapping Card Fan/Deck Pager (Cards overlap and tilt in 3D)
+            // 3D Overlapping Card Deck Pager
             HorizontalPager(
                 state = pagerState,
                 contentPadding = PaddingValues(horizontal = 92.dp),
                 pageSpacing = (-38).dp, // Negative spacing tucks side cards behind center card
                 modifier = Modifier.fillMaxSize()
             ) { page ->
-                val item = items[page]
+                val realIdx = (page % items.size).let { if (it < 0) it + items.size else it }
+                val item = items[realIdx]
                 val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
                 val absOffset = abs(pageOffset).coerceIn(0f, 2f)
+
+                val interactionSource = remember { MutableInteractionSource() }
+                var isPressed by remember { mutableStateOf(false) }
+                LaunchedEffect(interactionSource) {
+                    interactionSource.interactions.collect { interaction ->
+                        when (interaction) {
+                            is PressInteraction.Press -> isPressed = true
+                            is PressInteraction.Release,
+                            is PressInteraction.Cancel -> isPressed = false
+                        }
+                    }
+                }
+
+                val pressScale by animateFloatAsState(
+                    targetValue = if (isPressed) 0.95f else 1f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    ),
+                    label = "hero_card_press"
+                )
 
                 Box(
                     modifier = Modifier
                         .zIndex(1f - absOffset) // Active center card is strictly on top
                         .graphicsLayer {
-                            // 3D Perspective Scaling & Tilt
-                            val scale = 1f - absOffset * 0.12f
-                            scaleX = scale
-                            scaleY = scale
+                            // 3D Perspective Scaling, Tilt & Rotation
+                            val cardScale = (1f - absOffset * 0.12f) * pressScale
+                            scaleX = cardScale
+                            scaleY = cardScale
                             rotationY = pageOffset * -18f
                             cameraDistance = 16f * density
 
                             // Subtle downward arc translation for side cards
                             translationY = absOffset * 8f * density
 
-                            // Side cards dim slightly
+                            // Side cards remain partially visible and dim slightly
                             alpha = (1f - absOffset * 0.25f).coerceIn(0.55f, 1f)
                         }
                         .fillMaxSize()
@@ -361,7 +419,11 @@ fun VideoStyle3DHeroCarousel(
                             ),
                             shape = RoundedCornerShape(32.dp)
                         )
-                        .clickable { onTap(item) }
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null,
+                            onClick = { onTap(item) }
+                        )
                 ) {
                     // Movie Poster Artwork
                     AsyncImage(
@@ -401,137 +463,162 @@ fun VideoStyle3DHeroCarousel(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Year (e.g. "2025")
-        val yearText = currentItem.year?.toString()?.takeIf { it.isNotBlank() } ?: "2025"
-        Text(
-            text = yearText,
-            color = Color(0xFF8E95A3),
-            fontSize = 13.sp,
-            fontFamily = ManropeFontFamily,
-            fontWeight = FontWeight.Medium
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Title (e.g. "Minecraft Movie")
-        Text(
-            text = currentItem.title,
-            color = Color.White,
-            fontSize = 22.sp,
-            fontFamily = ManropeFontFamily,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = (-0.4).sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Metadata Pills Row: Genre | Duration | Rating
-        // Metadata Row: Anime | 9 EP | ★ 7.5 (Video Concept - Frame 4)
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val genre = currentItem.genres.firstOrNull() ?: "Anime"
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0x38354354))
-                    .border(
-                        0.8.dp,
-                        Brush.verticalGradient(
-                            listOf(
-                                Color(0x3DFFFFFF),
-                                Color(0x14FFFFFF)
-                            )
-                        ),
-                        RoundedCornerShape(12.dp)
-                    )
-                    .padding(horizontal = 11.dp, vertical = 5.dp)
+        // Animated Year, Title & Metadata Pills on poster change
+        AnimatedContent(
+            targetState = currentItem,
+            transitionSpec = {
+                (fadeIn(animationSpec = tween(380)) + slideInVertically(animationSpec = tween(380, easing = FastOutSlowInEasing)) { 18 })
+                    .togetherWith(fadeOut(animationSpec = tween(220)) + slideOutVertically(animationSpec = tween(220)) { -18 })
+            },
+            label = "hero_metadata_anim",
+            modifier = Modifier.fillMaxWidth()
+        ) { targetMedia ->
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Year (e.g. "2025")
+                val yearText = targetMedia.year?.toString()?.takeIf { it.isNotBlank() } ?: "2025"
                 Text(
-                    text = genre,
-                    color = Color(0xFFE5E7EB),
-                    fontSize = 11.sp,
+                    text = yearText,
+                    color = Color(0xFF8E95A3),
+                    fontSize = 13.sp,
                     fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.Medium
                 )
-            }
 
-            val runtimeText = currentItem.runtime?.let { "${it / 60}h ${it % 60}min" } ?: "9 EP"
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0x38354354))
-                    .border(
-                        0.8.dp,
-                        Brush.verticalGradient(
-                            listOf(
-                                Color(0x3DFFFFFF),
-                                Color(0x14FFFFFF)
-                            )
-                        ),
-                        RoundedCornerShape(12.dp)
-                    )
-                    .padding(horizontal = 11.dp, vertical = 5.dp)
-            ) {
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Title (e.g. "Minecraft Movie")
                 Text(
-                    text = runtimeText,
-                    color = Color(0xFFE5E7EB),
-                    fontSize = 11.sp,
+                    text = targetMedia.title,
+                    color = Color.White,
+                    fontSize = 22.sp,
                     fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.4).sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-            }
 
-            val rating = currentItem.rating ?: 7.5f
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0x38354354))
-                    .border(
-                        0.8.dp,
-                        Brush.verticalGradient(
-                            listOf(
-                                Color(0x3DFFFFFF),
-                                Color(0x14FFFFFF)
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Metadata Pills Row: Genre | Duration | Rating (Video Concept - Frame 4)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val genre = targetMedia.genres.firstOrNull() ?: "Anime"
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0x38354354))
+                            .border(
+                                0.8.dp,
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color(0x3DFFFFFF),
+                                        Color(0x14FFFFFF)
+                                    )
+                                ),
+                                RoundedCornerShape(12.dp)
                             )
-                        ),
-                        RoundedCornerShape(12.dp)
-                    )
-                    .padding(horizontal = 11.dp, vertical = 5.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "★ ",
-                        color = Color(0xFFFFC107),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "%.1f".format(rating),
-                        color = Color.White,
-                        fontSize = 11.sp,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.Bold
-                    )
+                            .padding(horizontal = 11.dp, vertical = 5.dp)
+                    ) {
+                        Text(
+                            text = genre,
+                            color = Color(0xFFE5E7EB),
+                            fontSize = 11.sp,
+                            fontFamily = ManropeFontFamily,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    val runtimeText = targetMedia.runtime?.let { "${it / 60}h ${it % 60}min" } ?: "9 EP"
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0x38354354))
+                            .border(
+                                0.8.dp,
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color(0x3DFFFFFF),
+                                        Color(0x14FFFFFF)
+                                    )
+                                ),
+                                RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 11.dp, vertical = 5.dp)
+                    ) {
+                        Text(
+                            text = runtimeText,
+                            color = Color(0xFFE5E7EB),
+                            fontSize = 11.sp,
+                            fontFamily = ManropeFontFamily,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    val rating = targetMedia.rating ?: 7.5f
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0x38354354))
+                            .border(
+                                0.8.dp,
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color(0x3DFFFFFF),
+                                        Color(0x14FFFFFF)
+                                    )
+                                ),
+                                RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 11.dp, vertical = 5.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "★ ",
+                                color = Color(0xFFFFC107),
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "%.1f".format(rating),
+                                color = Color.White,
+                                fontSize = 11.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Fluid Animated Pagination Dots
+        // Fluid Animated Pagination Indicator Dots/Pills
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            items.take(8).forEachIndexed { idx, _ ->
-                val isSelected = idx == pagerState.currentPage
+            val totalDots = items.size.coerceAtMost(8)
+            for (idx in 0 until totalDots) {
+                val isSelected = idx == activeIndex
+                val dotWidth by animateDpAsState(
+                    targetValue = if (isSelected) 16.dp else 5.dp,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    ),
+                    label = "dot_width"
+                )
                 Box(
                     modifier = Modifier
-                        .size(if (isSelected) 6.dp else 4.dp)
+                        .height(5.dp)
+                        .width(dotWidth)
                         .clip(CircleShape)
                         .background(if (isSelected) Color.White else Color(0x40FFFFFF))
                 )

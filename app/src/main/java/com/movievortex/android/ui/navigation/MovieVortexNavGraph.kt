@@ -2,8 +2,14 @@ package com.movievortex.android.ui.navigation
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -229,7 +235,41 @@ fun MovieVortexNavGraph(
 
     AnimatedContent(
         targetState = currentScreen,
-        transitionSpec = { fadeIn() togetherWith fadeOut() },
+        transitionSpec = {
+            if (targetState is AppScreen.Detail || targetState is AppScreen.Search) {
+                // Smooth horizontal slide entrance from right + fade
+                (slideInHorizontally(
+                    initialOffsetX = { fullWidth -> fullWidth },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                ) + fadeIn(animationSpec = tween(320)))
+                    .togetherWith(
+                        slideOutHorizontally(
+                            targetOffsetX = { fullWidth -> -fullWidth / 4 },
+                            animationSpec = tween(280)
+                        ) + fadeOut(animationSpec = tween(280))
+                    )
+            } else if (initialState is AppScreen.Detail || initialState is AppScreen.Search) {
+                // Smooth horizontal slide back to right + fade
+                (slideInHorizontally(
+                    initialOffsetX = { fullWidth -> -fullWidth / 4 },
+                    animationSpec = tween(280)
+                ) + fadeIn(animationSpec = tween(280)))
+                    .togetherWith(
+                        slideOutHorizontally(
+                            targetOffsetX = { fullWidth -> fullWidth },
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioNoBouncy,
+                                stiffness = Spring.StiffnessMediumLow
+                            )
+                        ) + fadeOut(animationSpec = tween(280))
+                    )
+            } else {
+                fadeIn(animationSpec = tween(320)) togetherWith fadeOut(animationSpec = tween(240))
+            }
+        },
         label = "screen_transition"
     ) { screen ->
         when (screen) {
@@ -256,7 +296,45 @@ fun MovieVortexNavGraph(
                 ) {
                     // 1. Full-screen content (cards and posters scroll seamlessly behind the floating frosted glass bar)
                     Box(modifier = Modifier.fillMaxSize()) {
-                        Crossfade(targetState = currentDestination, label = "tab_crossfade") { dest ->
+                        AnimatedContent(
+                            targetState = currentDestination,
+                            transitionSpec = {
+                                val destOrder = listOf(
+                                    MainDestination.Home,
+                                    MainDestination.Search,
+                                    MainDestination.Downloads,
+                                    MainDestination.Bookmarks,
+                                    MainDestination.LiveTv,
+                                    MainDestination.Me
+                                )
+                                val fromIdx = destOrder.indexOf(initialState).coerceAtLeast(0)
+                                val toIdx = destOrder.indexOf(targetState).coerceAtLeast(0)
+                                if (toIdx > fromIdx) {
+                                    (slideInHorizontally(
+                                        initialOffsetX = { it / 4 },
+                                        animationSpec = tween(260, easing = FastOutSlowInEasing)
+                                    ) + fadeIn(animationSpec = tween(260)))
+                                        .togetherWith(
+                                            slideOutHorizontally(
+                                                targetOffsetX = { -it / 4 },
+                                                animationSpec = tween(220, easing = FastOutSlowInEasing)
+                                            ) + fadeOut(animationSpec = tween(220))
+                                        )
+                                } else {
+                                    (slideInHorizontally(
+                                        initialOffsetX = { -it / 4 },
+                                        animationSpec = tween(260, easing = FastOutSlowInEasing)
+                                    ) + fadeIn(animationSpec = tween(260)))
+                                        .togetherWith(
+                                            slideOutHorizontally(
+                                                targetOffsetX = { it / 4 },
+                                                animationSpec = tween(220, easing = FastOutSlowInEasing)
+                                            ) + fadeOut(animationSpec = tween(220))
+                                        )
+                                }
+                            },
+                            label = "tab_slide_fade"
+                        ) { dest ->
                             when (dest) {
                                 MainDestination.Home -> {
                                     HomeScreen(

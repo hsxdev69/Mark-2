@@ -2,6 +2,7 @@ package com.movievortex.android.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -9,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,8 +32,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +44,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -281,9 +287,28 @@ private fun VideoPillNavItem(
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    var isPressed by remember { mutableStateOf(false) }
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> isPressed = true
+                is PressInteraction.Release,
+                is PressInteraction.Cancel -> isPressed = false
+            }
+        }
+    }
 
-    val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.12f else 1.0f,
+    val pressScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.91f else 1.0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "nav_item_press"
+    )
+
+    val selectScale by animateFloatAsState(
+        targetValue = if (isSelected) 1.15f else 1.0f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
@@ -293,14 +318,24 @@ private fun VideoPillNavItem(
 
     val iconColor by animateColorAsState(
         targetValue = if (isSelected) activeColor else inactiveColor,
-        animationSpec = tween(durationMillis = 200),
+        animationSpec = tween(durationMillis = 220),
         label = "nav_icon_color"
+    )
+
+    val glowAlpha by animateFloatAsState(
+        targetValue = if (isSelected) 1.0f else 0f,
+        animationSpec = tween(durationMillis = 250),
+        label = "nav_glow_alpha"
     )
 
     Box(
         modifier = modifier
             .size(46.dp)
-            .scale(scale)
+            .graphicsLayer {
+                val totalScale = selectScale * pressScale
+                scaleX = totalScale
+                scaleY = totalScale
+            }
             .clip(CircleShape)
             .clickable(
                 interactionSource = interactionSource,
@@ -309,6 +344,18 @@ private fun VideoPillNavItem(
             ),
         contentAlignment = Alignment.Center
     ) {
+        // Active Frosted Indicator Glow Pill behind selected icon
+        if (glowAlpha > 0.01f) {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .graphicsLayer { alpha = glowAlpha }
+                    .clip(CircleShape)
+                    .background(Color(0x2EFFFFFF))
+                    .border(0.8.dp, Color(0x38FFFFFF), CircleShape)
+            )
+        }
+
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,

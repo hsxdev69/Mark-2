@@ -1,13 +1,16 @@
 package com.movievortex.android.ui.detail
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,15 +31,21 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +53,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -126,24 +136,138 @@ fun DetailScreen(
         }
     }
 
+    val scrollState = rememberLazyListState()
+
+    var isEntered by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        isEntered = true
+    }
+
+    // Parallax backdrop translation & alpha dimming on scroll
+    val backdropTranslationY by remember {
+        derivedStateOf {
+            if (scrollState.firstVisibleItemIndex == 0) {
+                scrollState.firstVisibleItemScrollOffset * 0.42f
+            } else 320f
+        }
+    }
+    val backdropAlpha by remember {
+        derivedStateOf {
+            if (scrollState.firstVisibleItemIndex == 0) {
+                (1f - scrollState.firstVisibleItemScrollOffset / 460f).coerceIn(0.20f, 1f)
+            } else 0.20f
+        }
+    }
+
+    // Play Button Press & Entrance animation
+    val playInteraction = remember { MutableInteractionSource() }
+    var isPlayPressed by remember { mutableStateOf(false) }
+    LaunchedEffect(playInteraction) {
+        playInteraction.interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> isPlayPressed = true
+                is PressInteraction.Release,
+                is PressInteraction.Cancel -> isPlayPressed = false
+            }
+        }
+    }
+    val playScale by animateFloatAsState(
+        targetValue = if (!isEntered) 0.3f else if (isPlayPressed) 0.90f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "play_scale"
+    )
+
+    // Watchlist & Download Button Springs
+    val watchlistInteraction = remember { MutableInteractionSource() }
+    var isWatchlistPressed by remember { mutableStateOf(false) }
+    LaunchedEffect(watchlistInteraction) {
+        watchlistInteraction.interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> isWatchlistPressed = true
+                is PressInteraction.Release,
+                is PressInteraction.Cancel -> isWatchlistPressed = false
+            }
+        }
+    }
+    val watchlistScale by animateFloatAsState(
+        targetValue = if (isWatchlistPressed) 0.94f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "watchlist_scale"
+    )
+
+    val downloadInteraction = remember { MutableInteractionSource() }
+    var isDownloadPressed by remember { mutableStateOf(false) }
+    LaunchedEffect(downloadInteraction) {
+        downloadInteraction.interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> isDownloadPressed = true
+                is PressInteraction.Release,
+                is PressInteraction.Cancel -> isDownloadPressed = false
+            }
+        }
+    }
+    val downloadScale by animateFloatAsState(
+        targetValue = if (isDownloadPressed) 0.94f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "download_scale"
+    )
+
+    val heartScale by animateFloatAsState(
+        targetValue = if (state.isInMyList) 1.25f else 1.0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioHighBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "heart_bounce"
+    )
+
+    // Content entrance slide & fade
+    val contentTranslateY by animateFloatAsState(
+        targetValue = if (isEntered) 0f else 28f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "content_translate_y"
+    )
+    val contentAlpha by animateFloatAsState(
+        targetValue = if (isEntered) 1f else 0f,
+        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+        label = "content_alpha"
+    )
+
     LazyColumn(
+        state = scrollState,
         modifier = modifier
             .fillMaxSize()
             .background(Color(0xFF0B0E14)),
         contentPadding = PaddingValues(bottom = 96.dp)
     ) {
-        // 1. Top Cinematic Backdrop Banner with Floating Play Button (Exact Video Match - Frame 8)
+        // 1. Top Cinematic Backdrop Banner with Parallax and Floating Play Button
         item {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(300.dp)
             ) {
-                // Curved Backdrop Image
+                // Curved Backdrop Image with Parallax & Collapsing Header Dim
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(270.dp)
+                        .graphicsLayer {
+                            translationY = backdropTranslationY
+                            alpha = backdropAlpha
+                        }
                         .clip(RoundedCornerShape(bottomStart = 26.dp, bottomEnd = 26.dp))
                         .background(Color(0xFF141923))
                 ) {
@@ -178,7 +302,7 @@ fun DetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Frosted Glass Squircle Back Button (Video Concept - Frame 8)
+                        // Frosted Glass Squircle Back Button
                         Box(
                             modifier = Modifier
                                 .size(42.dp)
@@ -206,7 +330,7 @@ fun DetailScreen(
                             )
                         }
 
-                        // Frosted Glass Squircle More Options Button (Video Concept - Frame 8)
+                        // Frosted Glass Squircle More Options Button
                         Box(
                             modifier = Modifier
                                 .size(42.dp)
@@ -242,6 +366,10 @@ fun DetailScreen(
                         .align(Alignment.BottomCenter)
                         .offset(y = 0.dp)
                         .size(58.dp)
+                        .graphicsLayer {
+                            scaleX = playScale
+                            scaleY = playScale
+                        }
                         .shadow(18.dp, CircleShape, spotColor = Color(0x99000000))
                         .clip(CircleShape)
                         .background(
@@ -263,15 +391,19 @@ fun DetailScreen(
                             ),
                             shape = CircleShape
                         )
-                        .clickable {
-                            if (media.type == MediaType.TvSeries || media.type == MediaType.Anime) {
-                                state.currentSeasonEpisodes.firstOrNull()?.let { ep ->
-                                    onPlayEpisode(media, ep)
-                                } ?: onPlayMovie(media)
-                            } else {
-                                onPlayMovie(media)
+                        .clickable(
+                            interactionSource = playInteraction,
+                            indication = null,
+                            onClick = {
+                                if (media.type == MediaType.TvSeries || media.type == MediaType.Anime) {
+                                    state.currentSeasonEpisodes.firstOrNull()?.let { ep ->
+                                        onPlayEpisode(media, ep)
+                                    } ?: onPlayMovie(media)
+                                } else {
+                                    onPlayMovie(media)
+                                }
                             }
-                        },
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -286,11 +418,15 @@ fun DetailScreen(
             }
         }
 
-        // 2. Movie Info: Date, Title, Metadata Chips, Rating & Likes (Frame 8)
+        // 2. Movie Info: Date, Title, Metadata Chips, Rating & Likes (with smooth slide & fade entrance)
         item {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .graphicsLayer {
+                        alpha = contentAlpha
+                        translationY = contentTranslateY
+                    }
                     .padding(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 // Release Date (e.g. "April 4, 2025")
@@ -394,7 +530,7 @@ fun DetailScreen(
                             )
                         }
 
-                        // Bookmark / Heart (Watchlist toggle)
+                        // Bookmark / Heart (Watchlist toggle with bounce animation)
                         Row(
                             modifier = Modifier.clickable { detailController.toggleMyList() },
                             verticalAlignment = Alignment.CenterVertically,
@@ -404,7 +540,12 @@ fun DetailScreen(
                                 imageVector = if (state.isInMyList) VortexIcons.Heart else VortexIcons.HeartBorder,
                                 contentDescription = "Favorite",
                                 tint = if (state.isInMyList) Color(0xFFE53448) else Color(0xFF8E95A3),
-                                modifier = Modifier.size(15.dp)
+                                modifier = Modifier
+                                    .size(15.dp)
+                                    .graphicsLayer {
+                                        scaleX = heartScale
+                                        scaleY = heartScale
+                                    }
                             )
                             Text(
                                 text = if (state.isInMyList) "Saved" else "156",
@@ -417,7 +558,7 @@ fun DetailScreen(
                     }
                 }
 
-                // Quick Action Buttons: Watchlist & Download (Requirement 2)
+                // Quick Action Buttons: Watchlist & Download with Spring Interaction
                 Spacer(modifier = Modifier.height(18.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -429,6 +570,10 @@ fun DetailScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(46.dp)
+                            .graphicsLayer {
+                                scaleX = watchlistScale
+                                scaleY = watchlistScale
+                            }
                             .clip(RoundedCornerShape(23.dp))
                             .background(
                                 if (state.isInMyList) Color(0x33E53448) else Color(0x38354354)
@@ -438,7 +583,11 @@ fun DetailScreen(
                                 if (state.isInMyList) Color(0x80E53448) else Color(0x33FFFFFF),
                                 RoundedCornerShape(23.dp)
                             )
-                            .clickable { detailController.toggleMyList() },
+                            .clickable(
+                                interactionSource = watchlistInteraction,
+                                indication = null,
+                                onClick = { detailController.toggleMyList() }
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
@@ -466,18 +615,26 @@ fun DetailScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(46.dp)
+                            .graphicsLayer {
+                                scaleX = downloadScale
+                                scaleY = downloadScale
+                            }
                             .clip(RoundedCornerShape(23.dp))
                             .background(Color(0x38354354))
                             .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(23.dp))
-                            .clickable {
-                                if (media.type == MediaType.TvSeries || media.type == MediaType.Anime) {
-                                    state.currentSeasonEpisodes.firstOrNull()?.let { ep ->
-                                        onPlayEpisode(media, ep)
-                                    } ?: onPlayMovie(media)
-                                } else {
-                                    onPlayMovie(media)
+                            .clickable(
+                                interactionSource = downloadInteraction,
+                                indication = null,
+                                onClick = {
+                                    if (media.type == MediaType.TvSeries || media.type == MediaType.Anime) {
+                                        state.currentSeasonEpisodes.firstOrNull()?.let { ep ->
+                                            onPlayEpisode(media, ep)
+                                        } ?: onPlayMovie(media)
+                                    } else {
+                                        onPlayMovie(media)
+                                    }
                                 }
-                            },
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         Row(
@@ -536,16 +693,65 @@ fun DetailScreen(
                 contentPadding = PaddingValues(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                items(displayCast) { actor ->
+                itemsIndexed(displayCast) { index, actor ->
+                    var castAppeared by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) {
+                        kotlinx.coroutines.delay((index * 45L).coerceAtMost(320L))
+                        castAppeared = true
+                    }
+                    val itemScale by animateFloatAsState(
+                        targetValue = if (castAppeared) 1f else 0.82f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioLowBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        ),
+                        label = "cast_scale_$index"
+                    )
+                    val itemAlpha by animateFloatAsState(
+                        targetValue = if (castAppeared) 1f else 0f,
+                        animationSpec = tween(300),
+                        label = "cast_alpha_$index"
+                    )
+
+                    val actorInteraction = remember { MutableInteractionSource() }
+                    var isActorPressed by remember { mutableStateOf(false) }
+                    LaunchedEffect(actorInteraction) {
+                        actorInteraction.interactions.collect { interaction ->
+                            when (interaction) {
+                                is PressInteraction.Press -> isActorPressed = true
+                                is PressInteraction.Release,
+                                is PressInteraction.Cancel -> isActorPressed = false
+                            }
+                        }
+                    }
+                    val actorPressScale by animateFloatAsState(
+                        targetValue = if (isActorPressed) 0.92f else 1f,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        ),
+                        label = "actor_press_$index"
+                    )
+
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
                             .width(88.dp)
-                            .clickable { /* Tappable cast profiles */ }
+                            .graphicsLayer {
+                                alpha = itemAlpha
+                                scaleX = itemScale * actorPressScale
+                                scaleY = itemScale * actorPressScale
+                            }
+                            .clickable(
+                                interactionSource = actorInteraction,
+                                indication = null,
+                                onClick = { /* Tappable cast profiles */ }
+                            )
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(88.dp)
+                                .shadow(8.dp, RoundedCornerShape(18.dp), spotColor = Color(0x66000000))
                                 .clip(RoundedCornerShape(18.dp))
                                 .background(Color(0xFF161B26))
                                 .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(18.dp))
