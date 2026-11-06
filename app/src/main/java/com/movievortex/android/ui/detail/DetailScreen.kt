@@ -274,8 +274,8 @@ fun DetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val duration = media.duration?.takeIf { it.isNotBlank() } ?: "1h 41min"
-                    MetadataChip(text = duration)
+                    val runtimeText = media.runtime?.let { "${it / 60}h ${it % 60}min" } ?: "1h 41min"
+                    MetadataChip(text = runtimeText)
 
                     val genre = media.genres.firstOrNull() ?: "Fantasy"
                     MetadataChip(text = genre)
@@ -451,7 +451,7 @@ fun DetailScreen(
                     letterSpacing = (-0.3).sp
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                val synopsisText = media.description?.takeIf { it.isNotBlank() }
+                val synopsisText = media.synopsis?.takeIf { it.isNotBlank() }
                     ?: "Four misfits are suddenly pulled through a mysterious portal into a bizarre cubic wonderland that thrives on imagination."
                 Text(
                     text = synopsisText,
@@ -497,13 +497,13 @@ fun DetailScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "EP ${ep.episodeNumber}: ${ep.name ?: "Episode ${ep.episodeNumber}"}",
+                                text = "EP ${ep.episodeNumber}: ${ep.title.ifBlank { "Episode ${ep.episodeNumber}" }}",
                                 color = Color.White,
                                 fontSize = 14.sp,
                                 fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.SemiBold
                             )
-                            ep.description?.let { desc ->
+                            ep.synopsis?.let { desc ->
                                 Text(
                                     text = desc,
                                     color = Color(0xFF8E95A3),

@@ -368,6 +368,7 @@ fun VideoStyle3DHeroCarousel(
                 )
             }
 
+            val runtimeText = currentItem.runtime?.let { "${it / 60}h ${it % 60}min" } ?: "1h 45min"
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
@@ -376,7 +377,7 @@ fun VideoStyle3DHeroCarousel(
                     .padding(horizontal = 10.dp, vertical = 4.dp)
             ) {
                 Text(
-                    text = currentItem.duration?.takeIf { it.isNotBlank() } ?: "1h 45min",
+                    text = runtimeText,
                     color = Color(0xFFCCD0CF),
                     fontSize = 11.sp,
                     fontFamily = ManropeFontFamily,
