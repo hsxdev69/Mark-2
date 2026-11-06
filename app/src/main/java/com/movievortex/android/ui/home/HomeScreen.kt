@@ -430,3 +430,87 @@ fun VideoStyle3DHeroCarousel(
         }
     }
 }
+
+@Composable
+fun SectionHeader(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    onSeeAllClick: (() -> Unit)? = null
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Text(
+                text = title,
+                color = Color.White,
+                fontSize = 18.sp,
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.3).sp
+            )
+        }
+        Text(
+            text = "See all",
+            color = Color(0xFF8E95A3),
+            fontSize = 12.sp,
+            fontFamily = ManropeFontFamily,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.clickable { onSeeAllClick?.invoke() }
+        )
+    }
+}
+
+@Composable
+fun ContentRowSection(
+    row: ContentRow,
+    onMediaClick: (MovieVortexMedia) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        SectionHeader(title = row.title, icon = null)
+        Spacer(modifier = Modifier.height(12.dp))
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            items(row.items) { item ->
+                PosterCard(
+                    media = item,
+                    onClick = { onMediaClick(item) },
+                    width = 135.dp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FeaturedHero(
+    items: List<MovieVortexMedia>,
+    onMediaClick: (MovieVortexMedia) -> Unit,
+    onPlayClick: (MovieVortexMedia) -> Unit,
+    onMyListClick: (MovieVortexMedia) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    VideoStyle3DHeroCarousel(
+        items = items,
+        onTap = onMediaClick,
+        modifier = modifier
+    )
+}
