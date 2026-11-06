@@ -71,31 +71,38 @@ object VortexColors {
         }
     }
 
-    // ── Core Surfaces ────────────────────────────────────────────────────────
+    // ── Strict OTT Monochrome & Dark Slate Surfaces ─────────────────────────
+    val DarkSlateDeep = Color(0xFF06141B)
+    val DarkSlateCard = Color(0xFF11212D)
+    val DarkSlateBorder = Color(0xFF253745)
+    val MutedGrayDark = Color(0xFF4A5C6A)
+    val MutedGraySoft = Color(0xFF9BA8AB)
+    val PureWhite = Color(0xFFFFFFFF)
+
     val PureBlack: Color
-        get() = if (isDarkState.value) Color(0xFF000000) else Color(0xFFF8F9FA)
+        get() = Color(0xFF000000)
     val AppBackground: Color
-        get() = if (isDarkState.value) Color(0xFF000000) else Color(0xFFF8F9FA)
+        get() = Color(0xFF06141B)
     val SecondaryBackground: Color
-        get() = if (isDarkState.value) Color(0xFF0A0A0A) else Color(0xFFF1F3F5)
+        get() = Color(0xFF11212D)
     val DarkGraphite: Color
-        get() = if (isDarkState.value) Color(0xFF101010) else Color(0xFFFFFFFF)
+        get() = Color(0xFF11212D)
     val CardSurface: Color
-        get() = if (isDarkState.value) Color(0xFF141414) else Color(0xFFFFFFFF)
+        get() = Color(0xFF11212D)
     val CardSurfaceElevated: Color
-        get() = if (isDarkState.value) Color(0xFF1C1C1C) else Color(0xFFF1F5F9)
+        get() = Color(0xFF253745)
     val BorderSubtle: Color
-        get() = if (isDarkState.value) Color(0xFF242424) else Color(0xFFE2E8F0)
+        get() = Color(0xFF253745)
     val Divider: Color
-        get() = if (isDarkState.value) Color(0xFF1F1F1F) else Color(0xFFE2E8F0)
+        get() = Color(0xFF253745)
 
     // ── Text Hierarchy ───────────────────────────────────────────────────────
     val PrimaryText: Color
-        get() = if (isDarkState.value) Color(0xFFFFFFFF) else Color(0xFF0F172A)
+        get() = Color(0xFFFFFFFF)
     val SecondaryText: Color
-        get() = if (isDarkState.value) Color(0xFFCCCCCC) else Color(0xFF475569)
+        get() = Color(0xFF9BA8AB)
     val MutedText: Color
-        get() = if (isDarkState.value) Color(0xFF888888) else Color(0xFF64748B)
+        get() = Color(0xFF4A5C6A)
     val TextPrimary: Color get() = PrimaryText
     val TextSecondary: Color get() = SecondaryText
     val TextMuted: Color get() = MutedText

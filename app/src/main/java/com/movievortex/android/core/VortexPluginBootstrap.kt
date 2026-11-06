@@ -36,6 +36,21 @@ object VortexPluginBootstrap {
             name = "AniVortex",
             internalName = "AniVortex",
             fallbackUrl = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/builds/AniVortex.cs3"
+        ),
+        TargetPlugin(
+            name = "IStreamFlare",
+            internalName = "IStreamFlare",
+            fallbackUrl = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/builds/IStreamFlare.cs3"
+        ),
+        TargetPlugin(
+            name = "MovieBoxProvider",
+            internalName = "MovieBoxProvider",
+            fallbackUrl = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/builds/MovieBoxProvider.cs3"
+        ),
+        TargetPlugin(
+            name = "SuperStream",
+            internalName = "SuperStream",
+            fallbackUrl = "https://raw.githubusercontent.com/phisher98/cloudstream-extensions-phisher/builds/SuperStream.cs3"
         )
     )
 

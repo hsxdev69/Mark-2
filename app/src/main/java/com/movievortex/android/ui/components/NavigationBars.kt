@@ -84,15 +84,15 @@ fun MovieVortexTopBar(
         Modifier.background(
             Brush.verticalGradient(
                 listOf(
-                    Color(0xE626070B),
-                    Color(0xBF0E1219),
-                    Color(0x66080B10),
+                    Color(0xF006141B),
+                    Color(0xCC11212D),
+                    Color(0x6606141B),
                     Color.Transparent
                 )
             )
         )
     } else {
-        Modifier.background(Color(0xF50A0E17))
+        Modifier.background(Color(0xFF06141B))
     }
 
     Row(
@@ -104,13 +104,13 @@ fun MovieVortexTopBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left: Circular Frosted Glass Button with Staggered Menu Icon (CineNova Style)
+        // Left: Circular Frosted Glass Button with Staggered Menu Icon
         Box(
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color(0x33253745))
-                .border(1.dp, Color(0x22FFFFFF), CircleShape)
+                .background(Color(0x40253745))
+                .border(1.dp, Color(0x334A5C6A), CircleShape)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -126,7 +126,7 @@ fun MovieVortexTopBar(
             )
         }
 
-        // Center: CineNova Styled Title "MovieVortex" (White + Coral Red Accent)
+        // Center: High-End Monochrome OTT Title "MovieVortex" (Pure White + Soft Muted Slate)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
@@ -141,7 +141,7 @@ fun MovieVortexTopBar(
             )
             Text(
                 text = "Vortex",
-                color = Color(0xFFE53448),
+                color = Color(0xFF9BA8AB),
                 fontSize = 20.sp,
                 fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.Bold,
@@ -149,13 +149,13 @@ fun MovieVortexTopBar(
             )
         }
 
-        // Right: Circular Frosted Glass Button with Search Icon (CineNova Style)
+        // Right: Circular Frosted Glass Button with Search Icon
         Box(
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color(0x33253745))
-                .border(1.dp, Color(0x22FFFFFF), CircleShape)
+                .background(Color(0x40253745))
+                .border(1.dp, Color(0x334A5C6A), CircleShape)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -186,7 +186,7 @@ fun MovieVortexBottomBar(
             .padding(horizontal = 24.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Compact Floating Frosted Glass Capsule matching Video Concept (exact_video_bottom_bar)
+        // Floating Frosted Glass Capsule (Monochrome Dark Slate #06141B, #11212D, #253745)
         Box(
             modifier = Modifier
                 .widthIn(max = 280.dp)
@@ -195,16 +195,16 @@ fun MovieVortexBottomBar(
                 .shadow(
                     elevation = 24.dp,
                     shape = CircleShape,
-                    spotColor = Color(0xAA000000),
-                    ambientColor = Color(0x66000000)
+                    spotColor = Color(0xEE06141B),
+                    ambientColor = Color(0x88000000)
                 )
                 .clip(CircleShape)
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            Color(0x73334155), // Top specular slate highlight (approx 45% alpha)
-                            Color(0x8C16202C), // Center frosted dark slate (approx 55% alpha)
-                            Color(0x9E0E1520)  // Bottom deep translucent slate
+                            Color(0x99253745), // Top specular dark slate highlight
+                            Color(0xD911212D), // Center frosted slate surface
+                            Color(0xF206141B)  // Bottom deep translucent black
                         )
                     )
                 )
@@ -212,9 +212,9 @@ fun MovieVortexBottomBar(
                     width = 1.dp,
                     brush = Brush.verticalGradient(
                         listOf(
-                            Color(0x59FFFFFF), // Crisp top highlight edge
-                            Color(0x22FFFFFF), // Soft mid edge
-                            Color(0x0FFFFFFF)  // Subtle bottom edge
+                            Color(0x594A5C6A), // Crisp subtle top edge
+                            Color(0x2E253745), // Soft mid edge
+                            Color(0x1406141B)  // Subtle bottom edge
                         )
                     ),
                     shape = CircleShape
@@ -227,8 +227,8 @@ fun MovieVortexBottomBar(
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val activeColor = Color.White
-                val inactiveColor = Color(0xFF8A96A3)
+                val activeColor = Color(0xFFFFFFFF) // Pure White
+                val inactiveColor = Color(0xFF9BA8AB) // Soft Muted Gray
 
                 // 1. Home
                 val isHome = currentDestination == MainDestination.Home
@@ -252,26 +252,26 @@ fun MovieVortexBottomBar(
                     onClick = { onDestinationSelected(MainDestination.Search) }
                 )
 
-                // 3. Downloads
-                val isDownloads = currentDestination == MainDestination.Downloads
-                VideoPillNavItem(
-                    icon = VortexIcons.Download,
-                    contentDescription = "Downloads",
-                    isSelected = isDownloads,
-                    activeColor = activeColor,
-                    inactiveColor = inactiveColor,
-                    onClick = { onDestinationSelected(MainDestination.Downloads) }
-                )
-
-                // 4. Library (Watchlist, History & Saved)
+                // 3. Bookmark / Library
                 val isLibrary = currentDestination == MainDestination.Bookmarks
                 VideoPillNavItem(
-                    icon = VortexIcons.VideoHeart,
+                    icon = VortexIcons.Bookmark,
                     contentDescription = "Library",
                     isSelected = isLibrary,
                     activeColor = activeColor,
                     inactiveColor = inactiveColor,
                     onClick = { onDestinationSelected(MainDestination.Bookmarks) }
+                )
+
+                // 4. Profile
+                val isProfile = currentDestination == MainDestination.Me
+                VideoPillNavItem(
+                    icon = VortexIcons.Person,
+                    contentDescription = "Profile",
+                    isSelected = isProfile,
+                    activeColor = activeColor,
+                    inactiveColor = inactiveColor,
+                    onClick = { onDestinationSelected(MainDestination.Me) }
                 )
             }
         }

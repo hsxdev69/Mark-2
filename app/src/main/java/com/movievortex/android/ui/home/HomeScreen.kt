@@ -130,10 +130,10 @@ fun HomeScreen(
         state = scrollState,
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF0F141C)),
+            .background(Color(0xFF06141B)),
         contentPadding = PaddingValues(bottom = 110.dp)
     ) {
-        // 1. Top Category Tabs (Video Concept - Frames 3-5)
+        // 1. Top Category Tabs (Monochrome High-End OTT)
         item {
             Box(
                 modifier = Modifier
@@ -150,7 +150,7 @@ fun HomeScreen(
                         val isSelected = cat == selectedCategory
                         Text(
                             text = cat,
-                            color = if (isSelected) Color.White else Color(0xFF6B7584),
+                            color = if (isSelected) Color.White else Color(0xFF9BA8AB),
                             fontSize = if (isSelected) 22.sp else 15.sp,
                             fontFamily = ManropeFontFamily,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
@@ -168,7 +168,7 @@ fun HomeScreen(
             }
         }
 
-        // 2. Liquid 3D Perspective Fling Carousel (Video Concept - Frames 3-5)
+        // 2. Liquid 3D Perspective Fling Carousel
         if (heroList.isNotEmpty()) {
             item {
                 VideoStyle3DHeroCarousel(
@@ -178,7 +178,7 @@ fun HomeScreen(
             }
         }
 
-        // 3. "For you" Row (Video Concept - Frame 3)
+        // 3. "For you" Row
         val forYouItems = filteredRows.firstOrNull()?.items ?: emptyList()
         if (forYouItems.isNotEmpty()) {
             item {
@@ -200,7 +200,7 @@ fun HomeScreen(
                     )
                     Text(
                         text = "See all",
-                        color = Color(0xFF8E95A3),
+                        color = Color(0xFF9BA8AB),
                         fontSize = 12.sp,
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.SemiBold
@@ -222,7 +222,7 @@ fun HomeScreen(
             }
         }
 
-        // 4. Content Rows (Popular Movies, Series, etc.)
+        // 4. Content Rows (Recently Added Movies, Popular Now, etc.)
         val remainingRows = filteredRows.drop(1)
         items(remainingRows) { row ->
             Spacer(modifier = Modifier.height(24.dp))
@@ -243,7 +243,7 @@ fun HomeScreen(
                 )
                 Text(
                     text = "See all",
-                    color = Color(0xFF8E95A3),
+                    color = Color(0xFF9BA8AB),
                     fontSize = 12.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.SemiBold
