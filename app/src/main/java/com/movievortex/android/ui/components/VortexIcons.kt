@@ -42,6 +42,36 @@ object VortexIcons {
         }.build()
     }
 
+    val HomeOutline: ImageVector by lazy {
+        ImageVector.Builder("HomeOutline", 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(12f, 5.69f)
+                lineToRelative(5f, 4.5f)
+                verticalLineTo(18f)
+                horizontalLineToRelative(-2f)
+                verticalLineToRelative(-6f)
+                horizontalLineTo(9f)
+                verticalLineToRelative(6f)
+                horizontalLineTo(7f)
+                verticalLineToRelative(-7.81f)
+                lineToRelative(5f, -4.5f)
+                moveTo(12f, 3f)
+                lineTo(2f, 12f)
+                horizontalLineToRelative(3f)
+                verticalLineToRelative(8f)
+                horizontalLineToRelative(6f)
+                verticalLineToRelative(-6f)
+                horizontalLineToRelative(2f)
+                verticalLineToRelative(6f)
+                horizontalLineToRelative(6f)
+                verticalLineToRelative(-8f)
+                horizontalLineToRelative(3f)
+                lineTo(12f, 3f)
+                close()
+            }
+        }.build()
+    }
+
     val Search: ImageVector by lazy {
         ImageVector.Builder("Search", 24.dp, 24.dp, 24f, 24f).apply {
             path(fill = SolidColor(Color.White)) {
@@ -495,6 +525,37 @@ object VortexIcons {
                 verticalLineToRelative(2f)
                 horizontalLineToRelative(16f)
                 verticalLineToRelative(-2f)
+                curveToRelative(0f, -2.66f, -5.33f, -4f, -8f, -4f)
+                close()
+            }
+        }.build()
+    }
+
+    val PersonOutline: ImageVector by lazy {
+        ImageVector.Builder("PersonOutline", 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(12f, 5.9f)
+                curveToRelative(1.16f, 0f, 2.1f, 0.94f, 2.1f, 2.1f)
+                reflectiveCurveToRelative(-0.94f, 2.1f, -2.1f, 2.1f)
+                reflectiveCurveTo(9.9f, 9.16f, 9.9f, 8f)
+                reflectiveCurveTo(10.84f, 5.9f, 12f, 5.9f)
+                moveTo(12f, 14.9f)
+                curveToRelative(2.97f, 0f, 6.1f, 1.46f, 6.1f, 2.1f)
+                verticalLineToRelative(1.1f)
+                horizontalLineTo(5.9f)
+                verticalLineTo(17f)
+                curveToRelative(0f, -0.64f, 3.13f, -2.1f, 6.1f, -2.1f)
+                moveTo(12f, 4f)
+                curveTo(9.79f, 4f, 8f, 5.79f, 8f, 8f)
+                reflectiveCurveToRelative(1.79f, 4f, 4f, 4f)
+                reflectiveCurveToRelative(4f, -1.79f, 4f, -4f)
+                reflectiveCurveToRelative(-1.79f, -4f, -4f, -4f)
+                close()
+                moveTo(12f, 13f)
+                curveToRelative(-2.67f, 0f, -8f, 1.34f, -8f, 4f)
+                verticalLineToRelative(3f)
+                horizontalLineToRelative(16f)
+                verticalLineToRelative(-3f)
                 curveToRelative(0f, -2.66f, -5.33f, -4f, -8f, -4f)
                 close()
             }

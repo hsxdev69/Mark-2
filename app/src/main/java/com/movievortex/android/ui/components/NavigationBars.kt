@@ -177,115 +177,109 @@ fun MovieVortexBottomBar(
     modifier: Modifier = Modifier,
     activeDownloadCount: Int = 0
 ) {
-    Box(
+    Column(
         modifier = modifier
             .fillMaxWidth()
+            .background(Color(0xF50A0E17))
             .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(start = 24.dp, end = 24.dp, bottom = 16.dp, top = 8.dp),
-        contentAlignment = Alignment.Center
     ) {
-        // Floating Glassmorphic Pill Capsule with Custom Deep Slate Palette
+        // Ultra subtle top hair-line divider matching CineNova reference
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp)
-                .shadow(
-                    elevation = 20.dp,
-                    shape = RoundedCornerShape(32.dp),
-                    spotColor = Color(0x80000000),
-                    ambientColor = Color(0x40000000)
-                )
-                .clip(RoundedCornerShape(32.dp))
-                .background(Color(0xF206141B))
-                .border(1.dp, Color(0x334A5C6A), RoundedCornerShape(32.dp))
-                .padding(horizontal = 14.dp, vertical = 6.dp),
-            contentAlignment = Alignment.Center
+                .height(0.6.dp)
+                .background(Color(0x18FFFFFF))
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(58.dp)
+                .padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // 1. Home
-                IconOnlyNavItem(
-                    icon = VortexIcons.Home,
-                    contentDescription = "Home",
-                    isSelected = currentDestination == MainDestination.Home,
-                    onClick = { onDestinationSelected(MainDestination.Home) }
-                )
+            val activeColor = Color(0xFFE53448) // CineNova Coral Red
+            val inactiveColor = Color(0xFF676E79) // CineNova Muted Slate Outline
 
-                // 2. Search
-                IconOnlyNavItem(
-                    icon = VortexIcons.Search,
-                    contentDescription = "Search",
-                    isSelected = currentDestination == MainDestination.Search,
-                    onClick = { onDestinationSelected(MainDestination.Search) }
-                )
+            // 1. Home
+            val isHome = currentDestination == MainDestination.Home
+            CineNovaNavItem(
+                icon = if (isHome) VortexIcons.Home else VortexIcons.HomeOutline,
+                contentDescription = "Home",
+                isSelected = isHome,
+                activeColor = activeColor,
+                inactiveColor = inactiveColor,
+                onClick = { onDestinationSelected(MainDestination.Home) }
+            )
 
-                // 3. Library / Bookmarks
-                IconOnlyNavItem(
-                    icon = VortexIcons.Bookmark,
-                    contentDescription = "Library",
-                    isSelected = currentDestination == MainDestination.Bookmarks || currentDestination == MainDestination.Downloads,
-                    onClick = { onDestinationSelected(MainDestination.Bookmarks) }
-                )
+            // 2. Search
+            val isSearch = currentDestination == MainDestination.Search
+            CineNovaNavItem(
+                icon = VortexIcons.Search,
+                contentDescription = "Search",
+                isSelected = isSearch,
+                activeColor = activeColor,
+                inactiveColor = inactiveColor,
+                onClick = { onDestinationSelected(MainDestination.Search) }
+            )
 
-                // 4. Profile / Settings
-                IconOnlyNavItem(
-                    icon = VortexIcons.Person,
-                    contentDescription = "Profile",
-                    isSelected = currentDestination == MainDestination.Me,
-                    onClick = { onDestinationSelected(MainDestination.Me) }
-                )
-            }
+            // 3. Library / Bookmarks
+            val isBookmarks = currentDestination == MainDestination.Bookmarks || currentDestination == MainDestination.Downloads
+            CineNovaNavItem(
+                icon = if (isBookmarks) VortexIcons.Bookmark else VortexIcons.BookmarkBorder,
+                contentDescription = "Library",
+                isSelected = isBookmarks,
+                activeColor = activeColor,
+                inactiveColor = inactiveColor,
+                onClick = { onDestinationSelected(MainDestination.Bookmarks) }
+            )
+
+            // 4. Profile / Settings
+            val isProfile = currentDestination == MainDestination.Me
+            CineNovaNavItem(
+                icon = if (isProfile) VortexIcons.Person else VortexIcons.PersonOutline,
+                contentDescription = "Profile",
+                isSelected = isProfile,
+                activeColor = activeColor,
+                inactiveColor = inactiveColor,
+                onClick = { onDestinationSelected(MainDestination.Me) }
+            )
         }
     }
 }
 
 @Composable
-private fun IconOnlyNavItem(
+private fun CineNovaNavItem(
     icon: ImageVector,
     contentDescription: String,
     isSelected: Boolean,
+    activeColor: Color,
+    inactiveColor: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
     val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.15f else 1.0f,
+        targetValue = if (isSelected) 1.08f else 1.0f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
         ),
-        label = "nav_icon_scale"
+        label = "nav_item_scale"
     )
 
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0xFFCCD0CF) else Color(0xFF4A5C6A),
+        targetValue = if (isSelected) activeColor else inactiveColor,
         animationSpec = tween(durationMillis = 200),
         label = "nav_icon_color"
     )
 
-    val containerColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0x66253745) else Color.Transparent,
-        animationSpec = tween(durationMillis = 200),
-        label = "nav_container_color"
-    )
-
-    val borderColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0x4DCCD0CF) else Color.Transparent,
-        animationSpec = tween(durationMillis = 200),
-        label = "nav_border_color"
-    )
-
     Box(
         modifier = modifier
-            .size(48.dp)
+            .size(54.dp)
             .scale(scale)
-            .clip(RoundedCornerShape(24.dp))
-            .background(containerColor)
-            .border(1.dp, borderColor, RoundedCornerShape(24.dp))
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -297,7 +291,7 @@ private fun IconOnlyNavItem(
             imageVector = icon,
             contentDescription = contentDescription,
             tint = iconColor,
-            modifier = Modifier.size(22.dp)
+            modifier = Modifier.size(23.dp)
         )
     }
 }
