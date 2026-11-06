@@ -23,6 +23,25 @@ object VortexIcons {
         }.build()
     }
 
+    val Home: ImageVector by lazy {
+        ImageVector.Builder("Home", 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(10.0f, 20.0f)
+                verticalLineToRelative(-6.0f)
+                horizontalLineToRelative(4.0f)
+                verticalLineToRelative(6.0f)
+                horizontalLineToRelative(5.0f)
+                verticalLineToRelative(-8.0f)
+                horizontalLineToRelative(3.0f)
+                lineTo(12.0f, 3.0f)
+                lineTo(2.0f, 12.0f)
+                horizontalLineToRelative(3.0f)
+                verticalLineToRelative(8.0f)
+                close()
+            }
+        }.build()
+    }
+
     val Search: ImageVector by lazy {
         ImageVector.Builder("Search", 24.dp, 24.dp, 24f, 24f).apply {
             path(fill = SolidColor(Color.White)) {

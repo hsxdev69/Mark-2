@@ -317,6 +317,16 @@ fun MovieVortexNavGraph(
                                     )
                                 }
 
+                                MainDestination.Bookmarks -> {
+                                    WatchlistScreen(
+                                        libraryController = libraryController,
+                                        onMediaClick = { media ->
+                                            launchCloudStreamPlayer(context, media, null)
+                                        },
+                                        onBackClick = { currentDestination = MainDestination.Home }
+                                    )
+                                }
+
                                 MainDestination.Me -> {
                                     SettingsScreen(
                                         settingsController = settingsController,

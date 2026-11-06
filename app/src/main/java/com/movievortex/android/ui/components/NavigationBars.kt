@@ -1,7 +1,9 @@
 package com.movievortex.android.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,15 +51,18 @@ import com.movievortex.android.ui.theme.VortexColors
 
 enum class MainDestination {
     Home,
-    LiveTv,
     Search,
-    Downloads,
-    Me;
+    Bookmarks,
+    Me,
+    LiveTv,
+    Downloads;
 
     companion object {
         val MoviesTv get() = Home
         val Anime get() = Home
         val Settings get() = Me
+        val Library get() = Bookmarks
+        val Profile get() = Me
     }
 }
 
@@ -179,16 +184,21 @@ fun MovieVortexBottomBar(
             .padding(start = 24.dp, end = 24.dp, bottom = 16.dp, top = 8.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Floating Glassmorphic Pill Capsule matching Flutter FloatingNavBar
+        // Floating Glassmorphic Pill Capsule with Custom Deep Slate Palette
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(66.dp)
-                .shadow(elevation = 16.dp, shape = RoundedCornerShape(33.dp))
-                .clip(RoundedCornerShape(33.dp))
-                .background(Color(0xE00A0A0A))
-                .border(1.dp, Color(0x30FFFFFF), RoundedCornerShape(33.dp))
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .height(64.dp)
+                .shadow(
+                    elevation = 20.dp,
+                    shape = RoundedCornerShape(32.dp),
+                    spotColor = Color(0x80000000),
+                    ambientColor = Color(0x40000000)
+                )
+                .clip(RoundedCornerShape(32.dp))
+                .background(Color(0xF206141B))
+                .border(1.dp, Color(0x334A5C6A), RoundedCornerShape(32.dp))
+                .padding(horizontal = 14.dp, vertical = 6.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -196,38 +206,34 @@ fun MovieVortexBottomBar(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BottomNavIslandItem(
-                    title = "Home",
-                    icon = VortexIcons.Movie,
+                // 1. Home
+                IconOnlyNavItem(
+                    icon = VortexIcons.Home,
+                    contentDescription = "Home",
                     isSelected = currentDestination == MainDestination.Home,
                     onClick = { onDestinationSelected(MainDestination.Home) }
                 )
 
-                BottomNavIslandItem(
-                    title = "Live TV",
-                    icon = VortexIcons.Tv,
-                    isSelected = currentDestination == MainDestination.LiveTv,
-                    onClick = { onDestinationSelected(MainDestination.LiveTv) }
-                )
-
-                BottomNavIslandItem(
-                    title = "Search",
+                // 2. Search
+                IconOnlyNavItem(
                     icon = VortexIcons.Search,
+                    contentDescription = "Search",
                     isSelected = currentDestination == MainDestination.Search,
                     onClick = { onDestinationSelected(MainDestination.Search) }
                 )
 
-                BottomNavIslandItem(
-                    title = "Downloads",
-                    icon = VortexIcons.Download,
-                    isSelected = currentDestination == MainDestination.Downloads,
-                    badgeCount = activeDownloadCount,
-                    onClick = { onDestinationSelected(MainDestination.Downloads) }
+                // 3. Library / Bookmarks
+                IconOnlyNavItem(
+                    icon = VortexIcons.Bookmark,
+                    contentDescription = "Library",
+                    isSelected = currentDestination == MainDestination.Bookmarks || currentDestination == MainDestination.Downloads,
+                    onClick = { onDestinationSelected(MainDestination.Bookmarks) }
                 )
 
-                BottomNavIslandItem(
-                    title = "Profile",
+                // 4. Profile / Settings
+                IconOnlyNavItem(
                     icon = VortexIcons.Person,
+                    contentDescription = "Profile",
                     isSelected = currentDestination == MainDestination.Me,
                     onClick = { onDestinationSelected(MainDestination.Me) }
                 )
@@ -237,99 +243,61 @@ fun MovieVortexBottomBar(
 }
 
 @Composable
-private fun BottomNavIslandItem(
-    title: String,
+private fun IconOnlyNavItem(
     icon: ImageVector,
+    contentDescription: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    badgeCount: Int = 0
+    modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
-    // Smooth scale animation on selected item
     val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.05f else 1f,
-        animationSpec = tween(durationMillis = 250),
-        label = "navItemScale"
+        targetValue = if (isSelected) 1.15f else 1.0f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "nav_icon_scale"
     )
 
-    // Animated background color transition
-    val pillBackground by animateColorAsState(
-        targetValue = if (isSelected) Color.White else Color.Transparent,
-        animationSpec = tween(durationMillis = 300),
-        label = "navItemBg"
+    val iconColor by animateColorAsState(
+        targetValue = if (isSelected) Color(0xFFCCD0CF) else Color(0xFF4A5C6A),
+        animationSpec = tween(durationMillis = 200),
+        label = "nav_icon_color"
     )
 
-    if (isSelected) {
-        // Active Pill: Pure White Background with subtle shadow, Black Text & Icon
-        Row(
-            modifier = Modifier
-                .scale(scale)
-                .shadow(elevation = 8.dp, shape = RoundedCornerShape(24.dp))
-                .clip(RoundedCornerShape(24.dp))
-                .background(pillBackground)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onClick
-                )
-                .padding(horizontal = 13.dp, vertical = 7.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = Color.Black,
-                modifier = Modifier.size(19.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = title,
-                color = Color.Black,
-                fontSize = 12.sp,
-                fontFamily = ManropeFontFamily,
-                fontWeight = FontWeight.ExtraBold
-            )
-        }
-    } else {
-        // Inactive: Minimal frosted icon with notification badge
-        Box(
-            modifier = Modifier
-                .scale(scale)
-                .clip(CircleShape)
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onClick
-                )
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            contentAlignment = Alignment.TopEnd
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = Color(0x80FFFFFF),
-                modifier = Modifier.size(21.dp)
-            )
+    val containerColor by animateColorAsState(
+        targetValue = if (isSelected) Color(0x66253745) else Color.Transparent,
+        animationSpec = tween(durationMillis = 200),
+        label = "nav_container_color"
+    )
 
-            if (badgeCount > 0) {
-                Box(
-                    modifier = Modifier
-                        .size(14.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFFFFFF)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = if (badgeCount > 9) "9+" else badgeCount.toString(),
-                        color = Color.Black,
-                        fontSize = 7.sp,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
+    val borderColor by animateColorAsState(
+        targetValue = if (isSelected) Color(0x4DCCD0CF) else Color.Transparent,
+        animationSpec = tween(durationMillis = 200),
+        label = "nav_border_color"
+    )
+
+    Box(
+        modifier = modifier
+            .size(48.dp)
+            .scale(scale)
+            .clip(RoundedCornerShape(24.dp))
+            .background(containerColor)
+            .border(1.dp, borderColor, RoundedCornerShape(24.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = iconColor,
+            modifier = Modifier.size(22.dp)
+        )
     }
 }
