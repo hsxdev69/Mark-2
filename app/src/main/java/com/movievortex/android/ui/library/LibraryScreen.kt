@@ -238,7 +238,7 @@ fun LibraryScreen(
                 }
 
                 LibraryTab.Downloads -> {
-                    if (downloadState.downloads.isEmpty()) {
+                    if (downloadState.items.isEmpty()) {
                         EmptyLibraryState(
                             icon = VortexIcons.Download,
                             title = "No Downloaded Movies",
@@ -250,7 +250,7 @@ fun LibraryScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            items(downloadState.downloads) { dl ->
+                            items(downloadState.items) { dl ->
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -272,7 +272,7 @@ fun LibraryScreen(
                                             .background(Color(0xFF141923))
                                     ) {
                                         AsyncImage(
-                                            model = dl.posterUrl,
+                                            model = dl.poster,
                                             contentDescription = dl.title,
                                             contentScale = ContentScale.Crop,
                                             modifier = Modifier.fillMaxSize()
@@ -293,7 +293,7 @@ fun LibraryScreen(
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = "${formatFileSize(dl.downloadedBytes)} / ${formatFileSize(dl.totalBytes)}",
+                                            text = "${formatFileSize(dl.downloadedBytes)} / ${formatFileSize(dl.fileSizeBytes)}",
                                             color = Color(0xFF8E95A3),
                                             fontSize = 12.sp,
                                             fontFamily = ManropeFontFamily
