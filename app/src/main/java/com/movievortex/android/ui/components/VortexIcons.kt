@@ -23,6 +23,37 @@ object VortexIcons {
         }.build()
     }
 
+    val StaggeredMenu: ImageVector by lazy {
+        ImageVector.Builder("StaggeredMenu", 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(4f, 6.5f)
+                horizontalLineToRelative(16f)
+                curveToRelative(0.55f, 0f, 1f, 0.45f, 1f, 1f)
+                reflectiveCurveToRelative(-0.45f, 1f, -1f, 1f)
+                horizontalLineTo(4f)
+                curveToRelative(-0.55f, 0f, -1f, -0.45f, -1f, -1f)
+                reflectiveCurveToRelative(0.45f, -1f, 1f, -1f)
+                close()
+                moveTo(4f, 11f)
+                horizontalLineToRelative(11f)
+                curveToRelative(0.55f, 0f, 1f, 0.45f, 1f, 1f)
+                reflectiveCurveToRelative(-0.45f, 1f, -1f, 1f)
+                horizontalLineTo(4f)
+                curveToRelative(-0.55f, 0f, -1f, -0.45f, -1f, -1f)
+                reflectiveCurveToRelative(0.45f, -1f, 1f, -1f)
+                close()
+                moveTo(4f, 15.5f)
+                horizontalLineToRelative(7f)
+                curveToRelative(0.55f, 0f, 1f, 0.45f, 1f, 1f)
+                reflectiveCurveToRelative(-0.45f, 1f, -1f, 1f)
+                horizontalLineTo(4f)
+                curveToRelative(-0.55f, 0f, -1f, -0.45f, -1f, -1f)
+                reflectiveCurveToRelative(0.45f, -1f, 1f, -1f)
+                close()
+            }
+        }.build()
+    }
+
     val Home: ImageVector by lazy {
         ImageVector.Builder("Home", 24.dp, 24.dp, 24f, 24f).apply {
             path(fill = SolidColor(Color.White)) {
@@ -67,6 +98,106 @@ object VortexIcons {
                 verticalLineToRelative(-8f)
                 horizontalLineToRelative(3f)
                 lineTo(12f, 3f)
+                close()
+            }
+        }.build()
+    }
+
+    val Heart: ImageVector by lazy {
+        ImageVector.Builder("Heart", 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(12f, 21.35f)
+                lineToRelative(-1.45f, -1.32f)
+                curveTo(5.4f, 15.36f, 2f, 12.28f, 2f, 8.5f)
+                curveTo(2f, 5.42f, 4.42f, 3f, 7.5f, 3f)
+                curveToRelative(1.74f, 0f, 3.41f, 0.81f, 4.5f, 2.09f)
+                curveTo(13.09f, 3.81f, 14.76f, 3f, 16.5f, 3f)
+                curveTo(19.58f, 3f, 22f, 5.42f, 22f, 8.5f)
+                curveToRelative(0f, 3.78f, -3.4f, 6.86f, -8.55f, 11.54f)
+                lineTo(12f, 21.35f)
+                close()
+            }
+        }.build()
+    }
+
+    val HeartBorder: ImageVector by lazy {
+        ImageVector.Builder("HeartBorder", 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(16.5f, 3f)
+                curveToRelative(-1.74f, 0f, -3.41f, 0.81f, -4.5f, 2.09f)
+                curveTo(10.91f, 3.81f, 9.24f, 3f, 7.5f, 3f)
+                curveTo(4.42f, 3f, 2f, 5.42f, 2f, 8.5f)
+                curveToRelative(0f, 3.78f, 3.4f, 6.86f, 8.55f, 11.54f)
+                lineTo(12f, 21.35f)
+                lineToRelative(1.45f, -1.32f)
+                curveTo(18.6f, 15.36f, 22f, 12.28f, 22f, 8.5f)
+                curveTo(22f, 5.42f, 19.58f, 3f, 16.5f, 3f)
+                close()
+                moveTo(12.1f, 18.55f)
+                lineToRelative(-0.1f, 0.1f)
+                lineToRelative(-0.1f, -0.1f)
+                curveTo(7.14f, 14.24f, 4f, 11.39f, 4f, 8.5f)
+                curveTo(4f, 6.5f, 5.5f, 5f, 7.5f, 5f)
+                curveToRelative(1.54f, 0f, 3.04f, 0.99f, 3.57f, 2.36f)
+                horizontalLineToRelative(1.87f)
+                curveTo(13.46f, 5.99f, 14.96f, 5f, 16.5f, 5f)
+                curveToRelative(2f, 0f, 3.5f, 1.5f, 3.5f, 3.5f)
+                curveToRelative(0f, 2.89f, -3.14f, 5.74f, -7.9f, 10.05f)
+                close()
+            }
+        }.build()
+    }
+
+    val MoreVert: ImageVector by lazy {
+        ImageVector.Builder("MoreVert", 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(12f, 8f)
+                curveToRelative(1.1f, 0f, 2f, -0.9f, 2f, -2f)
+                reflectiveCurveToRelative(-0.9f, -2f, -2f, -2f)
+                reflectiveCurveToRelative(-2f, 0.9f, -2f, 2f)
+                reflectiveCurveToRelative(0.9f, 2f, 2f, 2f)
+                close()
+                moveTo(12f, 10f)
+                curveToRelative(-1.1f, 0f, -2f, 0.9f, -2f, 2f)
+                reflectiveCurveToRelative(0.9f, 2f, 2f, 2f)
+                reflectiveCurveToRelative(2f, -0.9f, 2f, -2f)
+                reflectiveCurveToRelative(-0.9f, -2f, -2f, -2f)
+                close()
+                moveTo(12f, 16f)
+                curveToRelative(-1.1f, 0f, -2f, 0.9f, -2f, 2f)
+                reflectiveCurveToRelative(0.9f, 2f, 2f, 2f)
+                reflectiveCurveToRelative(2f, -0.9f, 2f, -2f)
+                reflectiveCurveToRelative(-0.9f, -2f, -2f, -2f)
+                close()
+            }
+        }.build()
+    }
+
+    val ThumbUp: ImageVector by lazy {
+        ImageVector.Builder("ThumbUp", 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(1f, 21f)
+                horizontalLineToRelative(4f)
+                verticalLineTo(9f)
+                horizontalLineTo(1f)
+                verticalLineToRelative(12f)
+                close()
+                moveTo(23f, 10f)
+                curveToRelative(0f, -1.1f, -0.9f, -2f, -2f, -2f)
+                horizontalLineToRelative(-6.31f)
+                lineToRelative(0.95f, -4.57f)
+                lineToRelative(0.03f, -0.32f)
+                curveToRelative(0f, -0.41f, -0.17f, -0.79f, -0.44f, -1.06f)
+                lineTo(14.17f, 1f)
+                lineTo(7.59f, 7.59f)
+                curveTo(7.22f, 7.95f, 7f, 8.45f, 7f, 9f)
+                verticalLineToRelative(10f)
+                curveToRelative(0f, 1.1f, 0.9f, 2f, 2f, 2f)
+                horizontalLineToRelative(9f)
+                curveToRelative(0.83f, 0f, 1.54f, -0.5f, 1.84f, -1.22f)
+                lineToRelative(3.02f, -7.05f)
+                curveToRelative(0.09f, -0.23f, 0.14f, -0.47f, 0.14f, -0.73f)
+                verticalLineToRelative(-2f)
                 close()
             }
         }.build()

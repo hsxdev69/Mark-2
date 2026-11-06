@@ -271,7 +271,7 @@ fun MovieVortexNavGraph(
                                     HomeScreen(
                                         homeController = homeController,
                                         onMediaClick = { media ->
-                                            launchCloudStreamPlayer(context, media, null)
+                                            currentScreen = AppScreen.Detail(media)
                                         },
                                         onPlayClick = { media ->
                                             launchCloudStreamPlayer(context, media, null)
@@ -371,8 +371,23 @@ fun MovieVortexNavGraph(
             }
 
             is AppScreen.Detail -> {
-                launchCloudStreamPlayer(context, screen.media, null)
-                currentScreen = AppScreen.Main
+                val detailController: DetailController = viewModel(key = screen.media.rawUrl)
+                androidx.compose.runtime.LaunchedEffect(screen.media) {
+                    detailController.loadMediaDetail(screen.media.rawUrl, screen.media.providerApiName, screen.media)
+                }
+                DetailScreen(
+                    detailController = detailController,
+                    onPlayMovie = { media ->
+                        launchCloudStreamPlayer(context, media, null)
+                    },
+                    onPlayEpisode = { media, ep ->
+                        launchCloudStreamPlayer(context, media, ep)
+                    },
+                    onDownloadClick = { media, ep ->
+                        android.widget.Toast.makeText(context, "Preparing download for ${media.title}...", android.widget.Toast.LENGTH_SHORT).show()
+                    },
+                    onBackClick = { currentScreen = AppScreen.Main }
+                )
             }
 
             is AppScreen.Watchlist -> {

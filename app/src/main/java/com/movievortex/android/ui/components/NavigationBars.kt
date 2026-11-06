@@ -73,9 +73,18 @@ fun MovieVortexTopBar(
     isTransparent: Boolean = true
 ) {
     val bgModifier = if (isTransparent) {
-        Modifier.background(VortexColors.TopBarGradient)
+        Modifier.background(
+            Brush.verticalGradient(
+                listOf(
+                    Color(0xE626070B),
+                    Color(0xBF0E1219),
+                    Color(0x66080B10),
+                    Color.Transparent
+                )
+            )
+        )
     } else {
-        Modifier.background(VortexColors.BackgroundOled)
+        Modifier.background(Color(0xF50A0E17))
     }
 
     Row(
@@ -83,89 +92,75 @@ fun MovieVortexTopBar(
             .fillMaxWidth()
             .then(bgModifier)
             .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left: Official MovieVortex 'M' Brand Logo with Neon Crimson Glow & Title
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        // Left: Circular Frosted Glass Button with Staggered Menu Icon (CineNova Style)
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(Color(0x33253745))
+                .border(1.dp, Color(0x22FFFFFF), CircleShape)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = { /* Menu */ }
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(CircleShape)
-                    .background(Color.Black)
-                    .border(1.dp, Color(0x33FFFFFF), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                AsyncImage(
-                    model = com.lagradost.cloudstream3.R.drawable.vortex_brand_logo,
-                    contentDescription = "MovieVortex",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            Text(
-                text = "MovieVortex",
-                color = Color.White,
-                fontSize = 19.sp,
-                fontFamily = ManropeFontFamily,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 0.3.sp
+            Icon(
+                imageVector = VortexIcons.StaggeredMenu,
+                contentDescription = "Menu",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
             )
         }
 
-        // Right: Frosted Glass Circular Buttons for Cast and Notifications
+        // Center: CineNova Styled Title "MovieVortex" (White + Coral Red Accent)
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
-            // Chromecast Button
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xBB0E0E0E))
-                    .border(1.dp, Color(0x28FFFFFF), CircleShape)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { /* Cast */ }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = VortexIcons.Cast,
-                    contentDescription = "Cast",
-                    tint = Color.White,
-                    modifier = Modifier.size(19.dp)
-                )
-            }
+            Text(
+                text = "Movie",
+                color = Color.White,
+                fontSize = 20.sp,
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.4).sp
+            )
+            Text(
+                text = "Vortex",
+                color = Color(0xFFE53448),
+                fontSize = 20.sp,
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.4).sp
+            )
+        }
 
-            // Notifications Bell Button
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xBB0E0E0E))
-                    .border(1.dp, Color(0x28FFFFFF), CircleShape)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { /* Notifications */ }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = VortexIcons.Notifications,
-                    contentDescription = "Notifications",
-                    tint = Color.White,
-                    modifier = Modifier.size(19.dp)
-                )
-            }
+        // Right: Circular Frosted Glass Button with Search Icon (CineNova Style)
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(Color(0x33253745))
+                .border(1.dp, Color(0x22FFFFFF), CircleShape)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onSearchClick
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = VortexIcons.Search,
+                contentDescription = "Search",
+                tint = Color.White,
+                modifier = Modifier.size(19.dp)
+            )
         }
     }
 }
@@ -177,80 +172,88 @@ fun MovieVortexBottomBar(
     modifier: Modifier = Modifier,
     activeDownloadCount: Int = 0
 ) {
-    Column(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(Color(0xF50A0E17))
             .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(horizontal = 36.dp, vertical = 12.dp),
+        contentAlignment = Alignment.Center
     ) {
-        // Ultra subtle top hair-line divider matching CineNova reference
+        // Floating Frosted Glass Island matching Video Concept (Frames 3-5)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(0.6.dp)
-                .background(Color(0x18FFFFFF))
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
                 .height(58.dp)
-                .padding(horizontal = 8.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+                .shadow(
+                    elevation = 20.dp,
+                    shape = RoundedCornerShape(29.dp),
+                    spotColor = Color(0x99000000),
+                    ambientColor = Color(0x55000000)
+                )
+                .clip(RoundedCornerShape(29.dp))
+                .background(Color(0xD9151A24))
+                .border(1.dp, Color(0x2EFFFFFF), RoundedCornerShape(29.dp))
+                .padding(horizontal = 12.dp),
+            contentAlignment = Alignment.Center
         ) {
-            val activeColor = Color(0xFFE53448) // CineNova Coral Red
-            val inactiveColor = Color(0xFF676E79) // CineNova Muted Slate Outline
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val activeColor = Color.White
+                val inactiveColor = Color(0xFF8E95A3)
 
-            // 1. Home
-            val isHome = currentDestination == MainDestination.Home
-            CineNovaNavItem(
-                icon = if (isHome) VortexIcons.Home else VortexIcons.HomeOutline,
-                contentDescription = "Home",
-                isSelected = isHome,
-                activeColor = activeColor,
-                inactiveColor = inactiveColor,
-                onClick = { onDestinationSelected(MainDestination.Home) }
-            )
+                // 1. Home
+                val isHome = currentDestination == MainDestination.Home
+                VideoPillNavItem(
+                    icon = if (isHome) VortexIcons.Home else VortexIcons.HomeOutline,
+                    contentDescription = "Home",
+                    isSelected = isHome,
+                    activeColor = activeColor,
+                    inactiveColor = inactiveColor,
+                    onClick = { onDestinationSelected(MainDestination.Home) }
+                )
 
-            // 2. Search
-            val isSearch = currentDestination == MainDestination.Search
-            CineNovaNavItem(
-                icon = VortexIcons.Search,
-                contentDescription = "Search",
-                isSelected = isSearch,
-                activeColor = activeColor,
-                inactiveColor = inactiveColor,
-                onClick = { onDestinationSelected(MainDestination.Search) }
-            )
+                // 2. Search
+                val isSearch = currentDestination == MainDestination.Search
+                VideoPillNavItem(
+                    icon = VortexIcons.Search,
+                    contentDescription = "Search",
+                    isSelected = isSearch,
+                    activeColor = activeColor,
+                    inactiveColor = inactiveColor,
+                    onClick = { onDestinationSelected(MainDestination.Search) }
+                )
 
-            // 3. Library / Bookmarks
-            val isBookmarks = currentDestination == MainDestination.Bookmarks || currentDestination == MainDestination.Downloads
-            CineNovaNavItem(
-                icon = if (isBookmarks) VortexIcons.Bookmark else VortexIcons.BookmarkBorder,
-                contentDescription = "Library",
-                isSelected = isBookmarks,
-                activeColor = activeColor,
-                inactiveColor = inactiveColor,
-                onClick = { onDestinationSelected(MainDestination.Bookmarks) }
-            )
+                // 3. Favorites / Heart (Watchlist)
+                val isBookmarks = currentDestination == MainDestination.Bookmarks || currentDestination == MainDestination.Downloads
+                VideoPillNavItem(
+                    icon = if (isBookmarks) VortexIcons.Heart else VortexIcons.HeartBorder,
+                    contentDescription = "Favorites",
+                    isSelected = isBookmarks,
+                    activeColor = activeColor,
+                    inactiveColor = inactiveColor,
+                    onClick = { onDestinationSelected(MainDestination.Bookmarks) }
+                )
 
-            // 4. Profile / Settings
-            val isProfile = currentDestination == MainDestination.Me
-            CineNovaNavItem(
-                icon = if (isProfile) VortexIcons.Person else VortexIcons.PersonOutline,
-                contentDescription = "Profile",
-                isSelected = isProfile,
-                activeColor = activeColor,
-                inactiveColor = inactiveColor,
-                onClick = { onDestinationSelected(MainDestination.Me) }
-            )
+                // 4. Profile
+                val isProfile = currentDestination == MainDestination.Me
+                VideoPillNavItem(
+                    icon = if (isProfile) VortexIcons.Person else VortexIcons.PersonOutline,
+                    contentDescription = "Profile",
+                    isSelected = isProfile,
+                    activeColor = activeColor,
+                    inactiveColor = inactiveColor,
+                    onClick = { onDestinationSelected(MainDestination.Me) }
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun CineNovaNavItem(
+private fun VideoPillNavItem(
     icon: ImageVector,
     contentDescription: String,
     isSelected: Boolean,
@@ -262,7 +265,7 @@ private fun CineNovaNavItem(
     val interactionSource = remember { MutableInteractionSource() }
 
     val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.08f else 1.0f,
+        targetValue = if (isSelected) 1.12f else 1.0f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
@@ -278,8 +281,9 @@ private fun CineNovaNavItem(
 
     Box(
         modifier = modifier
-            .size(54.dp)
+            .size(46.dp)
             .scale(scale)
+            .clip(CircleShape)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -291,7 +295,7 @@ private fun CineNovaNavItem(
             imageVector = icon,
             contentDescription = contentDescription,
             tint = iconColor,
-            modifier = Modifier.size(23.dp)
+            modifier = Modifier.size(22.dp)
         )
     }
 }

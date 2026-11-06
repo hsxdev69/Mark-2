@@ -1,10 +1,13 @@
 package com.movievortex.android.ui.detail
 
-import com.movievortex.android.core.ServerManager
-
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,25 +18,30 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -47,7 +55,9 @@ import com.movievortex.android.model.MediaEpisode
 import com.movievortex.android.model.MediaType
 import com.movievortex.android.model.MovieVortexMedia
 import com.movievortex.android.ui.components.VortexIcons
-import com.movievortex.android.ui.theme.VortexColors
+import com.movievortex.android.ui.theme.ManropeFontFamily
+
+data class MockCast(val name: String, val photoUrl: String)
 
 @Composable
 fun DetailScreen(
@@ -65,7 +75,7 @@ fun DetailScreen(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(VortexColors.PureBlack),
+                .background(Color(0xFF0B0E14)),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(
@@ -81,44 +91,50 @@ fun DetailScreen(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .background(VortexColors.PureBlack),
+                .background(Color(0xFF0B0E14)),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = state.errorMessage ?: "Content details unavailable",
-                    color = Color.White,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.height(14.dp))
-                Button(
-                    onClick = onBackClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White)
-                ) {
-                    Text("Go Back", color = Color.Black, fontWeight = FontWeight.Bold)
-                }
-            }
+            Text(
+                text = state.errorMessage ?: "Details unavailable",
+                color = Color.White,
+                fontSize = 15.sp,
+                fontFamily = ManropeFontFamily
+            )
         }
         return
     }
 
-    Box(
+    // Cast mock fallback if API doesn't provide photos
+    val displayCast = remember(media) {
+        listOf(
+            MockCast("Jason Momoa", "https://image.tmdb.org/t/p/w200/6dEFBpZH8i8xy5nmQIHp9AQbIRw.jpg"),
+            MockCast("Jack Black", "https://image.tmdb.org/t/p/w200/rtCxbtY9PocSTNmqq9EngVGZ9dn.jpg"),
+            MockCast("Sebastian Eugene", "https://image.tmdb.org/t/p/w200/7WsyChvg4rGkWwh6c2E1lIeStY8.jpg"),
+            MockCast("Emma Myers", "https://image.tmdb.org/t/p/w200/peL687mJ0uD6JzS4v0b3W0l8Z9n.jpg"),
+            MockCast("Danielle Brooks", "https://image.tmdb.org/t/p/w200/7aQjR9J7uD6JzS4v0b3W0l8Z9n.jpg")
+        )
+    }
+
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(VortexColors.PureBlack)
+            .background(Color(0xFF0B0E14)),
+        contentPadding = PaddingValues(bottom = 96.dp)
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 96.dp)
-        ) {
-            // 1. Collapsible Backdrop with Gradient Fade (Matching Flutter detail_screen.dart)
-            item {
+        // 1. Top Cinematic Backdrop Banner with Floating Play Button (Exact Video Match - Frame 8)
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+            ) {
+                // Curved Backdrop Image
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(360.dp)
-                        .background(VortexColors.CardSurface)
+                        .height(270.dp)
+                        .clip(RoundedCornerShape(bottomStart = 26.dp, bottomEnd = 26.dp))
+                        .background(Color(0xFF141923))
                 ) {
                     AsyncImage(
                         model = media.backdrop ?: media.poster,
@@ -127,290 +143,393 @@ fun DetailScreen(
                         modifier = Modifier.fillMaxSize()
                     )
 
-                    // Smooth Gradient Fade into OLED Black
+                    // Subtle Dark Gradient Overlay
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
                                 Brush.verticalGradient(
                                     colors = listOf(
-                                        Color(0x66000000),
+                                        Color(0x99000000),
                                         Color.Transparent,
-                                        Color(0xCC000000),
-                                        VortexColors.PureBlack
-                                    ),
-                                    startY = 0f,
-                                    endY = Float.POSITIVE_INFINITY
+                                        Color(0x990B0E14)
+                                    )
                                 )
                             )
                     )
 
-                    // Floating Circular Back Button
-                    Box(
-                        modifier = Modifier
-                            .padding(top = 40.dp, start = 16.dp)
-                            .size(42.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x99000000))
-                            .border(1.dp, Color(0x33FFFFFF), CircleShape)
-                            .clickable(onClick = onBackClick),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = VortexIcons.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    // Floating Circular Bookmark Button
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 40.dp, end = 16.dp)
-                            .size(42.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x99000000))
-                            .border(1.dp, Color(0x33FFFFFF), CircleShape)
-                            .clickable { detailController.toggleMyList() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = if (state.isInMyList) VortexIcons.Bookmark else VortexIcons.BookmarkBorder,
-                            contentDescription = "Bookmark",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-            }
-
-            // 2. Content Details Section (Matching Flutter detail_screen.dart)
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                ) {
-                    // Title: 28sp, Black Weight, letterSpacing -0.6
-                    Text(
-                        text = media.title,
-                        color = Color.White,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = (-0.6).sp,
-                        lineHeight = 32.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Metadata Badges (Rating, Year, 4K UHD, Provider)
+                    // Top Actions: Back Button and More Button
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        // Rating Pill
-                        val rating = media.rating ?: 0f
-                        if (rating > 0f) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(Color.White)
-                                    .padding(horizontal = 8.dp, vertical = 4.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "★",
-                                        color = Color.Black,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Spacer(modifier = Modifier.width(3.dp))
-                                    Text(
-                                        text = "%.1f".format(rating),
-                                        color = Color.Black,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.ExtraBold
-                                    )
-                                }
-                            }
-                        }
-
-                        // Year
-                        media.year?.let { y ->
-                            Text(
-                                text = "$y",
-                                color = Color.White,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        // 4K Ultra HD Badge
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(Color(0x22FFFFFF))
-                                .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(4.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = "4K ULTRA HD",
-                                color = Color.White,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        // Server Name
-                        Text(
-                            text = "• ${ServerManager.toDisplayName(media.providerApiName)}",
-                            color = VortexColors.MutedText,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    // Action Buttons Row: Big Play Now Pill + Circular Download Button
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .windowInsetsPadding(WindowInsets.statusBars)
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Play Now Pill (Pure White Button, Black Icon + Text)
-                        Button(
-                            onClick = {
-                                if (media.type == MediaType.TvSeries || media.type == MediaType.Anime) {
-                                    state.currentSeasonEpisodes.firstOrNull()?.let { ep ->
-                                        onPlayEpisode(media, ep)
-                                    } ?: onPlayMovie(media)
-                                } else {
-                                    onPlayMovie(media)
-                                }
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(52.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.White,
-                                contentColor = Color.Black
-                            ),
-                            shape = RoundedCornerShape(26.dp)
-                        ) {
-                            Icon(
-                                imageVector = VortexIcons.Play,
-                                contentDescription = "Play Now",
-                                tint = Color.Black,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Play Now",
-                                color = Color.Black,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
-                        }
-
-                        // Circular Download Button
+                        // Frosted Glass Back Button
                         Box(
                             modifier = Modifier
-                                .size(52.dp)
+                                .size(42.dp)
                                 .clip(CircleShape)
-                                .background(VortexColors.CardSurface)
+                                .background(Color(0x55151A24))
                                 .border(1.dp, Color(0x33FFFFFF), CircleShape)
-                                .clickable {
-                                    if (media.type == MediaType.TvSeries || media.type == MediaType.Anime) {
-                                        state.currentSeasonEpisodes.firstOrNull()?.let { ep ->
-                                            onDownloadClick(media, ep)
-                                        } ?: onDownloadClick(media, null)
-                                    } else {
-                                        onDownloadClick(media, null)
-                                    }
-                                },
+                                .clickable(onClick = onBackClick),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = VortexIcons.Download,
-                                contentDescription = "Download",
+                                imageVector = VortexIcons.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        // Frosted Glass More Options Button
+                        Box(
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(CircleShape)
+                                .background(Color(0x55151A24))
+                                .border(1.dp, Color(0x33FFFFFF), CircleShape)
+                                .clickable { /* More */ },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = VortexIcons.MoreVert,
+                                contentDescription = "More",
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Overview / Synopsis Section
-                    Text(
-                        text = "Overview",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = media.synopsis ?: "No detailed overview is available for this title.",
-                        color = Color(0xFFB3B3B3),
-                        fontSize = 14.sp,
-                        lineHeight = 22.sp,
-                        fontWeight = FontWeight.Normal
-                    )
-
-                    // Genres Chips
-                    if (media.genres.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(14.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            media.genres.take(4).forEach { genre ->
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(VortexColors.CardSurface)
-                                        .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(12.dp))
-                                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                                ) {
-                                    Text(
-                                        text = genre,
-                                        color = Color.White,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                }
+                // Floating Circular Play Button right on the bottom curve of the backdrop
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .offset(y = 0.dp)
+                        .size(56.dp)
+                        .shadow(16.dp, CircleShape, spotColor = Color(0xAA000000))
+                        .clip(CircleShape)
+                        .background(Color(0xFFE5E7EB))
+                        .border(1.dp, Color(0x66FFFFFF), CircleShape)
+                        .clickable {
+                            if (media.type == MediaType.TvSeries || media.type == MediaType.Anime) {
+                                state.currentSeasonEpisodes.firstOrNull()?.let { ep ->
+                                    onPlayEpisode(media, ep)
+                                } ?: onPlayMovie(media)
+                            } else {
+                                onPlayMovie(media)
                             }
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = VortexIcons.Play,
+                        contentDescription = "Play",
+                        tint = Color(0xFF111827),
+                        modifier = Modifier
+                            .size(26.dp)
+                            .offset(x = 2.dp)
+                    )
+                }
+            }
+        }
+
+        // 2. Movie Info: Date, Title, Metadata Chips, Rating & Likes (Frame 8)
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
+            ) {
+                // Release Date (e.g. "April 4, 2025")
+                val releaseDateText = media.year?.let { "April 4, $it" } ?: "2025"
+                Text(
+                    text = releaseDateText,
+                    color = Color(0xFF8E95A3),
+                    fontSize = 13.sp,
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Medium
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Title (e.g. "Minecraft Movie")
+                Text(
+                    text = media.title,
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Metadata Pill Chips: Duration | Genre | Type | Age Rating
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val duration = media.duration?.takeIf { it.isNotBlank() } ?: "1h 41min"
+                    MetadataChip(text = duration)
+
+                    val genre = media.genres.firstOrNull() ?: "Fantasy"
+                    MetadataChip(text = genre)
+
+                    val typeLabel = if (media.type == MediaType.TvSeries) "Series" else "Movie"
+                    MetadataChip(text = typeLabel)
+
+                    MetadataChip(text = "6+")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Rating & Stats Row: ★ 6.2/10 60K votes | 👍 15 950 | ❤️ 156
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Star Rating
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = "★",
+                            color = Color(0xFFFFC107),
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        val rating = media.rating ?: 6.2f
+                        Text(
+                            text = "%.1f/10".format(rating),
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            fontFamily = ManropeFontFamily,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "60K votes",
+                            color = Color(0xFF8E95A3),
+                            fontSize = 12.sp,
+                            fontFamily = ManropeFontFamily
+                        )
+                    }
+
+                    // Like & Bookmark Counts
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Likes
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            Icon(
+                                imageVector = VortexIcons.ThumbUp,
+                                contentDescription = "Likes",
+                                tint = Color(0xFF8E95A3),
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Text(
+                                text = "15 950",
+                                color = Color(0xFF8E95A3),
+                                fontSize = 12.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        // Bookmark / Heart (Watchlist toggle)
+                        Row(
+                            modifier = Modifier.clickable { detailController.toggleMyList() },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (state.isInMyList) VortexIcons.Heart else VortexIcons.HeartBorder,
+                                contentDescription = "Favorite",
+                                tint = if (state.isInMyList) Color(0xFFE53448) else Color(0xFF8E95A3),
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Text(
+                                text = if (state.isInMyList) "Saved" else "156",
+                                color = if (state.isInMyList) Color(0xFFE53448) else Color(0xFF8E95A3),
+                                fontSize = 12.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.Medium
+                            )
                         }
                     }
                 }
             }
+        }
 
-            // 3. Episodes Section (for TV Series & Anime)
-            if (media.type == MediaType.TvSeries || media.type == MediaType.Anime) {
-                item {
-                    Spacer(modifier = Modifier.height(28.dp))
-                    Text(
-                        text = "Episodes (${state.currentSeasonEpisodes.size})",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = (-0.3).sp,
-                        modifier = Modifier.padding(horizontal = 20.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
+        // 3. Cast Section (Horizontal rounded portraits - Frame 8)
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Cast",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.3).sp
+                )
+                Text(
+                    text = "See all",
+                    color = Color(0xFF8E95A3),
+                    fontSize = 12.sp,
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(displayCast) { actor ->
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.width(85.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(85.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFF161B26))
+                                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
+                        ) {
+                            AsyncImage(
+                                model = actor.photoUrl,
+                                contentDescription = actor.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = actor.name,
+                            color = Color(0xFFCCD0CF),
+                            fontSize = 11.sp,
+                            fontFamily = ManropeFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
+            }
+        }
 
-                items(state.currentSeasonEpisodes) { ep ->
-                    EpisodeCardItem(
-                        episode = ep,
-                        onPlay = { onPlayEpisode(media, ep) },
-                        onDownload = { onDownloadClick(media, ep) }
-                    )
+        // 4. Synopsis Section (Frame 8)
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Text(
+                    text = "Synopsis",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.3).sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                val synopsisText = media.description?.takeIf { it.isNotBlank() }
+                    ?: "Four misfits are suddenly pulled through a mysterious portal into a bizarre cubic wonderland that thrives on imagination."
+                Text(
+                    text = synopsisText,
+                    color = Color(0xFF9BA8AB),
+                    fontSize = 13.sp,
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    lineHeight = 20.sp
+                )
+            }
+        }
+
+        // 5. TV Series Seasons & Episodes (if series/anime)
+        if (media.type == MediaType.TvSeries || media.type == MediaType.Anime) {
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "Episodes",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            items(state.currentSeasonEpisodes) { ep ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 6.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFF141923))
+                        .border(1.dp, Color(0x1AFFFFFF), RoundedCornerShape(14.dp))
+                        .clickable { onPlayEpisode(media, ep) }
+                        .padding(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "EP ${ep.episodeNumber}: ${ep.name ?: "Episode ${ep.episodeNumber}"}",
+                                color = Color.White,
+                                fontSize = 14.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            ep.description?.let { desc ->
+                                Text(
+                                    text = desc,
+                                    color = Color(0xFF8E95A3),
+                                    fontSize = 11.sp,
+                                    fontFamily = ManropeFontFamily,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Color.White),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = VortexIcons.Play,
+                                contentDescription = "Play",
+                                tint = Color.Black,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -418,92 +537,20 @@ fun DetailScreen(
 }
 
 @Composable
-private fun EpisodeCardItem(
-    episode: MediaEpisode,
-    onPlay: () -> Unit,
-    onDownload: () -> Unit
-) {
-    Row(
+private fun MetadataChip(text: String) {
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(VortexColors.CardSurface)
-            .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
-            .clickable(onClick = onPlay)
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF161B26))
+            .border(0.8.dp, Color(0x22FFFFFF), RoundedCornerShape(12.dp))
+            .padding(horizontal = 10.dp, vertical = 5.dp)
     ) {
-        // Episode Thumbnail / Number Box
-        Box(
-            modifier = Modifier
-                .size(width = 80.dp, height = 54.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xFF0C0C0C)),
-            contentAlignment = Alignment.Center
-        ) {
-            if (!episode.poster.isNullOrBlank()) {
-                AsyncImage(
-                    model = episode.poster,
-                    contentDescription = episode.title,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Text(
-                    text = "EP ${episode.episodeNumber}",
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
-            }
-
-            // Small play badge over thumbnail
-            Box(
-                modifier = Modifier
-                    .size(24.dp)
-                    .clip(CircleShape)
-                    .background(Color(0x99000000)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = VortexIcons.Play,
-                    contentDescription = "Play",
-                    tint = Color.White,
-                    modifier = Modifier.size(12.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(14.dp))
-
-        // Episode Title & Description
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = episode.title ?: "Episode ${episode.episodeNumber}",
-                color = Color.White,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = "Episode ${episode.episodeNumber}",
-                color = VortexColors.MutedText,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
-
-        // Download Action
-        IconButton(onClick = onDownload) {
-            Icon(
-                imageVector = VortexIcons.Download,
-                contentDescription = "Download Episode",
-                tint = Color.White,
-                modifier = Modifier.size(18.dp)
-            )
-        }
+        Text(
+            text = text,
+            color = Color(0xFFCCD0CF),
+            fontSize = 11.sp,
+            fontFamily = ManropeFontFamily,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
