@@ -69,10 +69,10 @@ fun SearchScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(VortexColors.PureBlack)
+            .background(Color(0xFF0F141C))
             .padding(top = 12.dp)
     ) {
-        // 1. Futuristic Monochrome Search Input Pill (Matching Flutter search_screen.dart)
+        // 1. Futuristic Glass Search Input Pill
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -95,8 +95,17 @@ fun SearchScreen(
                     .weight(1f)
                     .height(54.dp)
                     .clip(RoundedCornerShape(27.dp))
-                    .background(VortexColors.CardSurface)
-                    .border(1.2.dp, Color(0x33FFFFFF), RoundedCornerShape(27.dp))
+                    .background(Color(0x38354354))
+                    .border(
+                        1.dp,
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            listOf(
+                                Color(0x3DFFFFFF),
+                                Color(0x14FFFFFF)
+                            )
+                        ),
+                        RoundedCornerShape(27.dp)
+                    )
                     .padding(horizontal = 16.dp),
                 contentAlignment = Alignment.CenterStart
             ) {

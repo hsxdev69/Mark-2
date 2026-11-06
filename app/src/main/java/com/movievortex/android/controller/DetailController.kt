@@ -8,6 +8,7 @@ import com.lagradost.cloudstream3.syncproviders.SyncAPI
 import com.lagradost.cloudstream3.ui.APIRepository
 import com.lagradost.cloudstream3.utils.DataStoreHelper
 import com.movievortex.android.core.CoreAdapter
+import com.movievortex.android.core.TmdbRepository
 import com.movievortex.android.model.MediaEpisode
 import com.movievortex.android.model.MediaSeason
 import com.movievortex.android.model.MovieVortexMedia
@@ -72,6 +73,15 @@ class DetailController : ViewModel() {
                             currentSeasonEpisodes = seasonEps,
                             isInMyList = fullMedia.isInMyList
                         )
+
+                        // Enrich with actual TMDB backdrop, cast, overview, real recommendations
+                        try {
+                            val enriched = TmdbRepository.enrichMediaWithTmdb(fullMedia)
+                            _uiState.value = _uiState.value.copy(
+                                media = enriched,
+                                isInMyList = enriched.isInMyList
+                            )
+                        } catch (_: Exception) {}
                     }
                     is Resource.Failure -> {
                         _uiState.value = _uiState.value.copy(

@@ -386,18 +386,18 @@ fun VideoStyle3DHeroCarousel(
                     modifier = Modifier
                         .zIndex(1f - absOffset) // Active center card is strictly on top
                         .graphicsLayer {
-                            // 3D Perspective Scaling, Tilt & Rotation
-                            val cardScale = (1f - absOffset * 0.12f) * pressScale
+                            // Premium Cover Flow 3D Perspective Scaling, Tilt & Rotation
+                            val cardScale = (1f - absOffset * 0.14f) * pressScale
                             scaleX = cardScale
                             scaleY = cardScale
-                            rotationY = pageOffset * -18f
-                            cameraDistance = 16f * density
+                            rotationY = pageOffset.coerceIn(-1.5f, 1.5f) * -22f
+                            cameraDistance = 18f * density
 
                             // Subtle downward arc translation for side cards
-                            translationY = absOffset * 8f * density
+                            translationY = absOffset * 6f * density
 
                             // Side cards remain partially visible and dim slightly
-                            alpha = (1f - absOffset * 0.25f).coerceIn(0.55f, 1f)
+                            alpha = (1f - absOffset * 0.28f).coerceIn(0.55f, 1f)
                         }
                         .fillMaxSize()
                         .shadow(

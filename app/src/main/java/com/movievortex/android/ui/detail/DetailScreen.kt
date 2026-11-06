@@ -76,6 +76,7 @@ fun DetailScreen(
     onPlayMovie: (MovieVortexMedia) -> Unit,
     onPlayEpisode: (MovieVortexMedia, MediaEpisode) -> Unit,
     onDownloadClick: (MovieVortexMedia, MediaEpisode?) -> Unit,
+    onMediaClick: (MovieVortexMedia) -> Unit = onPlayMovie,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -115,23 +116,13 @@ fun DetailScreen(
         return
     }
 
-    // Real cast with character roles, with high-quality fallback
-    val displayCast = remember(media) {
-        if (media.cast.isNotEmpty()) {
-            media.cast.map { c ->
-                CastUiItem(
-                    name = c.name,
-                    character = c.role?.takeIf { it.isNotBlank() } ?: "Lead Cast",
-                    photoUrl = c.avatarUrl
-                )
-            }
-        } else {
-            listOf(
-                CastUiItem("Jason Momoa", "Garrett", "https://image.tmdb.org/t/p/w200/6dEFBpZH8i8xy5nmQIHp9AQbIRw.jpg"),
-                CastUiItem("Jack Black", "Steve", "https://image.tmdb.org/t/p/w200/rtCxbtY9PocSTNmqq9EngVGZ9dn.jpg"),
-                CastUiItem("Sebastian Eugene", "Henry", "https://image.tmdb.org/t/p/w200/7WsyChvg4rGkWwh6c2E1lIeStY8.jpg"),
-                CastUiItem("Emma Myers", "Natalie", "https://image.tmdb.org/t/p/w200/peL687mJ0uD6JzS4v0b3W0l8Z9n.jpg"),
-                CastUiItem("Danielle Brooks", "Dawn", "https://image.tmdb.org/t/p/w200/7aQjR9J7uD6JzS4v0b3W0l8Z9n.jpg")
+    // 100% Real cast with character roles and actor photos from TMDB / Provider
+    val displayCast = remember(media.cast) {
+        media.cast.map { c ->
+            CastUiItem(
+                name = c.name,
+                character = c.role?.takeIf { it.isNotBlank() } ?: "Cast",
+                photoUrl = c.avatarUrl
             )
         }
     }
@@ -660,156 +651,152 @@ fun DetailScreen(
             }
         }
 
-        // 3. Cast Section (Horizontal rounded portraits with character roles - Frame 8)
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Cast",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.3).sp
-                )
-                Text(
-                    text = "See all",
-                    color = Color(0xFF8E95A3),
-                    fontSize = 12.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                itemsIndexed(displayCast) { index, actor ->
-                    var castAppeared by remember { mutableStateOf(false) }
-                    LaunchedEffect(Unit) {
-                        kotlinx.coroutines.delay((index * 45L).coerceAtMost(320L))
-                        castAppeared = true
-                    }
-                    val itemScale by animateFloatAsState(
-                        targetValue = if (castAppeared) 1f else 0.82f,
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioLowBouncy,
-                            stiffness = Spring.StiffnessMediumLow
-                        ),
-                        label = "cast_scale_$index"
+        // 3. Cast Section (100% Real TMDB Cast with photos & roles)
+        if (displayCast.isNotEmpty()) {
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Cast",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.3).sp
                     )
-                    val itemAlpha by animateFloatAsState(
-                        targetValue = if (castAppeared) 1f else 0f,
-                        animationSpec = tween(300),
-                        label = "cast_alpha_$index"
-                    )
+                }
 
-                    val actorInteraction = remember { MutableInteractionSource() }
-                    var isActorPressed by remember { mutableStateOf(false) }
-                    LaunchedEffect(actorInteraction) {
-                        actorInteraction.interactions.collect { interaction ->
-                            when (interaction) {
-                                is PressInteraction.Press -> isActorPressed = true
-                                is PressInteraction.Release,
-                                is PressInteraction.Cancel -> isActorPressed = false
+                Spacer(modifier = Modifier.height(12.dp))
+
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    itemsIndexed(displayCast) { index, actor ->
+                        var castAppeared by remember { mutableStateOf(false) }
+                        LaunchedEffect(Unit) {
+                            kotlinx.coroutines.delay((index * 45L).coerceAtMost(320L))
+                            castAppeared = true
+                        }
+                        val itemScale by animateFloatAsState(
+                            targetValue = if (castAppeared) 1f else 0.82f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                stiffness = Spring.StiffnessMediumLow
+                            ),
+                            label = "cast_scale_$index"
+                        )
+                        val itemAlpha by animateFloatAsState(
+                            targetValue = if (castAppeared) 1f else 0f,
+                            animationSpec = tween(300),
+                            label = "cast_alpha_$index"
+                        )
+
+                        val actorInteraction = remember { MutableInteractionSource() }
+                        var isActorPressed by remember { mutableStateOf(false) }
+                        LaunchedEffect(actorInteraction) {
+                            actorInteraction.interactions.collect { interaction ->
+                                when (interaction) {
+                                    is PressInteraction.Press -> isActorPressed = true
+                                    is PressInteraction.Release,
+                                    is PressInteraction.Cancel -> isActorPressed = false
+                                }
                             }
                         }
-                    }
-                    val actorPressScale by animateFloatAsState(
-                        targetValue = if (isActorPressed) 0.92f else 1f,
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessLow
-                        ),
-                        label = "actor_press_$index"
-                    )
+                        val actorPressScale by animateFloatAsState(
+                            targetValue = if (isActorPressed) 0.92f else 1f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            ),
+                            label = "actor_press_$index"
+                        )
 
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .width(88.dp)
-                            .graphicsLayer {
-                                alpha = itemAlpha
-                                scaleX = itemScale * actorPressScale
-                                scaleY = itemScale * actorPressScale
-                            }
-                            .clickable(
-                                interactionSource = actorInteraction,
-                                indication = null,
-                                onClick = { /* Tappable cast profiles */ }
-                            )
-                    ) {
-                        Box(
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
-                                .size(88.dp)
-                                .shadow(8.dp, RoundedCornerShape(18.dp), spotColor = Color(0x66000000))
-                                .clip(RoundedCornerShape(18.dp))
-                                .background(Color(0xFF161B26))
-                                .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(18.dp))
+                                .width(88.dp)
+                                .graphicsLayer {
+                                    alpha = itemAlpha
+                                    scaleX = itemScale * actorPressScale
+                                    scaleY = itemScale * actorPressScale
+                                }
+                                .clickable(
+                                    interactionSource = actorInteraction,
+                                    indication = null,
+                                    onClick = { /* Tappable cast profiles */ }
+                                )
                         ) {
-                            AsyncImage(
-                                model = actor.photoUrl,
-                                contentDescription = actor.name,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize()
+                            Box(
+                                modifier = Modifier
+                                    .size(88.dp)
+                                    .shadow(8.dp, RoundedCornerShape(18.dp), spotColor = Color(0x66000000))
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(Color(0xFF161B26))
+                                    .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(18.dp))
+                            ) {
+                                AsyncImage(
+                                    model = actor.photoUrl,
+                                    contentDescription = actor.name,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = actor.name,
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = actor.character,
+                                color = Color(0xFF8E95A3),
+                                fontSize = 10.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = actor.name,
-                            color = Color.White,
-                            fontSize = 12.sp,
-                            fontFamily = ManropeFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = actor.character,
-                            color = Color(0xFF8E95A3),
-                            fontSize = 10.sp,
-                            fontFamily = ManropeFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
                     }
                 }
             }
         }
 
-        // 4. Synopsis Section (Frame 8)
-        item {
-            Spacer(modifier = Modifier.height(20.dp))
-            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                Text(
-                    text = "Synopsis",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.3).sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                val synopsisText = media.synopsis?.takeIf { it.isNotBlank() }
-                    ?: "Four misfits are suddenly pulled through a mysterious portal into a bizarre cubic wonderland that thrives on imagination."
-                Text(
-                    text = synopsisText,
-                    color = Color(0xFF9BA8AB),
-                    fontSize = 13.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    lineHeight = 20.sp
-                )
+        // 4. Synopsis Section (Real movie overview, no placeholder text)
+        val synopsisText = media.synopsis?.takeIf { it.isNotBlank() }
+        if (!synopsisText.isNullOrBlank()) {
+            item {
+                Spacer(modifier = Modifier.height(20.dp))
+                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    Text(
+                        text = "Synopsis",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.3).sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = synopsisText,
+                        color = Color(0xFF9BA8AB),
+                        fontSize = 13.sp,
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        lineHeight = 20.sp
+                    )
+                }
             }
         }
 
@@ -911,7 +898,7 @@ fun DetailScreen(
                     items(media.recommendations) { rec ->
                         PosterCard(
                             media = rec,
-                            onClick = { onPlayMovie(rec) },
+                            onClick = { onMediaClick(rec) },
                             width = 135.dp
                         )
                     }

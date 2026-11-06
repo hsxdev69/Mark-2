@@ -444,7 +444,7 @@ fun MovieVortexNavGraph(
                 SearchScreen(
                     searchController = searchController,
                     onMediaClick = { media ->
-                        launchCloudStreamPlayer(context, media, null)
+                        currentScreen = AppScreen.Detail(media)
                     },
                     onBackClick = { currentScreen = AppScreen.Main }
                 )
@@ -456,7 +456,7 @@ fun MovieVortexNavGraph(
                     platform = screen.platform,
                     catalogItems = homeState.exploreGrid,
                     onMediaClick = { media ->
-                        launchCloudStreamPlayer(context, media, null)
+                        currentScreen = AppScreen.Detail(media)
                     },
                     onBackClick = { currentScreen = AppScreen.Main }
                 )
@@ -477,6 +477,9 @@ fun MovieVortexNavGraph(
                     },
                     onDownloadClick = { media, ep ->
                         android.widget.Toast.makeText(context, "Preparing download for ${media.title}...", android.widget.Toast.LENGTH_SHORT).show()
+                    },
+                    onMediaClick = { recMedia ->
+                        currentScreen = AppScreen.Detail(recMedia)
                     },
                     onBackClick = { currentScreen = AppScreen.Main }
                 )
