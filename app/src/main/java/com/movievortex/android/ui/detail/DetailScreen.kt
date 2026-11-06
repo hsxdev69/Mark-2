@@ -167,13 +167,23 @@ fun DetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Frosted Glass Back Button
+                        // Frosted Glass Squircle Back Button (Video Concept - Frame 8)
                         Box(
                             modifier = Modifier
                                 .size(42.dp)
-                                .clip(CircleShape)
-                                .background(Color(0x55151A24))
-                                .border(1.dp, Color(0x33FFFFFF), CircleShape)
+                                .shadow(10.dp, RoundedCornerShape(14.dp), spotColor = Color(0x66000000))
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(Color(0x4D1A222B))
+                                .border(
+                                    width = 1.dp,
+                                    brush = Brush.verticalGradient(
+                                        listOf(
+                                            Color(0x4DFFFFFF),
+                                            Color(0x18FFFFFF)
+                                        )
+                                    ),
+                                    shape = RoundedCornerShape(14.dp)
+                                )
                                 .clickable(onClick = onBackClick),
                             contentAlignment = Alignment.Center
                         ) {
@@ -185,13 +195,23 @@ fun DetailScreen(
                             )
                         }
 
-                        // Frosted Glass More Options Button
+                        // Frosted Glass Squircle More Options Button (Video Concept - Frame 8)
                         Box(
                             modifier = Modifier
                                 .size(42.dp)
-                                .clip(CircleShape)
-                                .background(Color(0x55151A24))
-                                .border(1.dp, Color(0x33FFFFFF), CircleShape)
+                                .shadow(10.dp, RoundedCornerShape(14.dp), spotColor = Color(0x66000000))
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(Color(0x4D1A222B))
+                                .border(
+                                    width = 1.dp,
+                                    brush = Brush.verticalGradient(
+                                        listOf(
+                                            Color(0x4DFFFFFF),
+                                            Color(0x18FFFFFF)
+                                        )
+                                    ),
+                                    shape = RoundedCornerShape(14.dp)
+                                )
                                 .clickable { /* More */ },
                             contentAlignment = Alignment.Center
                         ) {
@@ -205,16 +225,33 @@ fun DetailScreen(
                     }
                 }
 
-                // Floating Circular Play Button right on the bottom curve of the backdrop
+                // Floating Circular Frosted Glass Play Button matching video (video_play_btn)
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .offset(y = 0.dp)
-                        .size(56.dp)
-                        .shadow(16.dp, CircleShape, spotColor = Color(0xAA000000))
+                        .size(58.dp)
+                        .shadow(18.dp, CircleShape, spotColor = Color(0x99000000))
                         .clip(CircleShape)
-                        .background(Color(0xFFE5E7EB))
-                        .border(1.dp, Color(0x66FFFFFF), CircleShape)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color(0xB3434E5A),
+                                    Color(0xCC2B343E),
+                                    Color(0xE61F262F)
+                                )
+                            )
+                        )
+                        .border(
+                            width = 1.2.dp,
+                            brush = Brush.verticalGradient(
+                                listOf(
+                                    Color(0x66FFFFFF),
+                                    Color(0x22FFFFFF)
+                                )
+                            ),
+                            shape = CircleShape
+                        )
                         .clickable {
                             if (media.type == MediaType.TvSeries || media.type == MediaType.Anime) {
                                 state.currentSeasonEpisodes.firstOrNull()?.let { ep ->
@@ -229,9 +266,9 @@ fun DetailScreen(
                     Icon(
                         imageVector = VortexIcons.Play,
                         contentDescription = "Play",
-                        tint = Color(0xFF111827),
+                        tint = Color.White,
                         modifier = Modifier
-                            .size(26.dp)
+                            .size(24.dp)
                             .offset(x = 2.dp)
                     )
                 }
@@ -541,11 +578,28 @@ private fun MetadataChip(text: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF161B26))
-            .border(0.8.dp, Color(0x22FFFFFF), RoundedCornerShape(12.dp))
-            .padding(horizontal = 10.dp, vertical = 5.dp)
+            .background(Color(0x38354354))
+            .border(
+                width = 0.8.dp,
+                brush = Brush.verticalGradient(
+                    listOf(
+                        Color(0x3DFFFFFF),
+                        Color(0x14FFFFFF)
+                    )
+                ),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 11.dp, vertical = 5.dp)
     ) {
         Text(
+            text = text,
+            color = Color(0xFFE5E7EB),
+            fontSize = 12.sp,
+            fontFamily = ManropeFontFamily,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
             text = text,
             color = Color(0xFFCCD0CF),
             fontSize = 11.sp,

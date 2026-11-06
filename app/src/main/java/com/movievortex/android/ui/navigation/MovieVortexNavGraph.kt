@@ -13,6 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -243,28 +247,13 @@ fun MovieVortexNavGraph(
             }
 
             is AppScreen.Main -> {
-                Scaffold(
-                    contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Vertical),
-                    topBar = {
-                        MovieVortexTopBar(
-                            onSearchClick = { currentDestination = MainDestination.Search },
-                            isTransparent = currentDestination == MainDestination.Home || currentDestination == MainDestination.LiveTv
-                        )
-                    },
-                    bottomBar = {
-                        MovieVortexBottomBar(
-                            currentDestination = currentDestination,
-                            onDestinationSelected = { currentDestination = it },
-                            activeDownloadCount = downloadState.activeDownloadsCount
-                        )
-                    },
-                    containerColor = VortexColors.BackgroundOled
-                ) { innerPadding ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding)
-                    ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF0F141C))
+                ) {
+                    // 1. Full-screen content (cards and posters scroll seamlessly behind the floating frosted glass bar)
+                    Box(modifier = Modifier.fillMaxSize()) {
                         Crossfade(targetState = currentDestination, label = "tab_crossfade") { dest ->
                             when (dest) {
                                 MainDestination.Home -> {
@@ -345,6 +334,26 @@ fun MovieVortexNavGraph(
                             }
                         }
                     }
+
+                    // 2. Optional top bar for non-Home tabs
+                    if (currentDestination != MainDestination.Home) {
+                        MovieVortexTopBar(
+                            onSearchClick = { currentDestination = MainDestination.Search },
+                            isTransparent = currentDestination == MainDestination.LiveTv,
+                            modifier = Modifier.align(Alignment.TopCenter)
+                        )
+                    }
+
+                    // 3. Floating Frosted Glass Bottom Navigation Bar (Overlays content matching Video Concept)
+                    MovieVortexBottomBar(
+                        currentDestination = currentDestination,
+                        onDestinationSelected = { currentDestination = it },
+                        activeDownloadCount = downloadState.activeDownloadsCount,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .windowInsetsPadding(WindowInsets.navigationBars)
+                            .padding(bottom = 6.dp)
+                    )
                 }
             }
 

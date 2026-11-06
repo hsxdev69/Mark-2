@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -110,34 +113,40 @@ fun HomeScreen(
         state = scrollState,
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF0B0E14)),
-        contentPadding = PaddingValues(bottom = 96.dp)
+            .background(Color(0xFF0F141C)),
+        contentPadding = PaddingValues(bottom = 110.dp)
     ) {
         // 1. Top Category Tabs (Video Concept - Frames 3-5)
         item {
-            Spacer(modifier = Modifier.height(6.dp))
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.spacedBy(18.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(top = 10.dp, bottom = 4.dp)
             ) {
-                items(categories) { cat ->
-                    val isSelected = cat == selectedCategory
-                    Text(
-                        text = cat,
-                        color = if (isSelected) Color.White else Color(0xFF8E95A3),
-                        fontSize = if (isSelected) 18.sp else 15.sp,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        letterSpacing = (-0.3).sp,
-                        modifier = Modifier
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = { selectedCategory = cat }
-                            )
-                            .padding(vertical = 4.dp)
-                    )
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(18.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    items(categories) { cat ->
+                        val isSelected = cat == selectedCategory
+                        Text(
+                            text = cat,
+                            color = if (isSelected) Color.White else Color(0xFF6B7584),
+                            fontSize = if (isSelected) 22.sp else 15.sp,
+                            fontFamily = ManropeFontFamily,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            letterSpacing = (-0.4).sp,
+                            modifier = Modifier
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = { selectedCategory = cat }
+                                )
+                                .padding(vertical = 4.dp)
+                        )
+                    }
                 }
             }
         }
@@ -347,38 +356,57 @@ fun VideoStyle3DHeroCarousel(
         Spacer(modifier = Modifier.height(10.dp))
 
         // Metadata Pills Row: Genre | Duration | Rating
+        // Metadata Row: Anime | 9 EP | ★ 7.5 (Video Concept - Frame 4)
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val genre = currentItem.genres.firstOrNull() ?: "Fantasy"
+            val genre = currentItem.genres.firstOrNull() ?: "Anime"
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF181E29))
-                    .border(0.8.dp, Color(0x22FFFFFF), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                    .background(Color(0x38354354))
+                    .border(
+                        0.8.dp,
+                        Brush.verticalGradient(
+                            listOf(
+                                Color(0x3DFFFFFF),
+                                Color(0x14FFFFFF)
+                            )
+                        ),
+                        RoundedCornerShape(12.dp)
+                    )
+                    .padding(horizontal = 11.dp, vertical = 5.dp)
             ) {
                 Text(
                     text = genre,
-                    color = Color(0xFFCCD0CF),
+                    color = Color(0xFFE5E7EB),
                     fontSize = 11.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.SemiBold
                 )
             }
 
-            val runtimeText = currentItem.runtime?.let { "${it / 60}h ${it % 60}min" } ?: "1h 45min"
+            val runtimeText = currentItem.runtime?.let { "${it / 60}h ${it % 60}min" } ?: "9 EP"
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF181E29))
-                    .border(0.8.dp, Color(0x22FFFFFF), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                    .background(Color(0x38354354))
+                    .border(
+                        0.8.dp,
+                        Brush.verticalGradient(
+                            listOf(
+                                Color(0x3DFFFFFF),
+                                Color(0x14FFFFFF)
+                            )
+                        ),
+                        RoundedCornerShape(12.dp)
+                    )
+                    .padding(horizontal = 11.dp, vertical = 5.dp)
             ) {
                 Text(
                     text = runtimeText,
-                    color = Color(0xFFCCD0CF),
+                    color = Color(0xFFE5E7EB),
                     fontSize = 11.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.SemiBold
@@ -389,9 +417,18 @@ fun VideoStyle3DHeroCarousel(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF181E29))
-                    .border(0.8.dp, Color(0x22FFFFFF), RoundedCornerShape(12.dp))
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                    .background(Color(0x38354354))
+                    .border(
+                        0.8.dp,
+                        Brush.verticalGradient(
+                            listOf(
+                                Color(0x3DFFFFFF),
+                                Color(0x14FFFFFF)
+                            )
+                        ),
+                        RoundedCornerShape(12.dp)
+                    )
+                    .padding(horizontal = 11.dp, vertical = 5.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(

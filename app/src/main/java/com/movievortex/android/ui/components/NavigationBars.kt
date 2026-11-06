@@ -176,25 +176,42 @@ fun MovieVortexBottomBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = 36.dp, vertical = 12.dp),
+            .padding(horizontal = 28.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Floating Frosted Glass Island matching Video Concept (Frames 3-5)
+        // Floating Frosted Glass Capsule matching Video Concept (exact_video_bottom_bar)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(58.dp)
+                .height(62.dp)
                 .shadow(
-                    elevation = 20.dp,
-                    shape = RoundedCornerShape(29.dp),
-                    spotColor = Color(0x99000000),
-                    ambientColor = Color(0x55000000)
+                    elevation = 28.dp,
+                    shape = CircleShape,
+                    spotColor = Color(0xAA000000),
+                    ambientColor = Color(0x66000000)
                 )
-                .clip(RoundedCornerShape(29.dp))
-                .background(Color(0xD9151A24))
-                .border(1.dp, Color(0x2EFFFFFF), RoundedCornerShape(29.dp))
-                .padding(horizontal = 12.dp),
+                .clip(CircleShape)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color(0x73334155), // Top specular slate highlight (approx 45% alpha)
+                            Color(0x8C16202C), // Center frosted dark slate (approx 55% alpha)
+                            Color(0x9E0E1520)  // Bottom deep translucent slate
+                        )
+                    )
+                )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.verticalGradient(
+                        listOf(
+                            Color(0x59FFFFFF), // Crisp top highlight edge
+                            Color(0x22FFFFFF), // Soft mid edge
+                            Color(0x0FFFFFFF)  // Subtle bottom edge
+                        )
+                    ),
+                    shape = CircleShape
+                )
+                .padding(horizontal = 14.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -203,12 +220,12 @@ fun MovieVortexBottomBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val activeColor = Color.White
-                val inactiveColor = Color(0xFF8E95A3)
+                val inactiveColor = Color(0xFF8A96A3)
 
                 // 1. Home
                 val isHome = currentDestination == MainDestination.Home
                 VideoPillNavItem(
-                    icon = if (isHome) VortexIcons.Home else VortexIcons.HomeOutline,
+                    icon = VortexIcons.VideoHome,
                     contentDescription = "Home",
                     isSelected = isHome,
                     activeColor = activeColor,
@@ -219,7 +236,7 @@ fun MovieVortexBottomBar(
                 // 2. Search
                 val isSearch = currentDestination == MainDestination.Search
                 VideoPillNavItem(
-                    icon = VortexIcons.Search,
+                    icon = VortexIcons.VideoSearch,
                     contentDescription = "Search",
                     isSelected = isSearch,
                     activeColor = activeColor,
@@ -230,7 +247,7 @@ fun MovieVortexBottomBar(
                 // 3. Favorites / Heart (Watchlist)
                 val isBookmarks = currentDestination == MainDestination.Bookmarks || currentDestination == MainDestination.Downloads
                 VideoPillNavItem(
-                    icon = if (isBookmarks) VortexIcons.Heart else VortexIcons.HeartBorder,
+                    icon = VortexIcons.VideoHeart,
                     contentDescription = "Favorites",
                     isSelected = isBookmarks,
                     activeColor = activeColor,
@@ -241,7 +258,7 @@ fun MovieVortexBottomBar(
                 // 4. Profile
                 val isProfile = currentDestination == MainDestination.Me
                 VideoPillNavItem(
-                    icon = if (isProfile) VortexIcons.Person else VortexIcons.PersonOutline,
+                    icon = VortexIcons.VideoProfile,
                     contentDescription = "Profile",
                     isSelected = isProfile,
                     activeColor = activeColor,

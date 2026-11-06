@@ -54,6 +54,88 @@ object VortexIcons {
         }.build()
     }
 
+    val VideoHome: ImageVector by lazy {
+        ImageVector.Builder("VideoHome", 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(12.0f, 3.2f)
+                curveToRelative(0.53f, 0f, 1.04f, 0.22f, 1.4f, 0.6f)
+                lineToRelative(6.8f, 6.2f)
+                curveToRelative(0.5f, 0.46f, 0.8f, 1.12f, 0.8f, 1.8f)
+                verticalLineTo(18.5f)
+                curveToRelative(0f, 1.38f, -1.12f, 2.5f, -2.5f, 2.5f)
+                horizontalLineTo(15f)
+                curveToRelative(-0.55f, 0f, -1f, -0.45f, -1f, -1f)
+                verticalLineToRelative(-4.5f)
+                curveToRelative(0f, -0.83f, -0.67f, -1.5f, -1.5f, -1.5f)
+                reflectiveCurveTo(11f, 14.67f, 11f, 15.5f)
+                verticalLineTo(20f)
+                curveToRelative(0f, 0.55f, -0.45f, 1f, -1f, 1f)
+                horizontalLineTo(5.5f)
+                curveTo(4.12f, 21f, 3f, 19.88f, 3f, 18.5f)
+                verticalLineToRelative(-6.7f)
+                curveToRelative(0f, -0.68f, 0.3f, -1.34f, 0.8f, -1.8f)
+                lineToRelative(6.8f, -6.2f)
+                curveToRelative(0.36f, -0.38f, 0.87f, -0.6f, 1.4f, -0.6f)
+                close()
+            }
+        }.build()
+    }
+
+    val VideoSearch: ImageVector by lazy {
+        ImageVector.Builder("VideoSearch", 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(10.5f, 3f)
+                curveToRelative(4.14f, 0f, 7.5f, 3.36f, 7.5f, 7.5f)
+                curveToRelative(0f, 1.61f, -0.51f, 3.1f, -1.38f, 4.32f)
+                lineToRelative(4.09f, 4.09f)
+                curveToRelative(0.39f, 0.39f, 0.39f, 1.02f, 0f, 1.41f)
+                curveToRelative(-0.39f, 0.39f, -1.02f, 0.39f, -1.41f, 0f)
+                lineToRelative(-4.09f, -4.09f)
+                curveTo(13.99f, 17.15f, 12.35f, 18f, 10.5f, 18f)
+                curveTo(6.36f, 18f, 3f, 14.64f, 3f, 10.5f)
+                reflectiveCurveTo(6.36f, 3f, 10.5f, 3f)
+                close()
+            }
+        }.build()
+    }
+
+    val VideoHeart: ImageVector by lazy {
+        ImageVector.Builder("VideoHeart", 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(12f, 21.35f)
+                lineToRelative(-1.45f, -1.32f)
+                curveTo(5.4f, 15.36f, 2f, 12.28f, 2f, 8.5f)
+                curveTo(2f, 5.42f, 4.42f, 3f, 7.5f, 3f)
+                curveToRelative(1.74f, 0f, 3.41f, 0.81f, 4.5f, 2.09f)
+                curveTo(13.09f, 3.81f, 14.76f, 3f, 16.5f, 3f)
+                curveTo(19.58f, 3f, 22f, 5.42f, 22f, 8.5f)
+                curveToRelative(0f, 3.78f, -3.4f, 6.86f, -8.55f, 11.54f)
+                lineTo(12f, 21.35f)
+                close()
+            }
+        }.build()
+    }
+
+    val VideoProfile: ImageVector by lazy {
+        ImageVector.Builder("VideoProfile", 24.dp, 24.dp, 24f, 24f).apply {
+            path(fill = SolidColor(Color.White)) {
+                moveTo(12f, 2.5f)
+                curveToRelative(2.48f, 0f, 4.5f, 2.02f, 4.5f, 4.5f)
+                reflectiveCurveToRelative(-2.02f, 4.5f, -4.5f, 4.5f)
+                reflectiveCurveToRelative(-4.5f, -2.02f, -4.5f, -4.5f)
+                reflectiveCurveToRelative(2.02f, -4.5f, 4.5f, -4.5f)
+                close()
+                moveTo(12f, 13.5f)
+                curveToRelative(4.42f, 0f, 8f, 2.69f, 8f, 6f)
+                curveToRelative(0f, 0.83f, -0.67f, 1.5f, -1.5f, 1.5f)
+                horizontalLineTo(5.5f)
+                curveToRelative(-0.83f, 0f, -1.5f, -0.67f, -1.5f, -1.5f)
+                curveToRelative(0f, -3.31f, 3.58f, -6f, 8f, -6f)
+                close()
+            }
+        }.build()
+    }
+
     val Home: ImageVector by lazy {
         ImageVector.Builder("Home", 24.dp, 24.dp, 24f, 24f).apply {
             path(fill = SolidColor(Color.White)) {
