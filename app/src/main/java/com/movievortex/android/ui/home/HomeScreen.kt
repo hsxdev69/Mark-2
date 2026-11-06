@@ -39,6 +39,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -58,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -316,6 +318,12 @@ fun VideoStyle3DHeroCarousel(
     val activeIndex = (pagerState.currentPage % items.size).let { if (it < 0) it + items.size else it }
     val currentItem = items.getOrNull(activeIndex) ?: items.first()
 
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val cardWidth = 148.dp
+    val cardHeight = 222.dp // True 2:3 vertical portrait aspect ratio matching video
+    val horizontalPadding = ((screenWidth - cardWidth) / 2).coerceAtLeast(0.dp)
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -325,13 +333,13 @@ fun VideoStyle3DHeroCarousel(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(320.dp),
+                .height(236.dp),
             contentAlignment = Alignment.Center
         ) {
             // Dynamic Ambient Colorful Aura Glow with smooth Crossfade
             Crossfade(
                 targetState = currentItem.poster ?: currentItem.backdrop,
-                animationSpec = tween(600),
+                animationSpec = tween(500),
                 label = "hero_aura_crossfade"
             ) { auraUrl ->
                 AsyncImage(
@@ -339,21 +347,22 @@ fun VideoStyle3DHeroCarousel(
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(240.dp, 290.dp)
-                        .blur(50.dp)
+                        .size(165.dp, 215.dp)
+                        .blur(45.dp)
                         .graphicsLayer {
-                            alpha = 0.45f
+                            alpha = 0.42f
                             scaleX = 1.15f
                             scaleY = 1.15f
                         }
                 )
             }
 
-            // 3D Overlapping Card Deck Pager
+            // Compact 3D Cover Flow Overlapping Card Deck Pager
             HorizontalPager(
                 state = pagerState,
-                contentPadding = PaddingValues(horizontal = 92.dp),
-                pageSpacing = (-38).dp, // Negative spacing tucks side cards behind center card
+                pageSize = PageSize.Fixed(cardWidth),
+                contentPadding = PaddingValues(horizontal = horizontalPadding),
+                pageSpacing = (-22).dp, // Overlapping negative spacing tucks side cards directly behind active center card
                 modifier = Modifier.fillMaxSize()
             ) { page ->
                 val realIdx = (page % items.size).let { if (it < 0) it + items.size else it }
@@ -374,7 +383,7 @@ fun VideoStyle3DHeroCarousel(
                 }
 
                 val pressScale by animateFloatAsState(
-                    targetValue = if (isPressed) 0.95f else 1f,
+                    targetValue = if (isPressed) 0.94f else 1f,
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
                         stiffness = Spring.StiffnessLow
@@ -386,30 +395,30 @@ fun VideoStyle3DHeroCarousel(
                     modifier = Modifier
                         .zIndex(1f - absOffset) // Active center card is strictly on top
                         .graphicsLayer {
-                            // Premium Cover Flow 3D Perspective Scaling, Tilt & Rotation
-                            val cardScale = (1f - absOffset * 0.14f) * pressScale
-                            scaleX = cardScale
-                            scaleY = cardScale
-                            rotationY = pageOffset.coerceIn(-1.5f, 1.5f) * -22f
-                            cameraDistance = 18f * density
+                            // Cover Flow 3D Perspective: Center card is straight & larger; side cards rotate in 3D & scale down
+                            val scale = (1f - absOffset * 0.15f).coerceIn(0.70f, 1f) * pressScale
+                            scaleX = scale
+                            scaleY = scale
+                            rotationY = pageOffset.coerceIn(-1.5f, 1.5f) * -28f
+                            cameraDistance = 20f * density
 
                             // Subtle downward arc translation for side cards
                             translationY = absOffset * 6f * density
 
                             // Side cards remain partially visible and dim slightly
-                            alpha = (1f - absOffset * 0.28f).coerceIn(0.55f, 1f)
+                            alpha = (1f - absOffset * 0.35f).coerceIn(0.48f, 1f)
                         }
-                        .fillMaxSize()
+                        .size(cardWidth, cardHeight)
                         .shadow(
-                            elevation = if (absOffset < 0.5f) 28.dp else 10.dp,
-                            shape = RoundedCornerShape(32.dp),
+                            elevation = if (absOffset < 0.5f) 22.dp else 8.dp,
+                            shape = RoundedCornerShape(20.dp),
                             spotColor = Color(0xCC000000),
                             ambientColor = Color(0x66000000)
                         )
-                        .clip(RoundedCornerShape(32.dp))
+                        .clip(RoundedCornerShape(20.dp))
                         .background(Color(0xFF141923))
                         .border(
-                            width = 1.2.dp,
+                            width = 1.dp,
                             brush = Brush.verticalGradient(
                                 listOf(
                                     Color(0x66FFFFFF), // Crisp specular white edge at top
@@ -417,7 +426,7 @@ fun VideoStyle3DHeroCarousel(
                                     Color(0x0AFFFFFF)  // Faint bottom edge
                                 )
                             ),
-                            shape = RoundedCornerShape(32.dp)
+                            shape = RoundedCornerShape(20.dp)
                         )
                         .clickable(
                             interactionSource = interactionSource,
@@ -425,7 +434,7 @@ fun VideoStyle3DHeroCarousel(
                             onClick = { onTap(item) }
                         )
                 ) {
-                    // Movie Poster Artwork
+                    // Movie Poster Artwork (Natural 2:3 vertical portrait aspect ratio)
                     AsyncImage(
                         model = item.poster ?: item.backdrop,
                         contentDescription = item.title,
@@ -433,11 +442,11 @@ fun VideoStyle3DHeroCarousel(
                         modifier = Modifier.fillMaxSize()
                     )
 
-                    // Liquid Glass Top Gloss Sheen Overlay (Video Concept - Frame 4)
+                    // Liquid Glass Top Gloss Sheen Overlay
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(110.dp)
+                            .height(85.dp)
                             .background(
                                 Brush.verticalGradient(
                                     listOf(
@@ -449,12 +458,12 @@ fun VideoStyle3DHeroCarousel(
                             )
                     )
 
-                    // Dimmer scrim for side cards so center card pops
+                    // Scrim for side cards so center card pops forward
                     if (absOffset > 0.05f) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color.Black.copy(alpha = (absOffset * 0.35f).coerceIn(0f, 0.45f)))
+                                .background(Color.Black.copy(alpha = (absOffset * 0.40f).coerceIn(0f, 0.45f)))
                         )
                     }
                 }

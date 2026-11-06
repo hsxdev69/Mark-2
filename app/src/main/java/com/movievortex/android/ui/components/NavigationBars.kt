@@ -182,16 +182,17 @@ fun MovieVortexBottomBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 28.dp, vertical = 8.dp),
+            .padding(horizontal = 24.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Floating Frosted Glass Capsule matching Video Concept (exact_video_bottom_bar)
+        // Compact Floating Frosted Glass Capsule matching Video Concept (exact_video_bottom_bar)
         Box(
             modifier = Modifier
+                .widthIn(max = 280.dp)
                 .fillMaxWidth()
-                .height(62.dp)
+                .height(52.dp)
                 .shadow(
-                    elevation = 28.dp,
+                    elevation = 24.dp,
                     shape = CircleShape,
                     spotColor = Color(0xAA000000),
                     ambientColor = Color(0x66000000)
@@ -217,7 +218,7 @@ fun MovieVortexBottomBar(
                     ),
                     shape = CircleShape
                 )
-                .padding(horizontal = 14.dp),
+                .padding(horizontal = 12.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -330,7 +331,7 @@ private fun VideoPillNavItem(
 
     Box(
         modifier = modifier
-            .size(46.dp)
+            .size(42.dp)
             .graphicsLayer {
                 val totalScale = selectScale * pressScale
                 scaleX = totalScale
@@ -348,7 +349,7 @@ private fun VideoPillNavItem(
         if (glowAlpha > 0.01f) {
             Box(
                 modifier = Modifier
-                    .size(38.dp)
+                    .size(34.dp)
                     .graphicsLayer { alpha = glowAlpha }
                     .clip(CircleShape)
                     .background(Color(0x2EFFFFFF))
@@ -360,7 +361,7 @@ private fun VideoPillNavItem(
             imageVector = icon,
             contentDescription = contentDescription,
             tint = iconColor,
-            modifier = Modifier.size(22.dp)
+            modifier = Modifier.size(20.dp)
         )
     }
 }

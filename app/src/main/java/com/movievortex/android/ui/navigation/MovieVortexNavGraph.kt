@@ -370,7 +370,7 @@ fun MovieVortexNavGraph(
                                     SearchScreen(
                                         searchController = searchController,
                                         onMediaClick = { media ->
-                                            launchCloudStreamPlayer(context, media, null)
+                                            currentScreen = AppScreen.Detail(media)
                                         },
                                         onBackClick = { currentDestination = MainDestination.Home }
                                     )
