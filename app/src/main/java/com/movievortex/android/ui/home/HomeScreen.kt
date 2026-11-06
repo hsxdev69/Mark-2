@@ -44,6 +44,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -287,43 +289,113 @@ fun VideoStyle3DHeroCarousel(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 16.dp, bottom = 12.dp),
+            .padding(top = 10.dp, bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        HorizontalPager(
-            state = pagerState,
-            contentPadding = PaddingValues(horizontal = 80.dp),
-            pageSpacing = 16.dp,
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(310.dp)
-        ) { page ->
-            val item = items[page]
-            val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
-
-            Box(
+                .height(320.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            // 1. Dynamic Ambient Colorful Aura Glow behind the carousel (Video Concept - Frame 4)
+            AsyncImage(
+                model = currentItem.poster ?: currentItem.backdrop,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
+                    .size(240.dp, 290.dp)
+                    .blur(50.dp)
                     .graphicsLayer {
-                        val absOffset = abs(pageOffset).coerceIn(0f, 2f)
-                        scaleX = 1f - absOffset * 0.14f
-                        scaleY = 1f - absOffset * 0.14f
-                        rotationY = pageOffset * -16f
-                        cameraDistance = 14f * density
-                        alpha = (1f - absOffset * 0.35f).coerceIn(0.4f, 1f)
+                        alpha = 0.42f
+                        scaleX = 1.15f
+                        scaleY = 1.15f
                     }
-                    .fillMaxSize()
-                    .shadow(16.dp, RoundedCornerShape(24.dp), spotColor = Color(0x99000000))
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color(0xFF141923))
-                    .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(24.dp))
-                    .clickable { onTap(item) }
-            ) {
-                AsyncImage(
-                    model = item.poster ?: item.backdrop,
-                    contentDescription = item.title,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+            )
+
+            // 2. 3D Overlapping Card Fan/Deck Pager (Cards overlap and tilt in 3D)
+            HorizontalPager(
+                state = pagerState,
+                contentPadding = PaddingValues(horizontal = 92.dp),
+                pageSpacing = (-38).dp, // Negative spacing tucks side cards behind center card
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                val item = items[page]
+                val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+                val absOffset = abs(pageOffset).coerceIn(0f, 2f)
+
+                Box(
+                    modifier = Modifier
+                        .zIndex(1f - absOffset) // Active center card is strictly on top
+                        .graphicsLayer {
+                            // 3D Perspective Scaling & Tilt
+                            val scale = 1f - absOffset * 0.12f
+                            scaleX = scale
+                            scaleY = scale
+                            rotationY = pageOffset * -18f
+                            cameraDistance = 16f * density
+
+                            // Subtle downward arc translation for side cards
+                            translationY = absOffset * 8f * density
+
+                            // Side cards dim slightly
+                            alpha = (1f - absOffset * 0.25f).coerceIn(0.55f, 1f)
+                        }
+                        .fillMaxSize()
+                        .shadow(
+                            elevation = if (absOffset < 0.5f) 28.dp else 10.dp,
+                            shape = RoundedCornerShape(32.dp),
+                            spotColor = Color(0xCC000000),
+                            ambientColor = Color(0x66000000)
+                        )
+                        .clip(RoundedCornerShape(32.dp))
+                        .background(Color(0xFF141923))
+                        .border(
+                            width = 1.2.dp,
+                            brush = Brush.verticalGradient(
+                                listOf(
+                                    Color(0x66FFFFFF), // Crisp specular white edge at top
+                                    Color(0x22FFFFFF), // Subtle mid edge
+                                    Color(0x0AFFFFFF)  // Faint bottom edge
+                                )
+                            ),
+                            shape = RoundedCornerShape(32.dp)
+                        )
+                        .clickable { onTap(item) }
+                ) {
+                    // Movie Poster Artwork
+                    AsyncImage(
+                        model = item.poster ?: item.backdrop,
+                        contentDescription = item.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+
+                    // Liquid Glass Top Gloss Sheen Overlay (Video Concept - Frame 4)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(110.dp)
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color(0x38FFFFFF),
+                                        Color(0x10FFFFFF),
+                                        Color.Transparent
+                                    )
+                                )
+                            )
+                    )
+
+                    // Dimmer scrim for side cards so center card pops
+                    if (absOffset > 0.05f) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = (absOffset * 0.35f).coerceIn(0f, 0.45f)))
+                        )
+                    }
+                }
             }
         }
 
