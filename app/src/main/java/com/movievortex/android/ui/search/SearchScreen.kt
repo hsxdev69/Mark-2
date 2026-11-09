@@ -66,6 +66,7 @@ data class ActorItem(val name: String, val photoUrl: String)
 fun SearchScreen(
     searchController: SearchController,
     onMediaClick: (MovieVortexMedia) -> Unit,
+    recommendations: List<MovieVortexMedia> = emptyList(),
     onOpenCategory: (String) -> Unit = {},
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -212,14 +213,14 @@ fun SearchScreen(
         // 2. Search Body
         when (state.status) {
             SearchStatus.Idle -> {
+                val recentItems = recommendations.take(6).ifEmpty { state.results.take(6) }
+                val popularItems = recommendations.drop(6).take(6).ifEmpty { state.results.take(6) }
+
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 90.dp)
                 ) {
                     // SECTION A: "Recent Search" with "See all >"
-                    val recentItems = state.recentResults.take(6).ifEmpty {
-                        state.results.take(3)
-                    }
                     if (recentItems.isNotEmpty()) {
                         item {
                             Spacer(modifier = Modifier.height(8.dp))
@@ -449,7 +450,6 @@ fun SearchScreen(
                     }
 
                     // SECTION D: "Popular search"
-                    val popularItems = state.results.take(6).ifEmpty { recentItems }
                     if (popularItems.isNotEmpty()) {
                         item {
                             Spacer(modifier = Modifier.height(24.dp))
@@ -529,7 +529,7 @@ fun SearchScreen(
                 }
             }
 
-            SearchStatus.Success -> {
+            SearchStatus.Results -> {
                 if (state.results.isEmpty()) {
                     Box(
                         modifier = Modifier
@@ -568,6 +568,22 @@ fun SearchScreen(
                             }
                         }
                     }
+                }
+            }
+
+            SearchStatus.NoResults -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No results found for \"${state.query}\"",
+                        color = Color(0xFF959CE3),
+                        fontSize = 15.sp,
+                        fontFamily = ManropeFontFamily
+                    )
                 }
             }
 

@@ -384,8 +384,11 @@ fun MovieVortexNavGraph(
                                 }
 
                                 MainDestination.Search -> {
+                                    val homeState by homeController.uiState.collectAsState()
+                                    val allMedia = (homeState.rows.flatMap { it.items } + homeState.exploreGrid).distinctBy { it.rawUrl }
                                     SearchScreen(
                                         searchController = searchController,
+                                        recommendations = allMedia,
                                         onMediaClick = { media ->
                                             currentScreen = AppScreen.Detail(media)
                                         },

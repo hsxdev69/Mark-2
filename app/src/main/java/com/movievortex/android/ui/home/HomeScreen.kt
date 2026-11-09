@@ -673,8 +673,6 @@ private fun HeroMetadataBadge(text: String, isHighlight: Boolean = false) {
         )
     }
 }
-    }
-}
 
 @Composable
 fun SectionHeader(
