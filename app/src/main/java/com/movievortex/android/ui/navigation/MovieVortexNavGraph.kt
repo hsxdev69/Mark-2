@@ -79,6 +79,7 @@ sealed class AppScreen {
     object Watchlist : AppScreen()
     object History : AppScreen()
     data class PlatformCatalog(val platform: StreamingPlatform) : AppScreen()
+    data class CategoryCatalog(val title: String) : AppScreen()
     data class Detail(val media: MovieVortexMedia) : AppScreen()
     data class Player(val media: MovieVortexMedia, val episode: MediaEpisode? = null, val offlinePath: String? = null) : AppScreen()
 }
@@ -348,6 +349,9 @@ fun MovieVortexNavGraph(
                                         onPlatformClick = { platform ->
                                             currentScreen = AppScreen.PlatformCatalog(platform)
                                         },
+                                        onOpenCategory = { catTitle ->
+                                            currentScreen = AppScreen.CategoryCatalog(catTitle)
+                                        },
                                         onRequireAuth = { reason ->
                                             authModalReason = reason
                                             showAuthModal = true
@@ -355,6 +359,19 @@ fun MovieVortexNavGraph(
                                         onNavigateToLiveTv = {
                                             currentDestination = MainDestination.LiveTv
                                         }
+                                    )
+                                }
+
+                                MainDestination.Categories -> {
+                                    SearchScreen(
+                                        searchController = searchController,
+                                        onMediaClick = { media ->
+                                            currentScreen = AppScreen.Detail(media)
+                                        },
+                                        onOpenCategory = { catTitle ->
+                                            currentScreen = AppScreen.CategoryCatalog(catTitle)
+                                        },
+                                        onBackClick = { currentDestination = MainDestination.Home }
                                     )
                                 }
 
@@ -371,6 +388,9 @@ fun MovieVortexNavGraph(
                                         searchController = searchController,
                                         onMediaClick = { media ->
                                             currentScreen = AppScreen.Detail(media)
+                                        },
+                                        onOpenCategory = { catTitle ->
+                                            currentScreen = AppScreen.CategoryCatalog(catTitle)
                                         },
                                         onBackClick = { currentDestination = MainDestination.Home }
                                     )
@@ -455,6 +475,30 @@ fun MovieVortexNavGraph(
                 PlatformCatalogScreen(
                     platform = screen.platform,
                     catalogItems = homeState.exploreGrid,
+                    onMediaClick = { media ->
+                        currentScreen = AppScreen.Detail(media)
+                    },
+                    onBackClick = { currentScreen = AppScreen.Main }
+                )
+            }
+
+            is AppScreen.CategoryCatalog -> {
+                val homeState by homeController.uiState.collectAsState()
+                val allMedia = (homeState.rows.flatMap { it.items } + homeState.exploreGrid).distinctBy { it.rawUrl }
+                val filtered = when (screen.title.lowercase()) {
+                    "movies" -> allMedia.filter { it.type == MediaType.Movie || it.title.contains("Movie", ignoreCase = true) }
+                    "series", "serials", "tv shows" -> allMedia.filter { it.type == MediaType.TvSeries || it.title.contains("Season", ignoreCase = true) || it.title.contains("Series", ignoreCase = true) }
+                    "for you" -> homeState.rows.firstOrNull()?.items ?: allMedia.take(15)
+                    else -> allMedia.filter { m ->
+                        m.genres.any { g -> g.contains(screen.title, ignoreCase = true) } ||
+                                m.title.contains(screen.title, ignoreCase = true) ||
+                                (m.synopsis?.contains(screen.title, ignoreCase = true) == true)
+                    }
+                }.ifEmpty { allMedia }
+
+                com.movievortex.android.ui.catalog.CategoryCatalogScreen(
+                    title = screen.title,
+                    catalogItems = filtered,
                     onMediaClick = { media ->
                         currentScreen = AppScreen.Detail(media)
                     },

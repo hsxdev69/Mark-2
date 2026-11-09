@@ -9,12 +9,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -39,73 +42,88 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.movievortex.android.controller.SearchController
 import com.movievortex.android.controller.SearchStatus
 import com.movievortex.android.model.MovieVortexMedia
 import com.movievortex.android.ui.components.PosterCard
 import com.movievortex.android.ui.components.PosterSkeleton
 import com.movievortex.android.ui.components.VortexIcons
-import com.movievortex.android.ui.theme.VortexColors
+import com.movievortex.android.ui.theme.ManropeFontFamily
+
+data class GenreChipItem(val name: String, val count: Int)
+data class ActorItem(val name: String, val photoUrl: String)
 
 @Composable
 fun SearchScreen(
     searchController: SearchController,
     onMediaClick: (MovieVortexMedia) -> Unit,
+    onOpenCategory: (String) -> Unit = {},
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val state by searchController.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
-    var activeQuickFilter by remember { mutableStateOf("All") }
 
-    val quickFilters = listOf("All", "Trending", "Sci-Fi", "Anime", "Action", "4K UHD", "Series")
+    val categoryChips15 = remember {
+        listOf(
+            GenreChipItem("Biographical", 932),
+            GenreChipItem("Western", 673),
+            GenreChipItem("Documentary", 126),
+            GenreChipItem("Action", 1096),
+            GenreChipItem("Fantasy", 475),
+            GenreChipItem("Musical", 398),
+            GenreChipItem("War", 56),
+            GenreChipItem("Independent", 49),
+            GenreChipItem("Crime", 399),
+            GenreChipItem("Sci-fi", 821),
+            GenreChipItem("Comedy", 736),
+            GenreChipItem("Animation", 512),
+            GenreChipItem("Adventure", 840),
+            GenreChipItem("Horror", 620),
+            GenreChipItem("Thriller", 940)
+        )
+    }
+
+    val actorsList = remember {
+        listOf(
+            ActorItem("Leonardo DiCaprio", "https://image.tmdb.org/t/p/w185/wo2pa3nrvuaAcHgusvt8Ah894l.jpg"),
+            ActorItem("Scarlett Johansson", "https://image.tmdb.org/t/p/w185/6NsMbJXRlDZuDzatQTlgAmGu39e.jpg"),
+            ActorItem("George Clooney", "https://image.tmdb.org/t/p/w185/kFQPghqT7bY1fFw1uB4o1A1lVb8.jpg"),
+            ActorItem("Johnny Depp", "https://image.tmdb.org/t/p/w185/ilPB0q0wI5J525v0Y8yFv458a2E.jpg"),
+            ActorItem("Cillian Murphy", "https://image.tmdb.org/t/p/w185/3On2GL446E8jOC932t009dC9W1Y.jpg")
+        )
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF0F141C))
-            .padding(top = 12.dp)
+            .background(Color(0xFF08090B))
+            .windowInsetsPadding(WindowInsets.statusBars)
     ) {
-        // 1. Futuristic Glass Search Input Pill
+        // 1. Search Bar with Filter Sliders Icon (from Reference UI)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = VortexIcons.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.White
-                )
-            }
-
-            Spacer(modifier = Modifier.width(4.dp))
-
-            // 54dp Pill Search Field
+            // Search Input Pill
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(54.dp)
-                    .clip(RoundedCornerShape(27.dp))
-                    .background(Color(0x38354354))
-                    .border(
-                        1.dp,
-                        androidx.compose.ui.graphics.Brush.verticalGradient(
-                            listOf(
-                                Color(0x3DFFFFFF),
-                                Color(0x14FFFFFF)
-                            )
-                        ),
-                        RoundedCornerShape(27.dp)
-                    )
+                    .height(50.dp)
+                    .clip(RoundedCornerShape(25.dp))
+                    .background(Color(0xFF10121A))
+                    .border(1.dp, Color(0x33959CE3), RoundedCornerShape(25.dp))
                     .padding(horizontal = 16.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -116,7 +134,7 @@ fun SearchScreen(
                     Icon(
                         imageVector = VortexIcons.Search,
                         contentDescription = "Search",
-                        tint = Color.White,
+                        tint = Color(0xFF959CE3),
                         modifier = Modifier.size(20.dp)
                     )
 
@@ -125,9 +143,10 @@ fun SearchScreen(
                     Box(modifier = Modifier.weight(1f)) {
                         if (state.query.isEmpty()) {
                             Text(
-                                text = "Search movies, series, anime...",
-                                color = VortexColors.MutedText,
-                                fontSize = 14.sp
+                                text = "Search",
+                                color = Color(0xFF959CE3),
+                                fontSize = 15.sp,
+                                fontFamily = ManropeFontFamily
                             )
                         }
 
@@ -135,10 +154,11 @@ fun SearchScreen(
                             value = state.query,
                             onValueChange = { searchController.onQueryChange(it) },
                             singleLine = true,
-                            cursorBrush = SolidColor(Color.White),
+                            cursorBrush = SolidColor(Color(0xFFF8F8F8)),
                             textStyle = TextStyle(
-                                color = Color.White,
-                                fontSize = 14.sp,
+                                color = Color(0xFFF8F8F8),
+                                fontSize = 15.sp,
+                                fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.Normal
                             ),
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
@@ -160,219 +180,328 @@ fun SearchScreen(
                             Icon(
                                 imageVector = VortexIcons.Close,
                                 contentDescription = "Clear",
-                                tint = Color(0xFFCCCCCC),
+                                tint = Color(0xFF959CE3),
                                 modifier = Modifier.size(16.dp)
                             )
                         }
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
-        // 2. Quick Genre / Category Filter Chips (Matching Flutter _buildGenreChips)
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items(quickFilters) { filter ->
-                val isSelected = filter == activeQuickFilter
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(if (isSelected) Color.White else VortexColors.CardSurface)
-                        .border(
-                            1.dp,
-                            if (isSelected) Color.White else Color(0x22FFFFFF),
-                            RoundedCornerShape(18.dp)
-                        )
-                        .clickable {
-                            activeQuickFilter = filter
-                            if (filter != "All") {
-                                searchController.onQueryChange(filter)
-                                searchController.performSearch(filter)
-                            }
-                        }
-                        .padding(horizontal = 16.dp, vertical = 7.dp)
-                ) {
-                    Text(
-                        text = filter,
-                        color = if (isSelected) Color.Black else Color.White,
-                        fontSize = 12.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                    )
-                }
+            // Filter Sliders Icon Button (Matching Screenshot)
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF10121A))
+                    .border(1.dp, Color(0x33959CE3), CircleShape)
+                    .clickable { onOpenCategory("All Categories") },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = VortexIcons.Tune,
+                    contentDescription = "Filter",
+                    tint = Color(0xFFF8F8F8),
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 3. Search Body States
+        // 2. Search Body
         when (state.status) {
             SearchStatus.Idle -> {
-                Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    // Trending Searches Section
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = VortexIcons.TrendingUp,
-                            contentDescription = "Trending",
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Trending Searches",
-                            color = Color.White,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = (-0.2).sp
-                        )
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 90.dp)
+                ) {
+                    // SECTION A: "Recent Search" with "See all >"
+                    val recentItems = state.recentResults.take(6).ifEmpty {
+                        state.results.take(3)
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    val trendingSuggestions = listOf(
-                        "Severance",
-                        "Interstellar",
-                        "Solo Leveling",
-                        "Dune: Part Two",
-                        "The Batman",
-                        "Arcane",
-                        "Stranger Things",
-                        "Oppenheimer"
-                    )
-
-                    // First row of trending chips
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(trendingSuggestions.take(4)) { title ->
-                            Box(
+                    if (recentItems.isNotEmpty()) {
+                        item {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(VortexColors.CardSurface)
-                                    .border(1.dp, Color(0x2EFFFFFF), RoundedCornerShape(16.dp))
-                                    .clickable {
-                                        searchController.onQueryChange(title)
-                                        searchController.performSearch(title)
-                                    }
-                                    .padding(horizontal = 14.dp, vertical = 8.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = VortexIcons.Search,
-                                        contentDescription = null,
-                                        tint = Color(0xFFCCCCCC),
-                                        modifier = Modifier.size(12.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = title,
-                                        color = Color.White,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Second row of trending chips
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(trendingSuggestions.drop(4)) { title ->
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(VortexColors.CardSurface)
-                                    .border(1.dp, Color(0x2EFFFFFF), RoundedCornerShape(16.dp))
-                                    .clickable {
-                                        searchController.onQueryChange(title)
-                                        searchController.performSearch(title)
-                                    }
-                                    .padding(horizontal = 14.dp, vertical = 8.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = VortexIcons.Search,
-                                        contentDescription = null,
-                                        tint = Color(0xFFCCCCCC),
-                                        modifier = Modifier.size(12.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = title,
-                                        color = Color.White,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Recent Searches
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Recent Searches",
-                            color = Color.White,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                        Text(
-                            text = "Clear All",
-                            color = Color(0xFFCCCCCC),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.clickable { searchController.clearRecentQueries() }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    val recentChips = if (state.recentQueries.isNotEmpty()) {
-                        state.recentQueries
-                    } else {
-                        listOf("Interstellar", "Severance", "Solo Leveling")
-                    }
-
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(recentChips) { query ->
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(VortexColors.CardSurface)
-                                    .border(1.dp, Color(0x22FFFFFF), RoundedCornerShape(16.dp))
-                                    .clickable {
-                                        searchController.onQueryChange(query)
-                                        searchController.performSearch(query)
-                                    }
-                                    .padding(horizontal = 14.dp, vertical = 7.dp)
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = query,
-                                    color = Color(0xFFCCCCCC),
-                                    fontSize = 12.sp
+                                    text = "Recent Search",
+                                    color = Color(0xFFF8F8F8),
+                                    fontSize = 18.sp,
+                                    fontFamily = ManropeFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = (-0.3).sp
                                 )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.clickable { onOpenCategory("Recent Search") }
+                                ) {
+                                    Text(
+                                        text = "See all",
+                                        color = Color(0xFF959CE3),
+                                        fontSize = 12.sp,
+                                        fontFamily = ManropeFontFamily,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Icon(
+                                        imageVector = VortexIcons.ChevronRight,
+                                        contentDescription = null,
+                                        tint = Color(0xFF959CE3),
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            LazyRow(
+                                contentPadding = PaddingValues(horizontal = 20.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(recentItems) { media ->
+                                    PosterCard(
+                                        media = media,
+                                        onClick = { onMediaClick(media) },
+                                        width = 135.dp
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // SECTION B: "Categories" (15 chips as user requested)
+                    item {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Categories",
+                                color = Color(0xFFF8F8F8),
+                                fontSize = 18.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.3).sp
+                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clickable { onOpenCategory("All Categories") }
+                            ) {
+                                Text(
+                                    text = "See all",
+                                    color = Color(0xFF959CE3),
+                                    fontSize = 12.sp,
+                                    fontFamily = ManropeFontFamily,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Icon(
+                                    imageVector = VortexIcons.ChevronRight,
+                                    contentDescription = null,
+                                    tint = Color(0xFF959CE3),
+                                    modifier = Modifier.size(13.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Row 1 of chips
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(categoryChips15.take(4)) { chip ->
+                                CategoryChipPill(chip = chip, onClick = { onOpenCategory(chip.name) })
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Row 2 of chips
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(categoryChips15.subList(4, 8)) { chip ->
+                                CategoryChipPill(chip = chip, onClick = { onOpenCategory(chip.name) })
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Row 3 of chips
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(categoryChips15.subList(8, 12)) { chip ->
+                                CategoryChipPill(chip = chip, onClick = { onOpenCategory(chip.name) })
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Row 4 of chips
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(categoryChips15.drop(12)) { chip ->
+                                CategoryChipPill(chip = chip, onClick = { onOpenCategory(chip.name) })
+                            }
+                        }
+                    }
+
+                    // SECTION C: "Based on actor" with "See all >"
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Based on actor",
+                                color = Color(0xFFF8F8F8),
+                                fontSize = 18.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.3).sp
+                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clickable { onOpenCategory("Popular Actors") }
+                            ) {
+                                Text(
+                                    text = "See all",
+                                    color = Color(0xFF959CE3),
+                                    fontSize = 12.sp,
+                                    fontFamily = ManropeFontFamily,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Icon(
+                                    imageVector = VortexIcons.ChevronRight,
+                                    contentDescription = null,
+                                    tint = Color(0xFF959CE3),
+                                    modifier = Modifier.size(13.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            items(actorsList) { actor ->
+                                Column(
+                                    modifier = Modifier
+                                        .width(96.dp)
+                                        .clickable {
+                                            searchController.onQueryChange(actor.name)
+                                            searchController.performSearch(actor.name)
+                                        },
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(96.dp, 120.dp)
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(Color(0xFF10121A))
+                                            .border(1.dp, Color(0x33959CE3), RoundedCornerShape(16.dp))
+                                    ) {
+                                        AsyncImage(
+                                            model = actor.photoUrl,
+                                            contentDescription = actor.name,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = actor.name,
+                                        color = Color(0xFFF8F8F8),
+                                        fontSize = 12.sp,
+                                        fontFamily = ManropeFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // SECTION D: "Popular search"
+                    val popularItems = state.results.take(6).ifEmpty { recentItems }
+                    if (popularItems.isNotEmpty()) {
+                        item {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Popular search",
+                                    color = Color(0xFFF8F8F8),
+                                    fontSize = 18.sp,
+                                    fontFamily = ManropeFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = (-0.3).sp
+                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.clickable { onOpenCategory("Popular search") }
+                                ) {
+                                    Text(
+                                        text = "See all",
+                                        color = Color(0xFF959CE3),
+                                        fontSize = 12.sp,
+                                        fontFamily = ManropeFontFamily,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Icon(
+                                        imageVector = VortexIcons.ChevronRight,
+                                        contentDescription = null,
+                                        tint = Color(0xFF959CE3),
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            LazyRow(
+                                contentPadding = PaddingValues(horizontal = 20.dp),
+                                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                            ) {
+                                items(popularItems) { media ->
+                                    PosterCard(
+                                        media = media,
+                                        onClick = { onMediaClick(media) },
+                                        width = 135.dp
+                                    )
+                                }
                             }
                         }
                     }
@@ -381,13 +510,13 @@ fun SearchScreen(
 
             SearchStatus.Searching -> {
                 LazyColumn(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(listOf(1, 2, 3, 4)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             repeat(3) {
                                 PosterSkeleton(
@@ -400,100 +529,107 @@ fun SearchScreen(
                 }
             }
 
-            SearchStatus.Results -> {
-                // Responsive 3-column chunked grid of MovieCards
-                val chunked = state.results.chunked(3)
-                LazyColumn(
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    items(chunked) { rowItems ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            rowItems.forEach { media ->
-                                PosterCard(
-                                    media = media,
-                                    onClick = { onMediaClick(media) },
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                            repeat(3 - rowItems.size) {
-                                Spacer(modifier = Modifier.weight(1f))
-                            }
-                        }
-                    }
-                }
-            }
-
-            SearchStatus.NoResults -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(24.dp)
+            SearchStatus.Success -> {
+                if (state.results.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = VortexIcons.SearchOff,
-                            contentDescription = "No Results",
-                            tint = VortexColors.MutedText,
-                            modifier = Modifier.size(56.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "No results found for \"${state.query}\"",
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.SemiBold
+                            color = Color(0xFF959CE3),
+                            fontSize = 15.sp,
+                            fontFamily = ManropeFontFamily
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "Try searching for a different title or keyword",
-                            color = VortexColors.MutedText,
-                            fontSize = 13.sp
-                        )
+                    }
+                } else {
+                    val chunked = state.results.chunked(3)
+                    LazyColumn(
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(chunked) { rowItems ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                rowItems.forEach { media ->
+                                    PosterCard(
+                                        media = media,
+                                        onClick = { onMediaClick(media) },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                }
+                                repeat(3 - rowItems.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
                     }
                 }
             }
 
             SearchStatus.Error -> {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(24.dp)
-                    ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = state.errorMessage ?: "This content is currently unavailable.",
-                            color = Color.White,
+                            text = state.errorMessage ?: "Search failed",
+                            color = Color(0xFFF8F8F8),
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontFamily = ManropeFontFamily
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "Please check your network and try again.",
-                            color = VortexColors.MutedText,
-                            fontSize = 13.sp
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
                         Button(
                             onClick = { searchController.performSearch(state.query) },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.White,
-                                contentColor = Color.Black
-                            ),
-                            shape = RoundedCornerShape(24.dp)
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF959CE3))
                         ) {
-                            Text(text = "Retry", color = Color.Black, fontWeight = FontWeight.Bold)
+                            Text("Retry", color = Color(0xFF08090B), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CategoryChipPill(
+    chip: GenreChipItem,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(0xFF10121A))
+            .border(1.dp, Color(0x33959CE3), RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 9.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = chip.name,
+                color = Color(0xFFF8F8F8),
+                fontSize = 12.sp,
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "${chip.count}",
+                color = Color(0xFF959CE3),
+                fontSize = 11.sp,
+                fontFamily = ManropeFontFamily,
+                fontWeight = FontWeight.Normal
+            )
         }
     }
 }

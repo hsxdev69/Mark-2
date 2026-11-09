@@ -88,6 +88,7 @@ fun HomeScreen(
     onMediaClick: (MovieVortexMedia) -> Unit,
     onPlayClick: (MovieVortexMedia) -> Unit,
     onPlatformClick: (StreamingPlatform) -> Unit,
+    onOpenCategory: (String) -> Unit = {},
     onRequireAuth: (String) -> Unit = {},
     onNavigateToLiveTv: (() -> Unit)? = null,
     modifier: Modifier = Modifier
@@ -96,26 +97,15 @@ fun HomeScreen(
     val scrollState = rememberLazyListState()
     var selectedCategory by remember { mutableStateOf("Trending") }
 
-    val categories = listOf("Trending", "New", "Movies", "Serials", "TV shows")
+    val categories = listOf("Trending", "New", "Movies", "Series", "Animation", "TV shows")
 
     val filteredRows = remember(selectedCategory, state.rows) {
-        when (selectedCategory) {
-            "Trending", "New" -> state.rows
-            "Movies" -> state.rows.mapNotNull { row ->
-                val movies = row.items.filter { it.type == MediaType.Movie || it.title.contains("Movie", ignoreCase = true) }
-                if (movies.isNotEmpty()) row.copy(items = movies) else null
-            }.ifEmpty { state.rows }
-            "Serials", "TV shows" -> state.rows.mapNotNull { row ->
-                val series = row.items.filter { it.type == MediaType.TvSeries || it.title.contains("Season", ignoreCase = true) || it.title.contains("Series", ignoreCase = true) }
-                if (series.isNotEmpty()) row.copy(items = series) else null
-            }.ifEmpty { state.rows }
-            else -> state.rows
-        }
+        state.rows
     }
 
     // Trending Hero Carousel: At least 10 real movies without dummy data
-    val heroList = remember(state.heroItems, filteredRows) {
-        val pool = (state.heroItems + filteredRows.flatMap { it.items })
+    val heroList = remember(state.heroItems, state.rows) {
+        val pool = (state.heroItems + state.rows.flatMap { it.items })
             .distinctBy { it.rawUrl.ifBlank { it.title.trim().lowercase() } }
         if (pool.isNotEmpty()) pool.take(10) else emptyList()
     }
@@ -153,7 +143,13 @@ fun HomeScreen(
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null,
-                                    onClick = { selectedCategory = cat }
+                                    onClick = {
+                                        if (cat == "Trending") {
+                                            selectedCategory = "Trending"
+                                        } else {
+                                            onOpenCategory(cat)
+                                        }
+                                    }
                                 )
                                 .padding(vertical = 4.dp)
                         )
@@ -162,7 +158,7 @@ fun HomeScreen(
             }
         }
 
-        // 2. Liquid 3D Perspective Fling Carousel
+        // 2. Liquid 3D Perspective Fling Carousel (Expanded Length & Breadth)
         if (heroList.isNotEmpty()) {
             item {
                 VideoStyle3DHeroCarousel(
@@ -172,11 +168,58 @@ fun HomeScreen(
             }
         }
 
-        // 3. "For you" Row
+        // 3. Promo Announcement Banner (From Reference UI)
+        item {
+            Spacer(modifier = Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF10121A))
+                    .border(1.dp, Color(0x33959CE3), RoundedCornerShape(16.dp))
+                    .padding(14.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 12.dp)
+                    ) {
+                        Text(
+                            text = "Great news! You can now upgrade to our Pro mode at a discount of 60% off. Don't miss out on this limited-time offer!",
+                            color = Color(0xFFF8F8F8),
+                            fontSize = 11.sp,
+                            fontFamily = ManropeFontFamily,
+                            lineHeight = 16.sp
+                        )
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        val promoThumbnails = heroList.take(3).mapNotNull { it.poster ?: it.backdrop }
+                        promoThumbnails.forEach { thumb ->
+                            AsyncImage(
+                                model = thumb,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(34.dp, 48.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // 4. "For you" Row
         val forYouItems = filteredRows.firstOrNull()?.items ?: emptyList()
         if (forYouItems.isNotEmpty()) {
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(18.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -192,13 +235,25 @@ fun HomeScreen(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.4).sp
                     )
-                    Text(
-                        text = "See all",
-                        color = Color(0xFF959CE3),
-                        fontSize = 12.sp,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { onOpenCategory("For you") }
+                    ) {
+                        Text(
+                            text = "See all",
+                            color = Color(0xFF959CE3),
+                            fontSize = 12.sp,
+                            fontFamily = ManropeFontFamily,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Icon(
+                            imageVector = VortexIcons.ChevronRight,
+                            contentDescription = null,
+                            tint = Color(0xFF959CE3),
+                            modifier = Modifier.size(13.dp)
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 LazyRow(
@@ -209,14 +264,14 @@ fun HomeScreen(
                         PosterCard(
                             media = item,
                             onClick = { onMediaClick(item) },
-                            width = 135.dp
+                            width = 145.dp
                         )
                     }
                 }
             }
         }
 
-        // 4. Content Rows (Recently Added Movies, Popular Now, etc.)
+        // 5. Content Rows (Recently Added Movies, Popular Now, etc.)
         val remainingRows = filteredRows.drop(1)
         items(remainingRows) { row ->
             Spacer(modifier = Modifier.height(24.dp))
@@ -235,13 +290,25 @@ fun HomeScreen(
                     fontWeight = FontWeight.Bold,
                     letterSpacing = (-0.4).sp
                 )
-                Text(
-                    text = "See all",
-                    color = Color(0xFF959CE3),
-                    fontSize = 12.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { onOpenCategory(row.title) }
+                ) {
+                    Text(
+                        text = "See all",
+                        color = Color(0xFF959CE3),
+                        fontSize = 12.sp,
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Icon(
+                        imageVector = VortexIcons.ChevronRight,
+                        contentDescription = null,
+                        tint = Color(0xFF959CE3),
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(12.dp))
             LazyRow(
@@ -252,13 +319,13 @@ fun HomeScreen(
                     PosterCard(
                         media = item,
                         onClick = { onMediaClick(item) },
-                        width = 135.dp
+                        width = 145.dp
                     )
                 }
             }
         }
 
-        // 5. Explore More / Grid Loader
+        // 6. Explore More / Grid Loader
         item {
             LaunchedEffect(Unit) {
                 homeController.loadMoreExplore()
@@ -314,20 +381,20 @@ fun VideoStyle3DHeroCarousel(
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val cardWidth = 162.dp
-    val cardHeight = 243.dp // True 2:3 vertical portrait aspect ratio matching Apple 3D Carousel
+    val cardWidth = 260.dp
+    val cardHeight = 390.dp // True vertical portrait aspect ratio with expanded length & breadth
     val horizontalPadding = ((screenWidth - cardWidth) / 2).coerceAtLeast(0.dp)
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 10.dp, bottom = 14.dp),
+            .padding(top = 10.dp, bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(268.dp),
+                .height(415.dp),
             contentAlignment = Alignment.Center
         ) {
             // Dynamic Ambient Colorful Aura Glow with smooth Crossfade behind active card
@@ -341,12 +408,12 @@ fun VideoStyle3DHeroCarousel(
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(190.dp, 250.dp)
-                        .blur(50.dp)
+                        .size(280.dp, 390.dp)
+                        .blur(55.dp)
                         .graphicsLayer {
                             alpha = 0.45f
-                            scaleX = 1.18f
-                            scaleY = 1.18f
+                            scaleX = 1.15f
+                            scaleY = 1.15f
                         }
                 )
             }
@@ -356,7 +423,7 @@ fun VideoStyle3DHeroCarousel(
                 state = pagerState,
                 pageSize = PageSize.Fixed(cardWidth),
                 contentPadding = PaddingValues(horizontal = horizontalPadding),
-                pageSpacing = (-28).dp, // Negative overlap spacing tucks side cards along 3D cylinder arc
+                pageSpacing = (-22).dp, // Overlap spacing tucks side cards along 3D cylinder arc
                 modifier = Modifier.fillMaxSize()
             ) { page ->
                 val realIdx = (page % items.size).let { if (it < 0) it + items.size else it }
@@ -377,7 +444,7 @@ fun VideoStyle3DHeroCarousel(
                 }
 
                 val pressScale by animateFloatAsState(
-                    targetValue = if (isPressed) 0.93f else 1f,
+                    targetValue = if (isPressed) 0.94f else 1f,
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
                         stiffness = Spring.StiffnessLow
@@ -389,26 +456,14 @@ fun VideoStyle3DHeroCarousel(
                     modifier = Modifier
                         .zIndex(1f - absOffset) // Active center card is strictly on top
                         .graphicsLayer {
-                            // 1. Apple 3D Cylinder Perspective Projection:
-                            // Center card is large & facing forward; side cards scale and rotate inwards tangent to cylinder
-                            val scale = (1f - absOffset * 0.16f).coerceIn(0.68f, 1f) * pressScale
+                            val scale = (1f - absOffset * 0.14f).coerceIn(0.72f, 1f) * pressScale
                             scaleX = scale
                             scaleY = scale
-
-                            // 2. 3D Y-axis rotation tangent to cylindrical arc
-                            rotationY = pageOffset.coerceIn(-1.5f, 1.5f) * -34f
-
-                            // 3. Apple Spatial Camera Distance for realistic 3D depth
+                            rotationY = pageOffset.coerceIn(-1.5f, 1.5f) * -32f
                             cameraDistance = 16f * density
-
-                            // 4. Horizontal translation to tuck side cards along the curved 3D cylinder ring
-                            translationX = pageOffset * -12f * density
-
-                            // 5. Subtle parabolic curved vertical arc (visionOS / Apple TV curved screen effect)
-                            translationY = (absOffset * absOffset * 4.5f) * density
-
-                            // 6. Smooth depth dimming: side cards softly recede
-                            alpha = (1f - absOffset * 0.34f).coerceIn(0.44f, 1f)
+                            translationX = pageOffset * -10f * density
+                            translationY = (absOffset * absOffset * 4.0f) * density
+                            alpha = (1f - absOffset * 0.30f).coerceIn(0.48f, 1f)
                         }
                         .size(cardWidth, cardHeight)
                         .shadow(
@@ -445,22 +500,6 @@ fun VideoStyle3DHeroCarousel(
                         modifier = Modifier.fillMaxSize()
                     )
 
-                    // Apple Signature Liquid Glass Sheen Overlay (Top-to-Bottom Specular Light)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight(0.65f)
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(
-                                        Color(0x44FFFFFF), // Crisp top light reflection
-                                        Color(0x18FFFFFF), // Soft diffuse reflection
-                                        Color.Transparent
-                                    )
-                                )
-                            )
-                    )
-
                     // Depth-of-Field (DOF) Frosted Scrim for inactive side cards
                     if (absOffset > 0.05f) {
                         Box(
@@ -470,167 +509,123 @@ fun VideoStyle3DHeroCarousel(
                         )
                     }
 
-                    // Glass Badge on Poster (Top Right: 4K UHD or Rating)
-                    item.rating?.takeIf { it > 0f }?.let { rating ->
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xCC08090B))
-                                .border(0.8.dp, Color(0x40959CE3), RoundedCornerShape(8.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                    // Top-Left Heart / Bookmark Action Button (from Reference UI)
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(12.dp)
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(Color(0x6608090B))
+                            .border(1.dp, Color(0x33959CE3), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = VortexIcons.Heart,
+                            contentDescription = "Save",
+                            tint = Color(0xFFF8F8F8),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    // Bottom Dark Glass Gradient Scrim Overlay for Typography
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.55f)
+                            .align(Alignment.BottomCenter)
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color.Transparent,
+                                        Color(0x6608090B),
+                                        Color(0xDD08090B),
+                                        Color(0xFF08090B)
+                                    )
+                                )
+                            )
+                    )
+
+                    // Integrated Information Inside Card (Matching Reference UI exactly)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter)
+                            .padding(horizontal = 14.dp, vertical = 14.dp)
+                    ) {
+                        // Title + Type Pill
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = "★ %.1f".format(rating),
+                                text = item.title,
                                 color = Color(0xFFF8F8F8),
-                                fontSize = 9.sp,
+                                fontSize = 19.sp,
                                 fontFamily = ManropeFontFamily,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.3).sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
                             )
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color(0x33959CE3))
+                                    .padding(horizontal = 7.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = if (item.type == MediaType.TvSeries) "Series" else "Movie",
+                                    color = Color(0xFF959CE3),
+                                    fontSize = 10.sp,
+                                    fontFamily = ManropeFontFamily,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // 2-line real synopsis
+                        val synopsis = item.synopsis?.takeIf { it.isNotBlank() }
+                            ?: "Watch the high-rated cinematic experience streaming exclusively on MovieVortex."
+                        Text(
+                            text = synopsis,
+                            color = Color(0xFF959CE3),
+                            fontSize = 11.sp,
+                            fontFamily = ManropeFontFamily,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            lineHeight = 15.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Metadata Badges Row: [Genre] [Genre2] [Year] [+15] [★ 8.8 IMDb]
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val genres = item.genres.take(2).ifEmpty { listOf("Cinema") }
+                            genres.forEach { g ->
+                                HeroMetadataBadge(text = g)
+                            }
+
+                            val yearText = item.year?.toString() ?: "2024"
+                            HeroMetadataBadge(text = yearText)
+
+                            HeroMetadataBadge(text = "+15")
+
+                            val rating = item.rating?.takeIf { it > 0f } ?: 8.5f
+                            HeroMetadataBadge(text = "★ %.1f IMDb".format(rating), isHighlight = true)
                         }
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Animated Metadata (Year, Title & Metadata Pills on poster change)
-        AnimatedContent(
-            targetState = currentItem,
-            transitionSpec = {
-                (fadeIn(animationSpec = tween(380)) + slideInVertically(animationSpec = tween(380, easing = FastOutSlowInEasing)) { 18 })
-                    .togetherWith(fadeOut(animationSpec = tween(220)) + slideOutVertically(animationSpec = tween(220)) { -18 })
-            },
-            label = "hero_metadata_anim",
-            modifier = Modifier.fillMaxWidth()
-        ) { targetMedia ->
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Year
-                val yearText = targetMedia.year?.toString()?.takeIf { it.isNotBlank() } ?: "2025"
-                Text(
-                    text = yearText,
-                    color = Color(0xFF959CE3),
-                    fontSize = 13.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Medium
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                // Title
-                Text(
-                    text = targetMedia.title,
-                    color = Color(0xFFF8F8F8),
-                    fontSize = 22.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.4).sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Metadata Pills: Genre | Duration | Rating
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val genre = targetMedia.genres.firstOrNull() ?: "Cinema"
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF10121A))
-                            .border(
-                                0.8.dp,
-                                Brush.verticalGradient(
-                                    listOf(
-                                        Color(0x4D959CE3),
-                                        Color(0x1F959CE3)
-                                    )
-                                ),
-                                RoundedCornerShape(12.dp)
-                            )
-                            .padding(horizontal = 11.dp, vertical = 5.dp)
-                    ) {
-                        Text(
-                            text = genre,
-                            color = Color(0xFFF8F8F8),
-                            fontSize = 11.sp,
-                            fontFamily = ManropeFontFamily,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-
-                    val runtimeText = targetMedia.runtime?.let { "${it / 60}h ${it % 60}min" } ?: "4K UHD"
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF10121A))
-                            .border(
-                                0.8.dp,
-                                Brush.verticalGradient(
-                                    listOf(
-                                        Color(0x4D959CE3),
-                                        Color(0x1F959CE3)
-                                    )
-                                ),
-                                RoundedCornerShape(12.dp)
-                            )
-                            .padding(horizontal = 11.dp, vertical = 5.dp)
-                    ) {
-                        Text(
-                            text = runtimeText,
-                            color = Color(0xFFF8F8F8),
-                            fontSize = 11.sp,
-                            fontFamily = ManropeFontFamily,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-
-                    val rating = targetMedia.rating ?: 8.2f
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF10121A))
-                            .border(
-                                0.8.dp,
-                                Brush.verticalGradient(
-                                    listOf(
-                                        Color(0x4D959CE3),
-                                        Color(0x1F959CE3)
-                                    )
-                                ),
-                                RoundedCornerShape(12.dp)
-                            )
-                            .padding(horizontal = 11.dp, vertical = 5.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "★ ",
-                                color = Color(0xFFFFD700),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "%.1f".format(rating),
-                                color = Color(0xFFF8F8F8),
-                                fontSize = 11.sp,
-                                fontFamily = ManropeFontFamily,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Apple-Style Glassy Pager Pill Indicators
         Row(
@@ -657,55 +652,27 @@ fun VideoStyle3DHeroCarousel(
                 )
             }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(14.dp))
-
-        // Floating Frosted Glass "Watch Now" Capsule Action Button (Apple Style)
-        Box(
-            modifier = Modifier
-                .clip(RoundedCornerShape(22.dp))
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Color(0x4D959CE3),
-                            Color(0x2610121A)
-                        )
-                    )
-                )
-                .border(
-                    width = 1.dp,
-                    brush = Brush.verticalGradient(
-                        listOf(
-                            Color(0x66959CE3),
-                            Color(0x1A959CE3)
-                        )
-                    ),
-                    shape = RoundedCornerShape(22.dp)
-                )
-                .clickable { onTap(currentItem) }
-                .padding(horizontal = 22.dp, vertical = 9.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = VortexIcons.Play,
-                    contentDescription = null,
-                    tint = Color(0xFFF8F8F8),
-                    modifier = Modifier.size(15.dp)
-                )
-                Text(
-                    text = "Watch Now",
-                    color = Color(0xFFF8F8F8),
-                    fontSize = 13.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.2).sp
-                )
-            }
-        }
+@Composable
+private fun HeroMetadataBadge(text: String, isHighlight: Boolean = false) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(if (isHighlight) Color(0x33FFD700) else Color(0x33959CE3))
+            .border(0.8.dp, if (isHighlight) Color(0x66FFD700) else Color(0x26959CE3), RoundedCornerShape(6.dp))
+            .padding(horizontal = 7.dp, vertical = 3.dp)
+    ) {
+        Text(
+            text = text,
+            color = if (isHighlight) Color(0xFFFFD700) else Color(0xFFF8F8F8),
+            fontSize = 10.sp,
+            fontFamily = ManropeFontFamily,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
     }
 }
 

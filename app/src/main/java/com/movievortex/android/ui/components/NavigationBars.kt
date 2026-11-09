@@ -59,6 +59,7 @@ import com.movievortex.android.ui.theme.VortexColors
 
 enum class MainDestination {
     Home,
+    Categories,
     Search,
     Bookmarks,
     Me,
@@ -183,15 +184,15 @@ fun MovieVortexBottomBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 6.dp),
+            .padding(horizontal = 20.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
         // Floating Frosted Glass Capsule (#08090B, #10121A, #959CE3)
         Box(
             modifier = Modifier
-                .widthIn(max = 280.dp)
+                .widthIn(max = 330.dp)
                 .fillMaxWidth()
-                .height(52.dp)
+                .height(54.dp)
                 .shadow(
                     elevation = 24.dp,
                     shape = CircleShape,
@@ -219,7 +220,7 @@ fun MovieVortexBottomBar(
                     ),
                     shape = CircleShape
                 )
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 10.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -241,7 +242,18 @@ fun MovieVortexBottomBar(
                     onClick = { onDestinationSelected(MainDestination.Home) }
                 )
 
-                // 2. Search
+                // 2. Categories (4-Squares Grid icon from reference UI)
+                val isCategories = currentDestination == MainDestination.Categories
+                VideoPillNavItem(
+                    icon = VortexIcons.GridView,
+                    contentDescription = "Categories",
+                    isSelected = isCategories,
+                    activeColor = activeColor,
+                    inactiveColor = inactiveColor,
+                    onClick = { onDestinationSelected(MainDestination.Categories) }
+                )
+
+                // 3. Search
                 val isSearch = currentDestination == MainDestination.Search
                 VideoPillNavItem(
                     icon = VortexIcons.VideoSearch,
@@ -252,18 +264,18 @@ fun MovieVortexBottomBar(
                     onClick = { onDestinationSelected(MainDestination.Search) }
                 )
 
-                // 3. Bookmark / Library
-                val isLibrary = currentDestination == MainDestination.Bookmarks
+                // 4. Favorites / Watchlist (Heart icon from reference UI)
+                val isFavorites = currentDestination == MainDestination.Bookmarks
                 VideoPillNavItem(
-                    icon = VortexIcons.Bookmark,
-                    contentDescription = "Library",
-                    isSelected = isLibrary,
+                    icon = VortexIcons.Heart,
+                    contentDescription = "Favorites",
+                    isSelected = isFavorites,
                     activeColor = activeColor,
                     inactiveColor = inactiveColor,
                     onClick = { onDestinationSelected(MainDestination.Bookmarks) }
                 )
 
-                // 4. Profile
+                // 5. Profile
                 val isProfile = currentDestination == MainDestination.Me
                 VideoPillNavItem(
                     icon = VortexIcons.Person,
