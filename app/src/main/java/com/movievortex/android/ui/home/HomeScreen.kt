@@ -134,7 +134,7 @@ fun HomeScreen(
                         val isSelected = cat == selectedCategory
                         Text(
                             text = cat,
-                            color = if (isSelected) Color(0xFFF8F8F8) else Color(0xFF959CE3),
+                            color = if (isSelected) Color(0xFFFFFFFF) else Color(0xFF8E95A3),
                             fontSize = if (isSelected) 22.sp else 15.sp,
                             fontFamily = ManropeFontFamily,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
@@ -176,8 +176,8 @@ fun HomeScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFF10121A))
-                    .border(1.dp, Color(0x33959CE3), RoundedCornerShape(16.dp))
+                    .background(Color(0xFF141820))
+                    .border(1.dp, Color(0x334A5462), RoundedCornerShape(16.dp))
                     .padding(14.dp)
             ) {
                 Row(
@@ -192,7 +192,7 @@ fun HomeScreen(
                     ) {
                         Text(
                             text = "Great news! You can now upgrade to our Pro mode at a discount of 60% off. Don't miss out on this limited-time offer!",
-                            color = Color(0xFFF8F8F8),
+                            color = Color(0xFFFFFFFF),
                             fontSize = 11.sp,
                             fontFamily = ManropeFontFamily,
                             lineHeight = 16.sp
@@ -229,7 +229,7 @@ fun HomeScreen(
                 ) {
                     Text(
                         text = "For you",
-                        color = Color(0xFFF8F8F8),
+                        color = Color(0xFFFFFFFF),
                         fontSize = 19.sp,
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.Bold,
@@ -241,7 +241,7 @@ fun HomeScreen(
                     ) {
                         Text(
                             text = "See all",
-                            color = Color(0xFF959CE3),
+                            color = Color(0xFF8E95A3),
                             fontSize = 12.sp,
                             fontFamily = ManropeFontFamily,
                             fontWeight = FontWeight.SemiBold
@@ -250,7 +250,7 @@ fun HomeScreen(
                         Icon(
                             imageVector = VortexIcons.ChevronRight,
                             contentDescription = null,
-                            tint = Color(0xFF959CE3),
+                            tint = Color(0xFF8E95A3),
                             modifier = Modifier.size(13.dp)
                         )
                     }
@@ -284,7 +284,7 @@ fun HomeScreen(
             ) {
                 Text(
                     text = row.title,
-                    color = Color(0xFFF8F8F8),
+                    color = Color(0xFFFFFFFF),
                     fontSize = 19.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
@@ -296,7 +296,7 @@ fun HomeScreen(
                 ) {
                     Text(
                         text = "See all",
-                        color = Color(0xFF959CE3),
+                        color = Color(0xFF8E95A3),
                         fontSize = 12.sp,
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.SemiBold
@@ -305,7 +305,7 @@ fun HomeScreen(
                     Icon(
                         imageVector = VortexIcons.ChevronRight,
                         contentDescription = null,
-                        tint = Color(0xFF959CE3),
+                        tint = Color(0xFF8E95A3),
                         modifier = Modifier.size(13.dp)
                     )
                 }
@@ -338,7 +338,7 @@ fun HomeScreen(
             ) {
                 if (state.isExploreLoading) {
                     CircularProgressIndicator(
-                        color = Color(0xFF959CE3),
+                        color = Color(0xFFFFFFFF),
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -473,14 +473,14 @@ fun VideoStyle3DHeroCarousel(
                             ambientColor = Color(0x88000000)
                         )
                         .clip(RoundedCornerShape(22.dp))
-                        .background(Color(0xFF10121A))
+                        .background(Color(0xFF141820))
                         // Apple Dual-Bevel Specular Glass Border
                         .border(
                             width = 1.2.dp,
                             brush = Brush.verticalGradient(
                                 listOf(
-                                    Color(0x80959CE3), // Top specular reflection highlight
-                                    Color(0x33959CE3), // Translucent mid edge
+                                    Color(0x55FFFFFF), // Top specular reflection highlight
+                                    Color(0x224A5462), // Translucent mid edge
                                     Color(0x1008090B)  // Faint bottom shadow edge
                                 )
                             ),
@@ -517,13 +517,13 @@ fun VideoStyle3DHeroCarousel(
                             .size(34.dp)
                             .clip(CircleShape)
                             .background(Color(0x6608090B))
-                            .border(1.dp, Color(0x33959CE3), CircleShape),
+                            .border(1.dp, Color(0x44FFFFFF), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = VortexIcons.Heart,
                             contentDescription = "Save",
-                            tint = Color(0xFFF8F8F8),
+                            tint = Color(0xFFFFFFFF),
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -560,7 +560,7 @@ fun VideoStyle3DHeroCarousel(
                         ) {
                             Text(
                                 text = item.title,
-                                color = Color(0xFFF8F8F8),
+                                color = Color(0xFFFFFFFF),
                                 fontSize = 19.sp,
                                 fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.Bold,
@@ -572,12 +572,13 @@ fun VideoStyle3DHeroCarousel(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(Color(0x33959CE3))
+                                    .background(Color(0x33334050))
+                                    .border(0.8.dp, Color(0x444A5462), RoundedCornerShape(6.dp))
                                     .padding(horizontal = 7.dp, vertical = 2.dp)
                             ) {
                                 Text(
                                     text = if (item.type == MediaType.TvSeries) "Series" else "Movie",
-                                    color = Color(0xFF959CE3),
+                                    color = Color(0xFFE2E8F0),
                                     fontSize = 10.sp,
                                     fontFamily = ManropeFontFamily,
                                     fontWeight = FontWeight.SemiBold
@@ -592,7 +593,7 @@ fun VideoStyle3DHeroCarousel(
                             ?: "Watch the high-rated cinematic experience streaming exclusively on MovieVortex."
                         Text(
                             text = synopsis,
-                            color = Color(0xFF959CE3),
+                            color = Color(0xFFA0A5AD),
                             fontSize = 11.sp,
                             fontFamily = ManropeFontFamily,
                             maxLines = 2,
@@ -648,7 +649,7 @@ fun VideoStyle3DHeroCarousel(
                         .height(4.dp)
                         .width(dotWidth)
                         .clip(CircleShape)
-                        .background(if (isSelected) Color(0xFF959CE3) else Color(0x33959CE3))
+                        .background(if (isSelected) Color(0xFFFFFFFF) else Color(0x33FFFFFF))
                 )
             }
         }
@@ -660,13 +661,13 @@ private fun HeroMetadataBadge(text: String, isHighlight: Boolean = false) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
-            .background(if (isHighlight) Color(0x33FFD700) else Color(0x33959CE3))
-            .border(0.8.dp, if (isHighlight) Color(0x66FFD700) else Color(0x26959CE3), RoundedCornerShape(6.dp))
+            .background(if (isHighlight) Color(0x33FFC107) else Color(0x3325282D))
+            .border(0.8.dp, if (isHighlight) Color(0x66FFC107) else Color(0x444A5462), RoundedCornerShape(6.dp))
             .padding(horizontal = 7.dp, vertical = 3.dp)
     ) {
         Text(
             text = text,
-            color = if (isHighlight) Color(0xFFFFD700) else Color(0xFFF8F8F8),
+            color = if (isHighlight) Color(0xFFFFC107) else Color(0xFFFFFFFF),
             fontSize = 10.sp,
             fontFamily = ManropeFontFamily,
             fontWeight = FontWeight.SemiBold

@@ -73,40 +73,40 @@ object VortexColors {
 
     // ── Primary Requested Color System ───────────────────────────────────────
     val ObsidianBlack = Color(0xFF08090B)       // Primary Deep Black / Surface Background
-    val PeriwinkleGrey = Color(0xFF959CE3)      // Secondary Surface / Card / Accent Neutral
-    val SoftOffWhite = Color(0xFFF8F8F8)        // Text / Highlights / Element Surface
+    val PeriwinkleGrey = Color(0xFF8E95A3)      // Secondary Neutral Slate Gray (Clean Obsidian Dark Palette)
+    val SoftOffWhite = Color(0xFFFFFFFF)        // Text / Highlights / Element Surface
 
     val DarkSlateDeep = Color(0xFF08090B)
-    val DarkSlateCard = Color(0xFF10121A)
-    val DarkSlateBorder = Color(0x33959CE3)
-    val MutedGrayDark = Color(0x66959CE3)
-    val MutedGraySoft = Color(0xFF959CE3)
-    val PureWhite = Color(0xFFF8F8F8)
+    val DarkSlateCard = Color(0xFF181C24)
+    val DarkSlateBorder = Color(0x334A5462)
+    val MutedGrayDark = Color(0x664A5462)
+    val MutedGraySoft = Color(0xFF8E95A3)
+    val PureWhite = Color(0xFFFFFFFF)
 
     val PureBlack: Color
         get() = Color(0xFF08090B)
     val AppBackground: Color
         get() = Color(0xFF08090B)
     val SecondaryBackground: Color
-        get() = Color(0xFF10121A)
+        get() = Color(0xFF141820)
     val DarkGraphite: Color
-        get() = Color(0xFF10121A)
+        get() = Color(0xFF181C24)
     val CardSurface: Color
-        get() = Color(0xFF10121A)
+        get() = Color(0xFF181C24)
     val CardSurfaceElevated: Color
-        get() = Color(0x26959CE3)
+        get() = Color(0xFF222630)
     val BorderSubtle: Color
-        get() = Color(0x33959CE3)
+        get() = Color(0x334A5462)
     val Divider: Color
-        get() = Color(0x22959CE3)
+        get() = Color(0x224A5462)
 
     // ── Text Hierarchy ───────────────────────────────────────────────────────
     val PrimaryText: Color
-        get() = Color(0xFFF8F8F8)
+        get() = Color(0xFFFFFFFF)
     val SecondaryText: Color
-        get() = Color(0xFF959CE3)
+        get() = Color(0xFF8E95A3)
     val MutedText: Color
-        get() = Color(0xB3959CE3)
+        get() = Color(0xFFA0A5AD)
     val TextPrimary: Color get() = PrimaryText
     val TextSecondary: Color get() = SecondaryText
     val TextMuted: Color get() = MutedText

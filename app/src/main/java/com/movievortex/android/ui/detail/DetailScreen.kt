@@ -215,14 +215,14 @@ fun DetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(20.dp))
-                    .background(Color(0xFF10121A))
-                    .border(1.dp, Color(0x33959CE3), RoundedCornerShape(20.dp))
+                    .background(Color(0xFF141820))
+                    .border(1.dp, Color(0x334A5462), RoundedCornerShape(20.dp))
                     .padding(20.dp)
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = "Download Options",
-                        color = Color(0xFFF8F8F8),
+                        color = Color(0xFFFFFFFF),
                         fontSize = 18.sp,
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.Bold
@@ -230,7 +230,7 @@ fun DetailScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = media.title,
-                        color = Color(0xFF959CE3),
+                        color = Color(0xFF8E95A3),
                         fontSize = 13.sp,
                         fontFamily = ManropeFontFamily,
                         maxLines = 1,
@@ -250,8 +250,8 @@ fun DetailScreen(
                                 .fillMaxWidth()
                                 .padding(vertical = 5.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color(0x26959CE3))
-                                .border(1.dp, Color(0x33959CE3), RoundedCornerShape(12.dp))
+                                .background(Color(0xFF181C24))
+                                .border(1.dp, Color(0x334A5462), RoundedCornerShape(12.dp))
                                 .clickable {
                                     val streamUrl = state.activeStreamUrl
                                     if (!streamUrl.isNullOrBlank()) {
@@ -284,7 +284,7 @@ fun DetailScreen(
                             ) {
                                 Text(
                                     text = opt,
-                                    color = Color(0xFFF8F8F8),
+                                    color = Color(0xFFFFFFFF),
                                     fontSize = 13.sp,
                                     fontFamily = ManropeFontFamily,
                                     fontWeight = FontWeight.Medium
@@ -292,7 +292,7 @@ fun DetailScreen(
                                 Icon(
                                     imageVector = VortexIcons.Download,
                                     contentDescription = null,
-                                    tint = Color(0xFF959CE3),
+                                    tint = Color(0xFF8E95A3),
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -372,8 +372,8 @@ fun DetailScreen(
                                     width = 1.dp,
                                     brush = Brush.verticalGradient(
                                         listOf(
-                                            Color(0x80959CE3),
-                                            Color(0x26959CE3)
+                                            Color(0x66FFFFFF),
+                                            Color(0x224A5462)
                                         )
                                     ),
                                     shape = RoundedCornerShape(14.dp)
@@ -384,7 +384,7 @@ fun DetailScreen(
                             Icon(
                                 imageVector = VortexIcons.ArrowBack,
                                 contentDescription = "Back",
-                                tint = Color(0xFFF8F8F8),
+                                tint = Color(0xFFFFFFFF),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -400,8 +400,8 @@ fun DetailScreen(
                                     width = 1.dp,
                                     brush = Brush.verticalGradient(
                                         listOf(
-                                            Color(0x80959CE3),
-                                            Color(0x26959CE3)
+                                            Color(0x66FFFFFF),
+                                            Color(0x224A5462)
                                         )
                                     ),
                                     shape = RoundedCornerShape(14.dp)
@@ -412,7 +412,7 @@ fun DetailScreen(
                             Icon(
                                 imageVector = VortexIcons.MoreVert,
                                 contentDescription = "More",
-                                tint = Color(0xFFF8F8F8),
+                                tint = Color(0xFFFFFFFF),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -434,8 +434,8 @@ fun DetailScreen(
                         .background(
                             Brush.verticalGradient(
                                 listOf(
-                                    Color(0xE6959CE3),
-                                    Color(0xCC10121A)
+                                    Color(0xFFFFFFFF),
+                                    Color(0xFFE2E8F0)
                                 )
                             )
                         )
@@ -443,8 +443,8 @@ fun DetailScreen(
                             width = 1.2.dp,
                             brush = Brush.verticalGradient(
                                 listOf(
-                                    Color(0xCCF8F8F8),
-                                    Color(0x33959CE3)
+                                    Color(0x88FFFFFF),
+                                    Color(0x334A5462)
                                 )
                             ),
                             shape = CircleShape
@@ -467,7 +467,7 @@ fun DetailScreen(
                     Icon(
                         imageVector = VortexIcons.Play,
                         contentDescription = "Watch Now",
-                        tint = Color(0xFFF8F8F8),
+                        tint = Color(0xFF08090B),
                         modifier = Modifier
                             .size(28.dp)
                             .offset(x = 1.5.dp)
@@ -481,7 +481,7 @@ fun DetailScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF10121A))
+                    .background(Color(0xFF141820))
                     .padding(horizontal = 20.dp, vertical = 12.dp)
             ) {
                 Row(
@@ -491,7 +491,7 @@ fun DetailScreen(
                 ) {
                     Text(
                         text = "Server Source",
-                        color = Color(0xFF959CE3),
+                        color = Color(0xFF8E95A3),
                         fontSize = 12.sp,
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.SemiBold
@@ -499,7 +499,7 @@ fun DetailScreen(
                     state.fallbackStatusMessage?.let { msg ->
                         Text(
                             text = "Auto-fallback active",
-                            color = Color(0xFFF8F8F8),
+                            color = Color(0xFFFFFFFF),
                             fontSize = 11.sp,
                             fontFamily = ManropeFontFamily
                         )
@@ -520,11 +520,11 @@ fun DetailScreen(
                                 .height(38.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(
-                                    if (isSelected) Color(0x33959CE3) else Color(0xFF08090B)
+                                    if (isSelected) Color(0x33FFFFFF) else Color(0xFF08090B)
                                 )
                                 .border(
                                     1.dp,
-                                    if (isSelected) Color(0xFF959CE3) else Color(0x1F959CE3),
+                                    if (isSelected) Color(0x55FFFFFF) else Color(0x224A5462),
                                     RoundedCornerShape(10.dp)
                                 )
                                 .clickable { detailController.switchServer(serverName) },
@@ -539,12 +539,12 @@ fun DetailScreen(
                                         modifier = Modifier
                                             .size(6.dp)
                                             .clip(CircleShape)
-                                            .background(Color(0xFFF8F8F8))
+                                            .background(Color(0xFFFFFFFF))
                                     )
                                 }
                                 Text(
                                     text = serverName,
-                                    color = if (isSelected) Color(0xFFF8F8F8) else Color(0xFF959CE3),
+                                    color = if (isSelected) Color(0xFFFFFFFF) else Color(0xFF8E95A3),
                                     fontSize = 12.sp,
                                     fontFamily = ManropeFontFamily,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
@@ -566,7 +566,7 @@ fun DetailScreen(
                 // Title
                 Text(
                     text = media.title,
-                    color = Color(0xFFF8F8F8),
+                    color = Color(0xFFFFFFFF),
                     fontSize = 22.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
@@ -606,14 +606,14 @@ fun DetailScreen(
                     ) {
                         Text(
                             text = "★",
-                            color = Color(0xFFFFD700),
+                            color = Color(0xFFFFC107),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
                         val rating = media.rating ?: 8.4f
                         Text(
                             text = "%.1f/10".format(rating),
-                            color = Color(0xFFF8F8F8),
+                            color = Color(0xFFFFFFFF),
                             fontSize = 14.sp,
                             fontFamily = ManropeFontFamily,
                             fontWeight = FontWeight.Bold
@@ -621,7 +621,7 @@ fun DetailScreen(
                         media.year?.let { y ->
                             Text(
                                 text = "• $y",
-                                color = Color(0xFF959CE3),
+                                color = Color(0xFF8E95A3),
                                 fontSize = 12.sp,
                                 fontFamily = ManropeFontFamily
                             )
@@ -648,11 +648,11 @@ fun DetailScreen(
                             }
                             .clip(RoundedCornerShape(12.dp))
                             .background(
-                                if (state.isInMyList) Color(0x33959CE3) else Color(0xFF10121A)
+                                if (state.isInMyList) Color(0x33FFFFFF) else Color(0xFF141820)
                             )
                             .border(
                                 1.dp,
-                                if (state.isInMyList) Color(0xFF959CE3) else Color(0x26959CE3),
+                                if (state.isInMyList) Color(0x55FFFFFF) else Color(0x334A5462),
                                 RoundedCornerShape(12.dp)
                             )
                             .clickable(
@@ -669,12 +669,12 @@ fun DetailScreen(
                             Icon(
                                 imageVector = if (state.isInMyList) VortexIcons.Check else VortexIcons.Add,
                                 contentDescription = "Watchlist",
-                                tint = Color(0xFFF8F8F8),
+                                tint = Color(0xFFFFFFFF),
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
                                 text = if (state.isInMyList) "In Watchlist" else "Watchlist",
-                                color = Color(0xFFF8F8F8),
+                                color = Color(0xFFFFFFFF),
                                 fontSize = 13.sp,
                                 fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.SemiBold
@@ -692,8 +692,8 @@ fun DetailScreen(
                                 scaleY = downloadScale
                             }
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF10121A))
-                            .border(1.dp, Color(0x26959CE3), RoundedCornerShape(12.dp))
+                            .background(Color(0xFF141820))
+                            .border(1.dp, Color(0x334A5462), RoundedCornerShape(12.dp))
                             .clickable(
                                 interactionSource = downloadInteraction,
                                 indication = null,
@@ -708,12 +708,12 @@ fun DetailScreen(
                             Icon(
                                 imageVector = VortexIcons.Download,
                                 contentDescription = "Download",
-                                tint = Color(0xFFF8F8F8),
+                                tint = Color(0xFFFFFFFF),
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
                                 text = "Download",
-                                color = Color(0xFFF8F8F8),
+                                color = Color(0xFFFFFFFF),
                                 fontSize = 13.sp,
                                 fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.SemiBold
@@ -732,7 +732,7 @@ fun DetailScreen(
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                     Text(
                         text = "Synopsis",
-                        color = Color(0xFFF8F8F8),
+                        color = Color(0xFFFFFFFF),
                         fontSize = 17.sp,
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.Bold,
@@ -741,7 +741,7 @@ fun DetailScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = synopsisText,
-                        color = Color(0xFF959CE3),
+                        color = Color(0xFFA0A5AD),
                         fontSize = 13.sp,
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.Normal,
@@ -764,7 +764,7 @@ fun DetailScreen(
                 ) {
                     Text(
                         text = "Cast",
-                        color = Color(0xFFF8F8F8),
+                        color = Color(0xFFFFFFFF),
                         fontSize = 17.sp,
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.Bold,
@@ -787,8 +787,8 @@ fun DetailScreen(
                                 modifier = Modifier
                                     .size(80.dp)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(Color(0xFF10121A))
-                                    .border(1.dp, Color(0x33959CE3), RoundedCornerShape(16.dp))
+                                    .background(Color(0xFF141820))
+                                    .border(1.dp, Color(0x334A5462), RoundedCornerShape(16.dp))
                             ) {
                                 AsyncImage(
                                     model = actor.photoUrl,
@@ -800,7 +800,7 @@ fun DetailScreen(
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = actor.name,
-                                color = Color(0xFFF8F8F8),
+                                color = Color(0xFFFFFFFF),
                                 fontSize = 11.sp,
                                 fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.SemiBold,
@@ -809,7 +809,7 @@ fun DetailScreen(
                             )
                             Text(
                                 text = actor.character,
-                                color = Color(0xFF959CE3),
+                                color = Color(0xFF8E95A3),
                                 fontSize = 10.sp,
                                 fontFamily = ManropeFontFamily,
                                 maxLines = 1,
@@ -827,7 +827,7 @@ fun DetailScreen(
                 Spacer(modifier = Modifier.height(22.dp))
                 Text(
                     text = "Episodes",
-                    color = Color(0xFFF8F8F8),
+                    color = Color(0xFFFFFFFF),
                     fontSize = 17.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
@@ -843,10 +843,10 @@ fun DetailScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 5.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(if (isCurrentlyPlaying) Color(0x33959CE3) else Color(0xFF10121A))
+                        .background(if (isCurrentlyPlaying) Color(0x33FFFFFF) else Color(0xFF141820))
                         .border(
                             1.dp,
-                            if (isCurrentlyPlaying) Color(0xFF959CE3) else Color(0x1F959CE3),
+                            if (isCurrentlyPlaying) Color(0x55FFFFFF) else Color(0x224A5462),
                             RoundedCornerShape(12.dp)
                         )
                         .clickable { onPlayEpisode(media, ep) }
@@ -860,7 +860,7 @@ fun DetailScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "EP ${ep.episodeNumber}: ${ep.title.ifBlank { "Episode ${ep.episodeNumber}" }}",
-                                color = Color(0xFFF8F8F8),
+                                color = Color(0xFFFFFFFF),
                                 fontSize = 13.sp,
                                 fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.SemiBold
@@ -868,7 +868,7 @@ fun DetailScreen(
                             ep.synopsis?.let { desc ->
                                 Text(
                                     text = desc,
-                                    color = Color(0xFF959CE3),
+                                    color = Color(0xFF8E95A3),
                                     fontSize = 11.sp,
                                     fontFamily = ManropeFontFamily,
                                     maxLines = 1,
@@ -881,7 +881,7 @@ fun DetailScreen(
                             modifier = Modifier
                                 .size(34.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF959CE3)),
+                                .background(Color(0xFFFFFFFF)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -902,7 +902,7 @@ fun DetailScreen(
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
                     text = "More Like This",
-                    color = Color(0xFFF8F8F8),
+                    color = Color(0xFFFFFFFF),
                     fontSize = 17.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
@@ -932,13 +932,13 @@ private fun MetadataChip(text: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF10121A))
-            .border(0.8.dp, Color(0x33959CE3), RoundedCornerShape(8.dp))
+            .background(Color(0xFF141820))
+            .border(0.8.dp, Color(0x334A5462), RoundedCornerShape(8.dp))
             .padding(horizontal = 9.dp, vertical = 4.dp)
     ) {
         Text(
             text = text,
-            color = Color(0xFFF8F8F8),
+            color = Color(0xFFE2E8F0),
             fontSize = 11.sp,
             fontFamily = ManropeFontFamily,
             fontWeight = FontWeight.Medium

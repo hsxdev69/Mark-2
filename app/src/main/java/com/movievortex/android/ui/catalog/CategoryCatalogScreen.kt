@@ -64,15 +64,15 @@ fun CategoryCatalogScreen(
                 modifier = Modifier
                     .size(42.dp)
                     .clip(CircleShape)
-                    .background(Color(0x26959CE3))
-                    .border(1.dp, Color(0x33959CE3), CircleShape)
+                    .background(Color(0x262A3442))
+                    .border(1.dp, Color(0x444A5462), CircleShape)
                     .clickable(onClick = onBackClick),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = VortexIcons.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color(0xFFF8F8F8),
+                    tint = Color(0xFFFFFFFF),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -82,7 +82,7 @@ fun CategoryCatalogScreen(
             Column {
                 Text(
                     text = title,
-                    color = Color(0xFFF8F8F8),
+                    color = Color(0xFFFFFFFF),
                     fontSize = 20.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
@@ -90,7 +90,7 @@ fun CategoryCatalogScreen(
                 )
                 Text(
                     text = "${catalogItems.size} Titles Available",
-                    color = Color(0xFF959CE3),
+                    color = Color(0xFF8E95A3),
                     fontSize = 12.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Medium
@@ -107,7 +107,7 @@ fun CategoryCatalogScreen(
             ) {
                 Text(
                     text = "No content available in $title right now.",
-                    color = Color(0xFF959CE3),
+                    color = Color(0xFF8E95A3),
                     fontSize = 14.sp,
                     fontFamily = ManropeFontFamily
                 )

@@ -123,8 +123,8 @@ fun SearchScreen(
                     .weight(1f)
                     .height(50.dp)
                     .clip(RoundedCornerShape(25.dp))
-                    .background(Color(0xFF10121A))
-                    .border(1.dp, Color(0x33959CE3), RoundedCornerShape(25.dp))
+                    .background(Color(0xFF141820))
+                    .border(1.dp, Color(0x334A5462), RoundedCornerShape(25.dp))
                     .padding(horizontal = 16.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -135,7 +135,7 @@ fun SearchScreen(
                     Icon(
                         imageVector = VortexIcons.Search,
                         contentDescription = "Search",
-                        tint = Color(0xFF959CE3),
+                        tint = Color(0xFF8E95A3),
                         modifier = Modifier.size(20.dp)
                     )
 
@@ -145,7 +145,7 @@ fun SearchScreen(
                         if (state.query.isEmpty()) {
                             Text(
                                 text = "Search",
-                                color = Color(0xFF959CE3),
+                                color = Color(0xFF8E95A3),
                                 fontSize = 15.sp,
                                 fontFamily = ManropeFontFamily
                             )
@@ -155,9 +155,9 @@ fun SearchScreen(
                             value = state.query,
                             onValueChange = { searchController.onQueryChange(it) },
                             singleLine = true,
-                            cursorBrush = SolidColor(Color(0xFFF8F8F8)),
+                            cursorBrush = SolidColor(Color(0xFFFFFFFF)),
                             textStyle = TextStyle(
-                                color = Color(0xFFF8F8F8),
+                                color = Color(0xFFFFFFFF),
                                 fontSize = 15.sp,
                                 fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.Normal
@@ -181,7 +181,7 @@ fun SearchScreen(
                             Icon(
                                 imageVector = VortexIcons.Close,
                                 contentDescription = "Clear",
-                                tint = Color(0xFF959CE3),
+                                tint = Color(0xFF8E95A3),
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -196,15 +196,15 @@ fun SearchScreen(
                 modifier = Modifier
                     .size(50.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF10121A))
-                    .border(1.dp, Color(0x33959CE3), CircleShape)
+                    .background(Color(0xFF141820))
+                    .border(1.dp, Color(0x334A5462), CircleShape)
                     .clickable { onOpenCategory("All Categories") },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = VortexIcons.Tune,
                     contentDescription = "Filter",
-                    tint = Color(0xFFF8F8F8),
+                    tint = Color(0xFFFFFFFF),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -233,7 +233,7 @@ fun SearchScreen(
                             ) {
                                 Text(
                                     text = "Recent Search",
-                                    color = Color(0xFFF8F8F8),
+                                    color = Color(0xFFFFFFFF),
                                     fontSize = 18.sp,
                                     fontFamily = ManropeFontFamily,
                                     fontWeight = FontWeight.Bold,
@@ -245,7 +245,7 @@ fun SearchScreen(
                                 ) {
                                     Text(
                                         text = "See all",
-                                        color = Color(0xFF959CE3),
+                                        color = Color(0xFF8E95A3),
                                         fontSize = 12.sp,
                                         fontFamily = ManropeFontFamily,
                                         fontWeight = FontWeight.SemiBold
@@ -254,7 +254,7 @@ fun SearchScreen(
                                     Icon(
                                         imageVector = VortexIcons.ChevronRight,
                                         contentDescription = null,
-                                        tint = Color(0xFF959CE3),
+                                        tint = Color(0xFF8E95A3),
                                         modifier = Modifier.size(13.dp)
                                     )
                                 }
@@ -289,7 +289,7 @@ fun SearchScreen(
                         ) {
                             Text(
                                 text = "Categories",
-                                color = Color(0xFFF8F8F8),
+                                color = Color(0xFFFFFFFF),
                                 fontSize = 18.sp,
                                 fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.Bold,
@@ -301,7 +301,7 @@ fun SearchScreen(
                             ) {
                                 Text(
                                     text = "See all",
-                                    color = Color(0xFF959CE3),
+                                    color = Color(0xFF8E95A3),
                                     fontSize = 12.sp,
                                     fontFamily = ManropeFontFamily,
                                     fontWeight = FontWeight.SemiBold
@@ -310,7 +310,7 @@ fun SearchScreen(
                                 Icon(
                                     imageVector = VortexIcons.ChevronRight,
                                     contentDescription = null,
-                                    tint = Color(0xFF959CE3),
+                                    tint = Color(0xFF8E95A3),
                                     modifier = Modifier.size(13.dp)
                                 )
                             }
@@ -377,7 +377,7 @@ fun SearchScreen(
                         ) {
                             Text(
                                 text = "Based on actor",
-                                color = Color(0xFFF8F8F8),
+                                color = Color(0xFFFFFFFF),
                                 fontSize = 18.sp,
                                 fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.Bold,
@@ -389,7 +389,7 @@ fun SearchScreen(
                             ) {
                                 Text(
                                     text = "See all",
-                                    color = Color(0xFF959CE3),
+                                    color = Color(0xFF8E95A3),
                                     fontSize = 12.sp,
                                     fontFamily = ManropeFontFamily,
                                     fontWeight = FontWeight.SemiBold
@@ -398,7 +398,7 @@ fun SearchScreen(
                                 Icon(
                                     imageVector = VortexIcons.ChevronRight,
                                     contentDescription = null,
-                                    tint = Color(0xFF959CE3),
+                                    tint = Color(0xFF8E95A3),
                                     modifier = Modifier.size(13.dp)
                                 )
                             }
@@ -424,8 +424,8 @@ fun SearchScreen(
                                         modifier = Modifier
                                             .size(96.dp, 120.dp)
                                             .clip(RoundedCornerShape(16.dp))
-                                            .background(Color(0xFF10121A))
-                                            .border(1.dp, Color(0x33959CE3), RoundedCornerShape(16.dp))
+                                            .background(Color(0xFF141820))
+                                            .border(1.dp, Color(0x334A5462), RoundedCornerShape(16.dp))
                                     ) {
                                         AsyncImage(
                                             model = actor.photoUrl,
@@ -437,7 +437,7 @@ fun SearchScreen(
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
                                         text = actor.name,
-                                        color = Color(0xFFF8F8F8),
+                                        color = Color(0xFFFFFFFF),
                                         fontSize = 12.sp,
                                         fontFamily = ManropeFontFamily,
                                         fontWeight = FontWeight.Medium,
@@ -462,7 +462,7 @@ fun SearchScreen(
                             ) {
                                 Text(
                                     text = "Popular search",
-                                    color = Color(0xFFF8F8F8),
+                                    color = Color(0xFFFFFFFF),
                                     fontSize = 18.sp,
                                     fontFamily = ManropeFontFamily,
                                     fontWeight = FontWeight.Bold,
@@ -474,7 +474,7 @@ fun SearchScreen(
                                 ) {
                                     Text(
                                         text = "See all",
-                                        color = Color(0xFF959CE3),
+                                        color = Color(0xFF8E95A3),
                                         fontSize = 12.sp,
                                         fontFamily = ManropeFontFamily,
                                         fontWeight = FontWeight.SemiBold
@@ -483,7 +483,7 @@ fun SearchScreen(
                                     Icon(
                                         imageVector = VortexIcons.ChevronRight,
                                         contentDescription = null,
-                                        tint = Color(0xFF959CE3),
+                                        tint = Color(0xFF8E95A3),
                                         modifier = Modifier.size(13.dp)
                                     )
                                 }
@@ -539,7 +539,7 @@ fun SearchScreen(
                     ) {
                         Text(
                             text = "No results found for \"${state.query}\"",
-                            color = Color(0xFF959CE3),
+                            color = Color(0xFF8E95A3),
                             fontSize = 15.sp,
                             fontFamily = ManropeFontFamily
                         )
@@ -580,7 +580,7 @@ fun SearchScreen(
                 ) {
                     Text(
                         text = "No results found for \"${state.query}\"",
-                        color = Color(0xFF959CE3),
+                        color = Color(0xFF8E95A3),
                         fontSize = 15.sp,
                         fontFamily = ManropeFontFamily
                     )
@@ -597,14 +597,14 @@ fun SearchScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = state.errorMessage ?: "Search failed",
-                            color = Color(0xFFF8F8F8),
+                            color = Color(0xFFFFFFFF),
                             fontSize = 15.sp,
                             fontFamily = ManropeFontFamily
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                         Button(
                             onClick = { searchController.performSearch(state.query) },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF959CE3))
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFFFFF))
                         ) {
                             Text("Retry", color = Color(0xFF08090B), fontWeight = FontWeight.Bold)
                         }
@@ -623,8 +623,8 @@ private fun CategoryChipPill(
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF10121A))
-            .border(1.dp, Color(0x33959CE3), RoundedCornerShape(10.dp))
+            .background(Color(0xFF181C24))
+            .border(1.dp, Color(0x334A5462), RoundedCornerShape(10.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 9.dp)
     ) {
@@ -634,14 +634,14 @@ private fun CategoryChipPill(
         ) {
             Text(
                 text = chip.name,
-                color = Color(0xFFF8F8F8),
+                color = Color(0xFFFFFFFF),
                 fontSize = 12.sp,
                 fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = "${chip.count}",
-                color = Color(0xFF959CE3),
+                color = Color(0xFF8E95A3),
                 fontSize = 11.sp,
                 fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.Normal

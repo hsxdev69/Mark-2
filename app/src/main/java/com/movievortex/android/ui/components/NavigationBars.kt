@@ -110,8 +110,8 @@ fun MovieVortexTopBar(
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color(0x26959CE3))
-                .border(1.dp, Color(0x33959CE3), CircleShape)
+                .background(Color(0x262A3442))
+                .border(1.dp, Color(0x444A5462), CircleShape)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -122,19 +122,19 @@ fun MovieVortexTopBar(
             Icon(
                 imageVector = VortexIcons.StaggeredMenu,
                 contentDescription = "Menu",
-                tint = Color(0xFFF8F8F8),
+                tint = Color(0xFFFFFFFF),
                 modifier = Modifier.size(20.dp)
             )
         }
 
-        // Center: High-End Monochrome OTT Title "MovieVortex" (Pure White + Soft Periwinkle)
+        // Center: High-End Monochrome OTT Title "MovieVortex" (Pure White + Crisp Silver)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
                 text = "Movie",
-                color = Color(0xFFF8F8F8),
+                color = Color(0xFFFFFFFF),
                 fontSize = 20.sp,
                 fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.Bold,
@@ -142,7 +142,7 @@ fun MovieVortexTopBar(
             )
             Text(
                 text = "Vortex",
-                color = Color(0xFF959CE3),
+                color = Color(0xFFA8B4C8),
                 fontSize = 20.sp,
                 fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.Bold,
@@ -155,8 +155,8 @@ fun MovieVortexTopBar(
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color(0x26959CE3))
-                .border(1.dp, Color(0x33959CE3), CircleShape)
+                .background(Color(0x262A3442))
+                .border(1.dp, Color(0x444A5462), CircleShape)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -167,7 +167,7 @@ fun MovieVortexTopBar(
             Icon(
                 imageVector = VortexIcons.Search,
                 contentDescription = "Search",
-                tint = Color(0xFFF8F8F8),
+                tint = Color(0xFFFFFFFF),
                 modifier = Modifier.size(19.dp)
             )
         }
@@ -184,28 +184,27 @@ fun MovieVortexBottomBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 6.dp),
+            .padding(horizontal = 16.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Floating Frosted Glass Capsule (#08090B, #10121A, #959CE3)
+        // Full-Line Simple Frosted Glass Dock (Matching IMG_20261109_185038.jpg)
         Box(
             modifier = Modifier
-                .widthIn(max = 330.dp)
                 .fillMaxWidth()
-                .height(54.dp)
+                .height(58.dp)
                 .shadow(
-                    elevation = 24.dp,
-                    shape = CircleShape,
-                    spotColor = Color(0xEE08090B),
-                    ambientColor = Color(0x88000000)
+                    elevation = 16.dp,
+                    shape = RoundedCornerShape(29.dp),
+                    spotColor = Color(0xCC000000),
+                    ambientColor = Color(0x66000000)
                 )
-                .clip(CircleShape)
+                .clip(RoundedCornerShape(29.dp))
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            Color(0x80959CE3), // Top specular highlight
-                            Color(0xE610121A), // Center frosted surface
-                            Color(0xF208090B)  // Bottom deep obsidian
+                            Color(0xEE262B34), // Top subtle specular frosted surface
+                            Color(0xF5181C24), // Center dark slate glass
+                            Color(0xFA0E1015)  // Bottom deep obsidian
                         )
                     )
                 )
@@ -213,23 +212,23 @@ fun MovieVortexBottomBar(
                     width = 1.dp,
                     brush = Brush.verticalGradient(
                         listOf(
-                            Color(0x66959CE3), // Crisp subtle top edge
-                            Color(0x26959CE3), // Soft mid edge
-                            Color(0x1008090B)  // Subtle bottom edge
+                            Color(0x55FFFFFF), // Crisp top light-catching edge
+                            Color(0x22FFFFFF), // Soft translucent mid edge
+                            Color(0x0A000000)  // Grounded bottom edge
                         )
                     ),
-                    shape = CircleShape
+                    shape = RoundedCornerShape(29.dp)
                 )
-                .padding(horizontal = 10.dp),
+                .padding(horizontal = 16.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround,
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val activeColor = Color(0xFFF8F8F8) // Pure Off-White
-                val inactiveColor = Color(0xFF959CE3) // Muted Periwinkle
+                val activeColor = Color(0xFFFFFFFF) // Pure Crisp White
+                val inactiveColor = Color(0xFF9EA2A5) // Muted Slate Silver
 
                 // 1. Home
                 val isHome = currentDestination == MainDestination.Home
@@ -358,15 +357,15 @@ private fun VideoPillNavItem(
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Active Frosted Indicator Glow Pill behind selected icon
+        // Active Frosted Indicator Glow Pill behind selected icon (Matching IMG_20261109_185038.jpg)
         if (glowAlpha > 0.01f) {
             Box(
                 modifier = Modifier
-                    .size(34.dp)
+                    .size(36.dp)
                     .graphicsLayer { alpha = glowAlpha }
                     .clip(CircleShape)
-                    .background(Color(0x33959CE3))
-                    .border(0.8.dp, Color(0x4D959CE3), CircleShape)
+                    .background(Color(0x33FFFFFF))
+                    .border(0.8.dp, Color(0x55FFFFFF), CircleShape)
             )
         }
 
