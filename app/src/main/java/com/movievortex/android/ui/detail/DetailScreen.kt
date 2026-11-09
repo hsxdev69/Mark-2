@@ -388,7 +388,7 @@ fun DetailScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = if (state.isInMyList) VortexIcons.Heart else VortexIcons.HeartOutline,
+                                imageVector = if (state.isInMyList) VortexIcons.Heart else VortexIcons.HeartBorder,
                                 contentDescription = "Favorite",
                                 tint = Color(0xFFFFFFFF),
                                 modifier = Modifier.size(20.dp)

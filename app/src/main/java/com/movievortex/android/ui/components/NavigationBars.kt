@@ -249,10 +249,10 @@ fun MovieVortexBottomBar(
                 onClick = { onDestinationSelected(MainDestination.Search) }
             )
 
-            // 4. Favorites (Heart Outline)
+            // 4. Favorites (Heart Filled when selected, HeartBorder when inactive)
             val isFavorites = currentDestination == MainDestination.Bookmarks
             VideoPillNavItem(
-                icon = VortexIcons.Heart,
+                icon = if (isFavorites) VortexIcons.Heart else VortexIcons.HeartBorder,
                 contentDescription = "Favorites",
                 isSelected = isFavorites,
                 activeColor = activeColor,
@@ -263,7 +263,7 @@ fun MovieVortexBottomBar(
             // 5. Profile
             val isProfile = currentDestination == MainDestination.Me
             VideoPillNavItem(
-                icon = VortexIcons.Person,
+                icon = if (isProfile) VortexIcons.Person else VortexIcons.PersonOutline,
                 contentDescription = "Profile",
                 isSelected = isProfile,
                 activeColor = activeColor,
