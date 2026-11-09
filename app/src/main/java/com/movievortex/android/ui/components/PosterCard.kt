@@ -62,7 +62,8 @@ fun PosterCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     width: Dp = 135.dp,
-    showDetails: Boolean = true
+    showDetails: Boolean = true,
+    showBadges: Boolean = false
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -183,44 +184,16 @@ fun PosterCard(
                     )
             )
 
-            // Top Badges (4K UHD & Star Rating) — premium cinematic style
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // 4K UHD Badge with gradient background
-                Box(
+            // Top Badges (4K UHD & Star Rating) — only when enabled
+            if (showBadges) {
+                Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(Color(0xE0000000), Color(0xC0000000))
-                            )
-                        )
-                        .border(0.8.dp, Color(0x66FFFFFF), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val label = when (media.type) {
-                        MediaType.Anime -> "ANIME"
-                        MediaType.TvSeries -> "SERIES"
-                        else -> "4K UHD"
-                    }
-                    Text(
-                        text = label,
-                        color = Color.White,
-                        fontSize = 9.sp,
-                        fontFamily = ManropeFontFamily,
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 0.4.sp
-                    )
-                }
-
-                // Star Rating Badge with gold star
-                val rating = media.rating ?: 0f
-                if (rating > 0f) {
+                    // 4K UHD Badge with gradient background
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
@@ -232,19 +205,49 @@ fun PosterCard(
                             .border(0.8.dp, Color(0x66FFFFFF), RoundedCornerShape(8.dp))
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
+                        val label = when (media.type) {
+                            MediaType.Anime -> "ANIME"
+                            MediaType.TvSeries -> "SERIES"
+                            else -> "4K UHD"
+                        }
                         Text(
-                            text = buildAnnotatedString {
-                                withStyle(SpanStyle(color = Color(0xFFFFD700))) {
-                                    append("★ ")
-                                }
-                                withStyle(SpanStyle(color = Color.White)) {
-                                    append("%.1f".format(rating))
-                                }
-                            },
+                            text = label,
+                            color = Color.White,
                             fontSize = 9.sp,
                             fontFamily = ManropeFontFamily,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 0.4.sp
                         )
+                    }
+
+                    // Star Rating Badge with gold star
+                    val rating = media.rating ?: 0f
+                    if (rating > 0f) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(Color(0xE0000000), Color(0xC0000000))
+                                    )
+                                )
+                                .border(0.8.dp, Color(0x66FFFFFF), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = buildAnnotatedString {
+                                    withStyle(SpanStyle(color = Color(0xFFFFD700))) {
+                                        append("★ ")
+                                    }
+                                    withStyle(SpanStyle(color = Color.White)) {
+                                        append("%.1f".format(rating))
+                                    }
+                                },
+                                fontSize = 9.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }

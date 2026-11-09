@@ -450,15 +450,12 @@ fun MovieVortexNavGraph(
                         )
                     }
 
-                    // 3. Floating Frosted Glass Bottom Navigation Bar (Overlays content matching Video Concept)
+                    // 3. Edge-to-Edge Frosted Glass Bottom Navigation Bar (Direct match to reference UI)
                     MovieVortexBottomBar(
                         currentDestination = currentDestination,
                         onDestinationSelected = { currentDestination = it },
                         activeDownloadCount = downloadState.activeDownloadsCount,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .windowInsetsPadding(WindowInsets.navigationBars)
-                            .padding(bottom = 6.dp)
+                        modifier = Modifier.align(Alignment.BottomCenter)
                     )
                 }
             }

@@ -41,8 +41,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -181,110 +183,93 @@ fun MovieVortexBottomBar(
     modifier: Modifier = Modifier,
     activeDownloadCount: Int = 0
 ) {
+    // Edge-to-Edge Glassmorphism Navigation Dock (Direct match to reference Screenshot_20261109_160510.jpg & IMG_20261109_185038.jpg)
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        // Full-Line Simple Frosted Glass Dock (Matching IMG_20261109_185038.jpg)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(58.dp)
-                .shadow(
-                    elevation = 16.dp,
-                    shape = RoundedCornerShape(29.dp),
-                    spotColor = Color(0xCC000000),
-                    ambientColor = Color(0x66000000)
-                )
-                .clip(RoundedCornerShape(29.dp))
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Color(0xEE262B34), // Top subtle specular frosted surface
-                            Color(0xF5181C24), // Center dark slate glass
-                            Color(0xFA0E1015)  // Bottom deep obsidian
-                        )
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        Color(0xD9141822), // Frosted top glass
+                        Color(0xF20B0D12), // Deep dark obsidian
+                        Color(0xFF060709)  // Grounded black
                     )
                 )
-                .border(
-                    width = 1.dp,
-                    brush = Brush.verticalGradient(
-                        listOf(
-                            Color(0x55FFFFFF), // Crisp top light-catching edge
-                            Color(0x22FFFFFF), // Soft translucent mid edge
-                            Color(0x0A000000)  // Grounded bottom edge
-                        )
-                    ),
-                    shape = RoundedCornerShape(29.dp)
-                )
-                .padding(horizontal = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val activeColor = Color(0xFFFFFFFF) // Pure Crisp White
-                val inactiveColor = Color(0xFF9EA2A5) // Muted Slate Silver
-
-                // 1. Home
-                val isHome = currentDestination == MainDestination.Home
-                VideoPillNavItem(
-                    icon = VortexIcons.VideoHome,
-                    contentDescription = "Home",
-                    isSelected = isHome,
-                    activeColor = activeColor,
-                    inactiveColor = inactiveColor,
-                    onClick = { onDestinationSelected(MainDestination.Home) }
-                )
-
-                // 2. Categories (4-Squares Grid icon from reference UI)
-                val isCategories = currentDestination == MainDestination.Categories
-                VideoPillNavItem(
-                    icon = VortexIcons.GridView,
-                    contentDescription = "Categories",
-                    isSelected = isCategories,
-                    activeColor = activeColor,
-                    inactiveColor = inactiveColor,
-                    onClick = { onDestinationSelected(MainDestination.Categories) }
-                )
-
-                // 3. Search
-                val isSearch = currentDestination == MainDestination.Search
-                VideoPillNavItem(
-                    icon = VortexIcons.VideoSearch,
-                    contentDescription = "Search",
-                    isSelected = isSearch,
-                    activeColor = activeColor,
-                    inactiveColor = inactiveColor,
-                    onClick = { onDestinationSelected(MainDestination.Search) }
-                )
-
-                // 4. Favorites / Watchlist (Heart icon from reference UI)
-                val isFavorites = currentDestination == MainDestination.Bookmarks
-                VideoPillNavItem(
-                    icon = VortexIcons.Heart,
-                    contentDescription = "Favorites",
-                    isSelected = isFavorites,
-                    activeColor = activeColor,
-                    inactiveColor = inactiveColor,
-                    onClick = { onDestinationSelected(MainDestination.Bookmarks) }
-                )
-
-                // 5. Profile
-                val isProfile = currentDestination == MainDestination.Me
-                VideoPillNavItem(
-                    icon = VortexIcons.Person,
-                    contentDescription = "Profile",
-                    isSelected = isProfile,
-                    activeColor = activeColor,
-                    inactiveColor = inactiveColor,
-                    onClick = { onDestinationSelected(MainDestination.Me) }
+            )
+            .drawBehind {
+                drawLine(
+                    color = Color(0x33FFFFFF),
+                    start = Offset(0f, 0f),
+                    end = Offset(size.width, 0f),
+                    strokeWidth = 1.dp.toPx()
                 )
             }
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(horizontal = 24.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val activeColor = Color(0xFFFFFFFF) // Pure Crisp White
+            val inactiveColor = Color(0xFF7E8492) // Muted Slate Grey
+
+            // 1. Home (Filled Solid House when active, Outline when inactive)
+            val isHome = currentDestination == MainDestination.Home
+            VideoPillNavItem(
+                icon = if (isHome) VortexIcons.Home else VortexIcons.HomeOutline,
+                contentDescription = "Home",
+                isSelected = isHome,
+                activeColor = activeColor,
+                inactiveColor = inactiveColor,
+                onClick = { onDestinationSelected(MainDestination.Home) }
+            )
+
+            // 2. Categories (4-Squares Grid 2x2)
+            val isCategories = currentDestination == MainDestination.Categories
+            VideoPillNavItem(
+                icon = VortexIcons.GridView,
+                contentDescription = "Categories",
+                isSelected = isCategories,
+                activeColor = activeColor,
+                inactiveColor = inactiveColor,
+                onClick = { onDestinationSelected(MainDestination.Categories) }
+            )
+
+            // 3. Search
+            val isSearch = currentDestination == MainDestination.Search
+            VideoPillNavItem(
+                icon = VortexIcons.VideoSearch,
+                contentDescription = "Search",
+                isSelected = isSearch,
+                activeColor = activeColor,
+                inactiveColor = inactiveColor,
+                onClick = { onDestinationSelected(MainDestination.Search) }
+            )
+
+            // 4. Favorites (Heart Outline)
+            val isFavorites = currentDestination == MainDestination.Bookmarks
+            VideoPillNavItem(
+                icon = VortexIcons.Heart,
+                contentDescription = "Favorites",
+                isSelected = isFavorites,
+                activeColor = activeColor,
+                inactiveColor = inactiveColor,
+                onClick = { onDestinationSelected(MainDestination.Bookmarks) }
+            )
+
+            // 5. Profile
+            val isProfile = currentDestination == MainDestination.Me
+            VideoPillNavItem(
+                icon = VortexIcons.Person,
+                contentDescription = "Profile",
+                isSelected = isProfile,
+                activeColor = activeColor,
+                inactiveColor = inactiveColor,
+                onClick = { onDestinationSelected(MainDestination.Me) }
+            )
         }
     }
 }
@@ -312,7 +297,7 @@ private fun VideoPillNavItem(
     }
 
     val pressScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.91f else 1.0f,
+        targetValue = if (isPressed) 0.88f else 1.0f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
@@ -320,36 +305,19 @@ private fun VideoPillNavItem(
         label = "nav_item_press"
     )
 
-    val selectScale by animateFloatAsState(
-        targetValue = if (isSelected) 1.15f else 1.0f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "nav_item_scale"
-    )
-
     val iconColor by animateColorAsState(
         targetValue = if (isSelected) activeColor else inactiveColor,
-        animationSpec = tween(durationMillis = 220),
+        animationSpec = tween(durationMillis = 200),
         label = "nav_icon_color"
-    )
-
-    val glowAlpha by animateFloatAsState(
-        targetValue = if (isSelected) 1.0f else 0f,
-        animationSpec = tween(durationMillis = 250),
-        label = "nav_glow_alpha"
     )
 
     Box(
         modifier = modifier
-            .size(42.dp)
+            .size(44.dp)
             .graphicsLayer {
-                val totalScale = selectScale * pressScale
-                scaleX = totalScale
-                scaleY = totalScale
+                scaleX = pressScale
+                scaleY = pressScale
             }
-            .clip(CircleShape)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -357,23 +325,11 @@ private fun VideoPillNavItem(
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Active Frosted Indicator Glow Pill behind selected icon (Matching IMG_20261109_185038.jpg)
-        if (glowAlpha > 0.01f) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .graphicsLayer { alpha = glowAlpha }
-                    .clip(CircleShape)
-                    .background(Color(0x33FFFFFF))
-                    .border(0.8.dp, Color(0x55FFFFFF), CircleShape)
-            )
-        }
-
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
             tint = iconColor,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(23.dp)
         )
     }
 }

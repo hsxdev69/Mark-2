@@ -264,7 +264,8 @@ fun HomeScreen(
                         PosterCard(
                             media = item,
                             onClick = { onMediaClick(item) },
-                            width = 145.dp
+                            width = 145.dp,
+                            showDetails = false
                         )
                     }
                 }
@@ -381,20 +382,20 @@ fun VideoStyle3DHeroCarousel(
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val cardWidth = 260.dp
-    val cardHeight = 390.dp // True vertical portrait aspect ratio with expanded length & breadth
+    val cardWidth = (screenWidth * 0.77f).coerceIn(285.dp, 330.dp)
+    val cardHeight = 410.dp // True wide vertical portrait ratio matching reference Oppenheimer card
     val horizontalPadding = ((screenWidth - cardWidth) / 2).coerceAtLeast(0.dp)
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 10.dp, bottom = 12.dp),
+            .padding(top = 8.dp, bottom = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(415.dp),
+                .height(430.dp),
             contentAlignment = Alignment.Center
         ) {
             // Dynamic Ambient Colorful Aura Glow with smooth Crossfade behind active card
@@ -408,7 +409,7 @@ fun VideoStyle3DHeroCarousel(
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(280.dp, 390.dp)
+                        .size(cardWidth + 20.dp, cardHeight)
                         .blur(55.dp)
                         .graphicsLayer {
                             alpha = 0.45f

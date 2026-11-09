@@ -96,11 +96,11 @@ fun SearchScreen(
 
     val actorsList = remember {
         listOf(
-            ActorItem("Leonardo DiCaprio", "https://image.tmdb.org/t/p/w185/wo2pa3nrvuaAcHgusvt8Ah894l.jpg"),
-            ActorItem("Scarlett Johansson", "https://image.tmdb.org/t/p/w185/6NsMbJXRlDZuDzatQTlgAmGu39e.jpg"),
-            ActorItem("George Clooney", "https://image.tmdb.org/t/p/w185/kFQPghqT7bY1fFw1uB4o1A1lVb8.jpg"),
-            ActorItem("Johnny Depp", "https://image.tmdb.org/t/p/w185/ilPB0q0wI5J525v0Y8yFv458a2E.jpg"),
-            ActorItem("Cillian Murphy", "https://image.tmdb.org/t/p/w185/3On2GL446E8jOC932t009dC9W1Y.jpg")
+            ActorItem("Leonardo DiCaprio", "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/LeoPTABFI191125-28_%28cropped%29.jpg/330px-LeoPTABFI191125-28_%28cropped%29.jpg"),
+            ActorItem("Scarlett Johansson", "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Scarlett_Johansson-8588.jpg/330px-Scarlett_Johansson-8588.jpg"),
+            ActorItem("George Clooney", "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/George_Clooney_Jay_Kelly-19_%28cropped%29.jpg/330px-George_Clooney_Jay_Kelly-19_%28cropped%29.jpg"),
+            ActorItem("Johnny Depp", "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Johnny_Depp_2020.jpg/330px-Johnny_Depp_2020.jpg"),
+            ActorItem("Cillian Murphy", "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Cillian_Murphy_at_the_London_premier_of_Steve_in_September_2025_%28cropped%29.jpg/330px-Cillian_Murphy_at_the_London_premier_of_Steve_in_September_2025_%28cropped%29.jpg")
         )
     }
 
@@ -121,11 +121,11 @@ fun SearchScreen(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(25.dp))
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFF141820))
-                    .border(1.dp, Color(0x334A5462), RoundedCornerShape(25.dp))
-                    .padding(horizontal = 16.dp),
+                    .border(1.dp, Color(0x334A5462), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 14.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
                 Row(
@@ -194,10 +194,10 @@ fun SearchScreen(
             // Filter Sliders Icon Button (Matching Screenshot)
             Box(
                 modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFF141820))
-                    .border(1.dp, Color(0x334A5462), CircleShape)
+                    .border(1.dp, Color(0x334A5462), RoundedCornerShape(12.dp))
                     .clickable { onOpenCategory("All Categories") },
                 contentAlignment = Alignment.Center
             ) {

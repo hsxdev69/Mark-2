@@ -310,24 +310,22 @@ fun DetailScreen(
             .background(Color(0xFF08090B)),
         contentPadding = PaddingValues(bottom = 96.dp)
     ) {
-        // 1. TOP CINEMATIC BACKDROP BANNER WITH FLOATING "WATCH NOW" PLAY BUTTON (Launches Original CloudStream Player)
+        // 1. TOP CINEMATIC BACKDROP BANNER (Direct match to Silo Reference Screenshot)
         item {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(310.dp)
+                    .height(380.dp)
             ) {
-                // Curved Backdrop Image with Parallax & Collapsing Dim
+                // Backdrop Image with Parallax & Collapsing Dim
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(280.dp)
+                        .fillMaxSize()
                         .graphicsLayer {
                             translationY = backdropTranslationY
                             alpha = backdropAlpha
                         }
-                        .clip(RoundedCornerShape(bottomStart = 26.dp, bottomEnd = 26.dp))
-                        .background(Color(0xFF10121A))
+                        .background(Color(0xFF08090B))
                 ) {
                     AsyncImage(
                         model = media.backdrop ?: media.poster,
@@ -336,23 +334,23 @@ fun DetailScreen(
                         modifier = Modifier.fillMaxSize()
                     )
 
-                    // Cinematic Dark Gradient Overlay
+                    // Cinematic Dark Gradient Overlay (Fades seamlessly into screen background)
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
                                 Brush.verticalGradient(
                                     colors = listOf(
-                                        Color(0xB308090B),
+                                        Color(0x9908090B),
                                         Color.Transparent,
-                                        Color.Transparent,
-                                        Color(0xEE08090B)
+                                        Color(0x8008090B),
+                                        Color(0xFF08090B)
                                     )
                                 )
                             )
                     )
 
-                    // Top Actions: Back Button and More Button
+                    // Top Actions: Back Button and Favorite Heart Button
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -365,19 +363,9 @@ fun DetailScreen(
                         Box(
                             modifier = Modifier
                                 .size(42.dp)
-                                .shadow(10.dp, RoundedCornerShape(14.dp), spotColor = Color(0x66000000))
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(Color(0x4010121A))
-                                .border(
-                                    width = 1.dp,
-                                    brush = Brush.verticalGradient(
-                                        listOf(
-                                            Color(0x66FFFFFF),
-                                            Color(0x224A5462)
-                                        )
-                                    ),
-                                    shape = RoundedCornerShape(14.dp)
-                                )
+                                .background(Color(0x5508090B))
+                                .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(14.dp))
                                 .clickable(onClick = onBackClick),
                             contentAlignment = Alignment.Center
                         ) {
@@ -389,100 +377,135 @@ fun DetailScreen(
                             )
                         }
 
-                        // Frosted Glass Squircle More Button
+                        // Favorite Heart Button
                         Box(
                             modifier = Modifier
                                 .size(42.dp)
-                                .shadow(10.dp, RoundedCornerShape(14.dp), spotColor = Color(0x66000000))
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(Color(0x4010121A))
-                                .border(
-                                    width = 1.dp,
-                                    brush = Brush.verticalGradient(
-                                        listOf(
-                                            Color(0x66FFFFFF),
-                                            Color(0x224A5462)
-                                        )
-                                    ),
-                                    shape = RoundedCornerShape(14.dp)
-                                )
-                                .clickable { /* More Options */ },
+                                .background(Color(0x5508090B))
+                                .border(1.dp, Color(0x33FFFFFF), RoundedCornerShape(14.dp))
+                                .clickable { detailController.toggleMyList() },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = VortexIcons.MoreVert,
-                                contentDescription = "More",
+                                imageVector = if (state.isInMyList) VortexIcons.Heart else VortexIcons.HeartOutline,
+                                contentDescription = "Favorite",
                                 tint = Color(0xFFFFFFFF),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
                     }
-                }
 
-                // Floating Circular Frosted Glass Play Button ("Watch Now" -> Original Player)
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .offset(y = 0.dp)
-                        .size(62.dp)
-                        .graphicsLayer {
-                            scaleX = playScale
-                            scaleY = playScale
-                        }
-                        .shadow(18.dp, CircleShape, spotColor = Color(0xDD000000))
-                        .clip(CircleShape)
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color(0xFFFFFFFF),
-                                    Color(0xFFE2E8F0)
-                                )
+                    // Bottom info overlay inside the backdrop (Title, Badges)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomStart)
+                            .padding(horizontal = 20.dp, vertical = 8.dp)
+                    ) {
+                        // Title + Type Tag
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = media.title,
+                                color = Color(0xFFFFFFFF),
+                                fontSize = 22.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.4).sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f, fill = false)
                             )
-                        )
-                        .border(
-                            width = 1.2.dp,
-                            brush = Brush.verticalGradient(
-                                listOf(
-                                    Color(0x88FFFFFF),
-                                    Color(0x334A5462)
-                                )
-                            ),
-                            shape = CircleShape
-                        )
-                        .clickable(
-                            interactionSource = playInteraction,
-                            indication = null,
-                            onClick = {
-                                if (media.type == MediaType.TvSeries || media.type == MediaType.Anime) {
-                                    state.currentPlayingEpisode?.let { ep ->
-                                        onPlayEpisode(media, ep)
-                                    } ?: onPlayMovie(media)
-                                } else {
-                                    onPlayMovie(media)
-                                }
+                            val typeLabel = if (media.type == MediaType.TvSeries) "TV Series" else "Movie"
+                            Text(
+                                text = "• $typeLabel",
+                                color = Color(0xFF8E95A3),
+                                fontSize = 14.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Metadata Badges: [Genre] [Year] [+17] [★ Rating]
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val genre = media.genres.firstOrNull() ?: "Cinema"
+                            MetadataChip(text = genre)
+
+                            media.year?.let { y ->
+                                MetadataChip(text = y.toString())
                             }
-                        ),
-                    contentAlignment = Alignment.Center
+
+                            MetadataChip(text = "+17")
+
+                            val rating = media.rating ?: 8.4f
+                            MetadataChip(text = "★ %.1f".format(rating))
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. FULL-WIDTH WHITE PLAY BUTTON ("Continue Watching" / "Watch Now")
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
+                    .height(48.dp)
+                    .shadow(12.dp, RoundedCornerShape(12.dp), spotColor = Color(0x88000000))
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFFFFFFF))
+                    .clickable(
+                        interactionSource = playInteraction,
+                        indication = null,
+                        onClick = {
+                            if (media.type == MediaType.TvSeries || media.type == MediaType.Anime) {
+                                state.currentPlayingEpisode?.let { ep ->
+                                    onPlayEpisode(media, ep)
+                                } ?: onPlayMovie(media)
+                            } else {
+                                onPlayMovie(media)
+                            }
+                        }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
                         imageVector = VortexIcons.Play,
-                        contentDescription = "Watch Now",
+                        contentDescription = null,
                         tint = Color(0xFF08090B),
-                        modifier = Modifier
-                            .size(28.dp)
-                            .offset(x = 1.5.dp)
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (media.type == MediaType.TvSeries) "Continue Watching" else "Watch Now",
+                        color = Color(0xFF08090B),
+                        fontSize = 15.sp,
+                        fontFamily = ManropeFontFamily,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
         }
 
-        // 2. SERVER SELECTION TABS (Mark 1, Mark 2, Mark 3, Mark 4 with Auto-Fallback Mechanism)
+        // 3. SERVER SELECTION TABS (Mark 1, Mark 2, Mark 3, Mark 4 with Auto-Fallback Mechanism)
         item {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFF141820))
-                    .padding(horizontal = 20.dp, vertical = 12.dp)
+                    .padding(horizontal = 20.dp, vertical = 8.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -517,15 +540,15 @@ fun DetailScreen(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(38.dp)
-                                .clip(RoundedCornerShape(10.dp))
+                                .height(36.dp)
+                                .clip(RoundedCornerShape(8.dp))
                                 .background(
-                                    if (isSelected) Color(0x33FFFFFF) else Color(0xFF08090B)
+                                    if (isSelected) Color(0x33FFFFFF) else Color(0xFF141820)
                                 )
                                 .border(
                                     1.dp,
                                     if (isSelected) Color(0x55FFFFFF) else Color(0x224A5462),
-                                    RoundedCornerShape(10.dp)
+                                    RoundedCornerShape(8.dp)
                                 )
                                 .clickable { detailController.switchServer(serverName) },
                             contentAlignment = Alignment.Center
@@ -545,7 +568,7 @@ fun DetailScreen(
                                 Text(
                                     text = serverName,
                                     color = if (isSelected) Color(0xFFFFFFFF) else Color(0xFF8E95A3),
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     fontFamily = ManropeFontFamily,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                                 )
@@ -556,81 +579,13 @@ fun DetailScreen(
             }
         }
 
-        // 3. MOVIE INFO: Title, Metadata, Rating, Actions
+        // 4. ACTION BUTTONS: Watchlist & Download
         item {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 14.dp)
+                    .padding(horizontal = 20.dp, vertical = 6.dp)
             ) {
-                // Title
-                Text(
-                    text = media.title,
-                    color = Color(0xFFFFFFFF),
-                    fontSize = 22.sp,
-                    fontFamily = ManropeFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.4).sp
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Metadata Chips: Duration | Genre | Type | 4K UHD
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val runtimeText = media.runtime?.let { "${it / 60}h ${it % 60}min" } ?: "2h 10min"
-                    MetadataChip(text = runtimeText)
-
-                    val genre = media.genres.firstOrNull() ?: "Cinema"
-                    MetadataChip(text = genre)
-
-                    val typeLabel = if (media.type == MediaType.TvSeries) "Series" else "Movie"
-                    MetadataChip(text = typeLabel)
-
-                    MetadataChip(text = "4K UHD")
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Star Rating
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = "★",
-                            color = Color(0xFFFFC107),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        val rating = media.rating ?: 8.4f
-                        Text(
-                            text = "%.1f/10".format(rating),
-                            color = Color(0xFFFFFFFF),
-                            fontSize = 14.sp,
-                            fontFamily = ManropeFontFamily,
-                            fontWeight = FontWeight.Bold
-                        )
-                        media.year?.let { y ->
-                            Text(
-                                text = "• $y",
-                                color = Color(0xFF8E95A3),
-                                fontSize = 12.sp,
-                                fontFamily = ManropeFontFamily
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
                 // Quick Action Buttons: Watchlist & Download
                 Row(
                     modifier = Modifier.fillMaxWidth(),
