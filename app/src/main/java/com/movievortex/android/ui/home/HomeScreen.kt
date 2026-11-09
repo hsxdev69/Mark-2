@@ -302,14 +302,14 @@ fun VideoStyle3DHeroCarousel(
         pageCount = { virtualCount }
     )
 
-    // 1. Automatic horizontal poster sliding every 4.5 seconds (smooth infinite carousel)
+    // 1. Automatic horizontal sliding every 5 seconds (smooth infinite Apple-like carousel)
     LaunchedEffect(pagerState, items.size) {
         while (true) {
-            kotlinx.coroutines.delay(4500)
+            kotlinx.coroutines.delay(5000)
             if (!pagerState.isScrollInProgress) {
                 pagerState.animateScrollToPage(
                     page = pagerState.currentPage + 1,
-                    animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
+                    animationSpec = tween(durationMillis = 850, easing = FastOutSlowInEasing)
                 )
             }
         }
@@ -320,55 +320,55 @@ fun VideoStyle3DHeroCarousel(
 
     val configuration = LocalConfiguration.current
     val screenWidth = configuration.screenWidthDp.dp
-    val cardWidth = 148.dp
-    val cardHeight = 222.dp // True 2:3 vertical portrait aspect ratio matching video
+    val cardWidth = 162.dp
+    val cardHeight = 243.dp // True 2:3 vertical portrait aspect ratio matching Apple 3D Carousel
     val horizontalPadding = ((screenWidth - cardWidth) / 2).coerceAtLeast(0.dp)
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 10.dp, bottom = 12.dp),
+            .padding(top = 10.dp, bottom = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(236.dp),
+                .height(268.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Dynamic Ambient Colorful Aura Glow with smooth Crossfade
+            // Dynamic Ambient Colorful Aura Glow with smooth Crossfade behind active card
             Crossfade(
                 targetState = currentItem.poster ?: currentItem.backdrop,
-                animationSpec = tween(500),
-                label = "hero_aura_crossfade"
+                animationSpec = tween(550),
+                label = "apple_hero_aura_crossfade"
             ) { auraUrl ->
                 AsyncImage(
                     model = auraUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(165.dp, 215.dp)
-                        .blur(45.dp)
+                        .size(190.dp, 250.dp)
+                        .blur(50.dp)
                         .graphicsLayer {
-                            alpha = 0.42f
-                            scaleX = 1.15f
-                            scaleY = 1.15f
+                            alpha = 0.45f
+                            scaleX = 1.18f
+                            scaleY = 1.18f
                         }
                 )
             }
 
-            // Compact 3D Cover Flow Overlapping Card Deck Pager
+            // Apple Vision Pro Style 3D Cylindrical Ring Carousel Pager
             HorizontalPager(
                 state = pagerState,
                 pageSize = PageSize.Fixed(cardWidth),
                 contentPadding = PaddingValues(horizontal = horizontalPadding),
-                pageSpacing = (-22).dp, // Overlapping negative spacing tucks side cards directly behind active center card
+                pageSpacing = (-28).dp, // Negative overlap spacing tucks side cards along 3D cylinder arc
                 modifier = Modifier.fillMaxSize()
             ) { page ->
                 val realIdx = (page % items.size).let { if (it < 0) it + items.size else it }
                 val item = items[realIdx]
                 val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
-                val absOffset = abs(pageOffset).coerceIn(0f, 2f)
+                val absOffset = abs(pageOffset).coerceIn(0f, 2.5f)
 
                 val interactionSource = remember { MutableInteractionSource() }
                 var isPressed by remember { mutableStateOf(false) }
@@ -383,50 +383,59 @@ fun VideoStyle3DHeroCarousel(
                 }
 
                 val pressScale by animateFloatAsState(
-                    targetValue = if (isPressed) 0.94f else 1f,
+                    targetValue = if (isPressed) 0.93f else 1f,
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
                         stiffness = Spring.StiffnessLow
                     ),
-                    label = "hero_card_press"
+                    label = "apple_hero_card_press"
                 )
 
                 Box(
                     modifier = Modifier
                         .zIndex(1f - absOffset) // Active center card is strictly on top
                         .graphicsLayer {
-                            // Cover Flow 3D Perspective: Center card is straight & larger; side cards rotate in 3D & scale down
-                            val scale = (1f - absOffset * 0.15f).coerceIn(0.70f, 1f) * pressScale
+                            // 1. Apple 3D Cylinder Perspective Projection:
+                            // Center card is large & facing forward; side cards scale and rotate inwards tangent to cylinder
+                            val scale = (1f - absOffset * 0.16f).coerceIn(0.68f, 1f) * pressScale
                             scaleX = scale
                             scaleY = scale
-                            rotationY = pageOffset.coerceIn(-1.5f, 1.5f) * -28f
-                            cameraDistance = 20f * density
 
-                            // Subtle downward arc translation for side cards
-                            translationY = absOffset * 6f * density
+                            // 2. 3D Y-axis rotation tangent to cylindrical arc
+                            rotationY = pageOffset.coerceIn(-1.5f, 1.5f) * -34f
 
-                            // Side cards remain partially visible and dim slightly
-                            alpha = (1f - absOffset * 0.35f).coerceIn(0.48f, 1f)
+                            // 3. Apple Spatial Camera Distance for realistic 3D depth
+                            cameraDistance = 16f * density
+
+                            // 4. Horizontal translation to tuck side cards along the curved 3D cylinder ring
+                            translationX = pageOffset * -12f * density
+
+                            // 5. Subtle parabolic curved vertical arc (visionOS / Apple TV curved screen effect)
+                            translationY = (absOffset * absOffset * 4.5f) * density
+
+                            // 6. Smooth depth dimming: side cards softly recede
+                            alpha = (1f - absOffset * 0.34f).coerceIn(0.44f, 1f)
                         }
                         .size(cardWidth, cardHeight)
                         .shadow(
-                            elevation = if (absOffset < 0.5f) 22.dp else 8.dp,
-                            shape = RoundedCornerShape(20.dp),
-                            spotColor = Color(0xCC000000),
-                            ambientColor = Color(0x66000000)
+                            elevation = if (absOffset < 0.5f) 26.dp else 8.dp,
+                            shape = RoundedCornerShape(22.dp),
+                            spotColor = Color(0xDD000000),
+                            ambientColor = Color(0x88000000)
                         )
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0xFF141923))
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(Color(0xFF11212D))
+                        // Apple Dual-Bevel Specular Glass Border
                         .border(
-                            width = 1.dp,
+                            width = 1.2.dp,
                             brush = Brush.verticalGradient(
                                 listOf(
-                                    Color(0x66FFFFFF), // Crisp specular white edge at top
-                                    Color(0x22FFFFFF), // Subtle mid edge
-                                    Color(0x0AFFFFFF)  // Faint bottom edge
+                                    Color(0x99FFFFFF), // Top specular reflection highlight
+                                    Color(0x334A5C6A), // Translucent mid edge
+                                    Color(0x10253745)  // Faint bottom shadow edge
                                 )
                             ),
-                            shape = RoundedCornerShape(20.dp)
+                            shape = RoundedCornerShape(22.dp)
                         )
                         .clickable(
                             interactionSource = interactionSource,
@@ -434,7 +443,7 @@ fun VideoStyle3DHeroCarousel(
                             onClick = { onTap(item) }
                         )
                 ) {
-                    // Movie Poster Artwork (Natural 2:3 vertical portrait aspect ratio)
+                    // Movie Poster Artwork
                     AsyncImage(
                         model = item.poster ?: item.backdrop,
                         contentDescription = item.title,
@@ -442,29 +451,50 @@ fun VideoStyle3DHeroCarousel(
                         modifier = Modifier.fillMaxSize()
                     )
 
-                    // Liquid Glass Top Gloss Sheen Overlay
+                    // Apple Signature Liquid Glass Sheen Overlay (Top-to-Bottom Specular Light)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(85.dp)
+                            .fillMaxHeight(0.65f)
                             .background(
                                 Brush.verticalGradient(
                                     listOf(
-                                        Color(0x38FFFFFF),
-                                        Color(0x10FFFFFF),
+                                        Color(0x44FFFFFF), // Crisp top light reflection
+                                        Color(0x18FFFFFF), // Soft diffuse reflection
                                         Color.Transparent
                                     )
                                 )
                             )
                     )
 
-                    // Scrim for side cards so center card pops forward
+                    // Depth-of-Field (DOF) Frosted Scrim for inactive side cards
                     if (absOffset > 0.05f) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color.Black.copy(alpha = (absOffset * 0.40f).coerceIn(0f, 0.45f)))
+                                .background(Color(0xFF06141B).copy(alpha = (absOffset * 0.44f).coerceIn(0f, 0.52f)))
                         )
+                    }
+
+                    // Glass Badge on Poster (Top Right: 4K UHD or Rating)
+                    item.rating?.takeIf { it > 0f }?.let { rating ->
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xCC06141B))
+                                .border(0.8.dp, Color(0x40FFFFFF), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "★ %.1f".format(rating),
+                                color = Color.White,
+                                fontSize = 9.sp,
+                                fontFamily = ManropeFontFamily,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
@@ -472,7 +502,7 @@ fun VideoStyle3DHeroCarousel(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Animated Year, Title & Metadata Pills on poster change
+        // Animated Metadata (Year, Title & Metadata Pills on poster change)
         AnimatedContent(
             targetState = currentItem,
             transitionSpec = {
@@ -486,11 +516,11 @@ fun VideoStyle3DHeroCarousel(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Year (e.g. "2025")
+                // Year
                 val yearText = targetMedia.year?.toString()?.takeIf { it.isNotBlank() } ?: "2025"
                 Text(
                     text = yearText,
-                    color = Color(0xFF8E95A3),
+                    color = Color(0xFF9BA8AB),
                     fontSize = 13.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Medium
@@ -498,7 +528,7 @@ fun VideoStyle3DHeroCarousel(
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Title (e.g. "Minecraft Movie")
+                // Title
                 Text(
                     text = targetMedia.title,
                     color = Color.White,
@@ -512,16 +542,16 @@ fun VideoStyle3DHeroCarousel(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Metadata Pills Row: Genre | Duration | Rating (Video Concept - Frame 4)
+                // Metadata Pills: Genre | Duration | Rating
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val genre = targetMedia.genres.firstOrNull() ?: "Anime"
+                    val genre = targetMedia.genres.firstOrNull() ?: "Cinema"
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0x38354354))
+                            .background(Color(0xFF11212D))
                             .border(
                                 0.8.dp,
                                 Brush.verticalGradient(
@@ -543,11 +573,11 @@ fun VideoStyle3DHeroCarousel(
                         )
                     }
 
-                    val runtimeText = targetMedia.runtime?.let { "${it / 60}h ${it % 60}min" } ?: "9 EP"
+                    val runtimeText = targetMedia.runtime?.let { "${it / 60}h ${it % 60}min" } ?: "4K UHD"
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0x38354354))
+                            .background(Color(0xFF11212D))
                             .border(
                                 0.8.dp,
                                 Brush.verticalGradient(
@@ -569,11 +599,11 @@ fun VideoStyle3DHeroCarousel(
                         )
                     }
 
-                    val rating = targetMedia.rating ?: 7.5f
+                    val rating = targetMedia.rating ?: 8.2f
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0x38354354))
+                            .background(Color(0xFF11212D))
                             .border(
                                 0.8.dp,
                                 Brush.verticalGradient(
@@ -589,7 +619,7 @@ fun VideoStyle3DHeroCarousel(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = "★ ",
-                                color = Color(0xFFFFC107),
+                                color = Color.White,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -608,7 +638,7 @@ fun VideoStyle3DHeroCarousel(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Fluid Animated Pagination Indicator Dots/Pills
+        // Apple-Style Glassy Pager Pill Indicators
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -617,19 +647,68 @@ fun VideoStyle3DHeroCarousel(
             for (idx in 0 until totalDots) {
                 val isSelected = idx == activeIndex
                 val dotWidth by animateDpAsState(
-                    targetValue = if (isSelected) 16.dp else 5.dp,
+                    targetValue = if (isSelected) 22.dp else 5.dp,
                     animationSpec = spring(
                         dampingRatio = Spring.DampingRatioMediumBouncy,
                         stiffness = Spring.StiffnessLow
                     ),
-                    label = "dot_width"
+                    label = "apple_dot_width"
                 )
                 Box(
                     modifier = Modifier
-                        .height(5.dp)
+                        .height(4.dp)
                         .width(dotWidth)
                         .clip(CircleShape)
-                        .background(if (isSelected) Color.White else Color(0x40FFFFFF))
+                        .background(if (isSelected) Color.White else Color(0x339BA8AB))
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // Floating Frosted Glass "Watch Now" Capsule Action Button (Apple Style)
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(22.dp))
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color(0x4D253745),
+                            Color(0x2611212D)
+                        )
+                    )
+                )
+                .border(
+                    width = 1.dp,
+                    brush = Brush.verticalGradient(
+                        listOf(
+                            Color(0x66FFFFFF),
+                            Color(0x1A4A5C6A)
+                        )
+                    ),
+                    shape = RoundedCornerShape(22.dp)
+                )
+                .clickable { onTap(currentItem) }
+                .padding(horizontal = 22.dp, vertical = 9.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = VortexIcons.Play,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(15.dp)
+                )
+                Text(
+                    text = "Watch Now",
+                    color = Color.White,
+                    fontSize = 13.sp,
+                    fontFamily = ManropeFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.2).sp
                 )
             }
         }
