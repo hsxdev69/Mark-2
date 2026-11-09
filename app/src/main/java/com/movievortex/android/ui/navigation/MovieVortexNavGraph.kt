@@ -292,7 +292,7 @@ fun MovieVortexNavGraph(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFF0F141C))
+                        .background(Color(0xFF08090B))
                 ) {
                     // 1. Full-screen content (cards and posters scroll seamlessly behind the floating frosted glass bar)
                     Box(modifier = Modifier.fillMaxSize()) {

@@ -113,28 +113,21 @@ fun HomeScreen(
         }
     }
 
-    // Trending Hero Carousel: preserves recent items if available, or trending items
-    val heroList = remember(state.continueWatching, state.heroItems, filteredRows) {
-        state.continueWatching.ifEmpty {
-            state.heroItems.ifEmpty {
-                filteredRows.firstOrNull()?.items?.take(6) ?: emptyList()
-            }
-        }
-    }
-
-    if (state.isLoading) {
-        HomeScreenSkeleton(modifier = modifier)
-        return
+    // Trending Hero Carousel: At least 10 real movies without dummy data
+    val heroList = remember(state.heroItems, filteredRows) {
+        val pool = (state.heroItems + filteredRows.flatMap { it.items })
+            .distinctBy { it.rawUrl.ifBlank { it.title.trim().lowercase() } }
+        if (pool.isNotEmpty()) pool.take(10) else emptyList()
     }
 
     LazyColumn(
         state = scrollState,
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF06141B)),
+            .background(Color(0xFF08090B)),
         contentPadding = PaddingValues(bottom = 110.dp)
     ) {
-        // 1. Top Category Tabs (Monochrome High-End OTT)
+        // 1. Top Category Tabs (Obsidian + Periwinkle)
         item {
             Box(
                 modifier = Modifier
@@ -151,7 +144,7 @@ fun HomeScreen(
                         val isSelected = cat == selectedCategory
                         Text(
                             text = cat,
-                            color = if (isSelected) Color.White else Color(0xFF9BA8AB),
+                            color = if (isSelected) Color(0xFFF8F8F8) else Color(0xFF959CE3),
                             fontSize = if (isSelected) 22.sp else 15.sp,
                             fontFamily = ManropeFontFamily,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
@@ -193,7 +186,7 @@ fun HomeScreen(
                 ) {
                     Text(
                         text = "For you",
-                        color = Color.White,
+                        color = Color(0xFFF8F8F8),
                         fontSize = 19.sp,
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.Bold,
@@ -201,7 +194,7 @@ fun HomeScreen(
                     )
                     Text(
                         text = "See all",
-                        color = Color(0xFF9BA8AB),
+                        color = Color(0xFF959CE3),
                         fontSize = 12.sp,
                         fontFamily = ManropeFontFamily,
                         fontWeight = FontWeight.SemiBold
@@ -236,7 +229,7 @@ fun HomeScreen(
             ) {
                 Text(
                     text = row.title,
-                    color = Color.White,
+                    color = Color(0xFFF8F8F8),
                     fontSize = 19.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
@@ -244,7 +237,7 @@ fun HomeScreen(
                 )
                 Text(
                     text = "See all",
-                    color = Color(0xFF9BA8AB),
+                    color = Color(0xFF959CE3),
                     fontSize = 12.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.SemiBold
@@ -278,7 +271,7 @@ fun HomeScreen(
             ) {
                 if (state.isExploreLoading) {
                     CircularProgressIndicator(
-                        color = Color.White,
+                        color = Color(0xFF959CE3),
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -425,15 +418,15 @@ fun VideoStyle3DHeroCarousel(
                             ambientColor = Color(0x88000000)
                         )
                         .clip(RoundedCornerShape(22.dp))
-                        .background(Color(0xFF11212D))
+                        .background(Color(0xFF10121A))
                         // Apple Dual-Bevel Specular Glass Border
                         .border(
                             width = 1.2.dp,
                             brush = Brush.verticalGradient(
                                 listOf(
-                                    Color(0x99FFFFFF), // Top specular reflection highlight
-                                    Color(0x334A5C6A), // Translucent mid edge
-                                    Color(0x10253745)  // Faint bottom shadow edge
+                                    Color(0x80959CE3), // Top specular reflection highlight
+                                    Color(0x33959CE3), // Translucent mid edge
+                                    Color(0x1008090B)  // Faint bottom shadow edge
                                 )
                             ),
                             shape = RoundedCornerShape(22.dp)
@@ -473,7 +466,7 @@ fun VideoStyle3DHeroCarousel(
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .background(Color(0xFF06141B).copy(alpha = (absOffset * 0.44f).coerceIn(0f, 0.52f)))
+                                .background(Color(0xFF08090B).copy(alpha = (absOffset * 0.44f).coerceIn(0f, 0.52f)))
                         )
                     }
 
@@ -484,13 +477,13 @@ fun VideoStyle3DHeroCarousel(
                                 .align(Alignment.TopEnd)
                                 .padding(8.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xCC06141B))
-                                .border(0.8.dp, Color(0x40FFFFFF), RoundedCornerShape(8.dp))
+                                .background(Color(0xCC08090B))
+                                .border(0.8.dp, Color(0x40959CE3), RoundedCornerShape(8.dp))
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = "★ %.1f".format(rating),
-                                color = Color.White,
+                                color = Color(0xFFF8F8F8),
                                 fontSize = 9.sp,
                                 fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.Bold
@@ -521,7 +514,7 @@ fun VideoStyle3DHeroCarousel(
                 val yearText = targetMedia.year?.toString()?.takeIf { it.isNotBlank() } ?: "2025"
                 Text(
                     text = yearText,
-                    color = Color(0xFF9BA8AB),
+                    color = Color(0xFF959CE3),
                     fontSize = 13.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Medium
@@ -532,7 +525,7 @@ fun VideoStyle3DHeroCarousel(
                 // Title
                 Text(
                     text = targetMedia.title,
-                    color = Color.White,
+                    color = Color(0xFFF8F8F8),
                     fontSize = 22.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,
@@ -552,13 +545,13 @@ fun VideoStyle3DHeroCarousel(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF11212D))
+                            .background(Color(0xFF10121A))
                             .border(
                                 0.8.dp,
                                 Brush.verticalGradient(
                                     listOf(
-                                        Color(0x3DFFFFFF),
-                                        Color(0x14FFFFFF)
+                                        Color(0x4D959CE3),
+                                        Color(0x1F959CE3)
                                     )
                                 ),
                                 RoundedCornerShape(12.dp)
@@ -567,7 +560,7 @@ fun VideoStyle3DHeroCarousel(
                     ) {
                         Text(
                             text = genre,
-                            color = Color(0xFFE5E7EB),
+                            color = Color(0xFFF8F8F8),
                             fontSize = 11.sp,
                             fontFamily = ManropeFontFamily,
                             fontWeight = FontWeight.SemiBold
@@ -578,13 +571,13 @@ fun VideoStyle3DHeroCarousel(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF11212D))
+                            .background(Color(0xFF10121A))
                             .border(
                                 0.8.dp,
                                 Brush.verticalGradient(
                                     listOf(
-                                        Color(0x3DFFFFFF),
-                                        Color(0x14FFFFFF)
+                                        Color(0x4D959CE3),
+                                        Color(0x1F959CE3)
                                     )
                                 ),
                                 RoundedCornerShape(12.dp)
@@ -593,7 +586,7 @@ fun VideoStyle3DHeroCarousel(
                     ) {
                         Text(
                             text = runtimeText,
-                            color = Color(0xFFE5E7EB),
+                            color = Color(0xFFF8F8F8),
                             fontSize = 11.sp,
                             fontFamily = ManropeFontFamily,
                             fontWeight = FontWeight.SemiBold
@@ -604,13 +597,13 @@ fun VideoStyle3DHeroCarousel(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF11212D))
+                            .background(Color(0xFF10121A))
                             .border(
                                 0.8.dp,
                                 Brush.verticalGradient(
                                     listOf(
-                                        Color(0x3DFFFFFF),
-                                        Color(0x14FFFFFF)
+                                        Color(0x4D959CE3),
+                                        Color(0x1F959CE3)
                                     )
                                 ),
                                 RoundedCornerShape(12.dp)
@@ -620,13 +613,13 @@ fun VideoStyle3DHeroCarousel(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = "★ ",
-                                color = Color.White,
+                                color = Color(0xFFFFD700),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = "%.1f".format(rating),
-                                color = Color.White,
+                                color = Color(0xFFF8F8F8),
                                 fontSize = 11.sp,
                                 fontFamily = ManropeFontFamily,
                                 fontWeight = FontWeight.Bold
@@ -644,9 +637,9 @@ fun VideoStyle3DHeroCarousel(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val totalDots = items.size.coerceAtMost(8)
+            val totalDots = items.size.coerceAtMost(10)
             for (idx in 0 until totalDots) {
-                val isSelected = idx == activeIndex
+                val isSelected = idx == (activeIndex % totalDots)
                 val dotWidth by animateDpAsState(
                     targetValue = if (isSelected) 22.dp else 5.dp,
                     animationSpec = spring(
@@ -660,7 +653,7 @@ fun VideoStyle3DHeroCarousel(
                         .height(4.dp)
                         .width(dotWidth)
                         .clip(CircleShape)
-                        .background(if (isSelected) Color.White else Color(0x339BA8AB))
+                        .background(if (isSelected) Color(0xFF959CE3) else Color(0x33959CE3))
                 )
             }
         }
@@ -674,8 +667,8 @@ fun VideoStyle3DHeroCarousel(
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            Color(0x4D253745),
-                            Color(0x2611212D)
+                            Color(0x4D959CE3),
+                            Color(0x2610121A)
                         )
                     )
                 )
@@ -683,8 +676,8 @@ fun VideoStyle3DHeroCarousel(
                     width = 1.dp,
                     brush = Brush.verticalGradient(
                         listOf(
-                            Color(0x66FFFFFF),
-                            Color(0x1A4A5C6A)
+                            Color(0x66959CE3),
+                            Color(0x1A959CE3)
                         )
                     ),
                     shape = RoundedCornerShape(22.dp)
@@ -700,12 +693,12 @@ fun VideoStyle3DHeroCarousel(
                 Icon(
                     imageVector = VortexIcons.Play,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = Color(0xFFF8F8F8),
                     modifier = Modifier.size(15.dp)
                 )
                 Text(
                     text = "Watch Now",
-                    color = Color.White,
+                    color = Color(0xFFF8F8F8),
                     fontSize = 13.sp,
                     fontFamily = ManropeFontFamily,
                     fontWeight = FontWeight.Bold,

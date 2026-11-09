@@ -84,15 +84,15 @@ fun MovieVortexTopBar(
         Modifier.background(
             Brush.verticalGradient(
                 listOf(
-                    Color(0xF006141B),
-                    Color(0xCC11212D),
-                    Color(0x6606141B),
+                    Color(0xF008090B),
+                    Color(0xCC10121A),
+                    Color(0x6608090B),
                     Color.Transparent
                 )
             )
         )
     } else {
-        Modifier.background(Color(0xFF06141B))
+        Modifier.background(Color(0xFF08090B))
     }
 
     Row(
@@ -109,8 +109,8 @@ fun MovieVortexTopBar(
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color(0x40253745))
-                .border(1.dp, Color(0x334A5C6A), CircleShape)
+                .background(Color(0x26959CE3))
+                .border(1.dp, Color(0x33959CE3), CircleShape)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -121,19 +121,19 @@ fun MovieVortexTopBar(
             Icon(
                 imageVector = VortexIcons.StaggeredMenu,
                 contentDescription = "Menu",
-                tint = Color.White,
+                tint = Color(0xFFF8F8F8),
                 modifier = Modifier.size(20.dp)
             )
         }
 
-        // Center: High-End Monochrome OTT Title "MovieVortex" (Pure White + Soft Muted Slate)
+        // Center: High-End Monochrome OTT Title "MovieVortex" (Pure White + Soft Periwinkle)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
                 text = "Movie",
-                color = Color.White,
+                color = Color(0xFFF8F8F8),
                 fontSize = 20.sp,
                 fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.Bold,
@@ -141,7 +141,7 @@ fun MovieVortexTopBar(
             )
             Text(
                 text = "Vortex",
-                color = Color(0xFF9BA8AB),
+                color = Color(0xFF959CE3),
                 fontSize = 20.sp,
                 fontFamily = ManropeFontFamily,
                 fontWeight = FontWeight.Bold,
@@ -154,8 +154,8 @@ fun MovieVortexTopBar(
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(Color(0x40253745))
-                .border(1.dp, Color(0x334A5C6A), CircleShape)
+                .background(Color(0x26959CE3))
+                .border(1.dp, Color(0x33959CE3), CircleShape)
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -166,7 +166,7 @@ fun MovieVortexTopBar(
             Icon(
                 imageVector = VortexIcons.Search,
                 contentDescription = "Search",
-                tint = Color.White,
+                tint = Color(0xFFF8F8F8),
                 modifier = Modifier.size(19.dp)
             )
         }
@@ -186,7 +186,7 @@ fun MovieVortexBottomBar(
             .padding(horizontal = 24.dp, vertical = 6.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Floating Frosted Glass Capsule (Monochrome Dark Slate #06141B, #11212D, #253745)
+        // Floating Frosted Glass Capsule (#08090B, #10121A, #959CE3)
         Box(
             modifier = Modifier
                 .widthIn(max = 280.dp)
@@ -195,16 +195,16 @@ fun MovieVortexBottomBar(
                 .shadow(
                     elevation = 24.dp,
                     shape = CircleShape,
-                    spotColor = Color(0xEE06141B),
+                    spotColor = Color(0xEE08090B),
                     ambientColor = Color(0x88000000)
                 )
                 .clip(CircleShape)
                 .background(
                     Brush.verticalGradient(
                         listOf(
-                            Color(0x99253745), // Top specular dark slate highlight
-                            Color(0xD911212D), // Center frosted slate surface
-                            Color(0xF206141B)  // Bottom deep translucent black
+                            Color(0x80959CE3), // Top specular highlight
+                            Color(0xE610121A), // Center frosted surface
+                            Color(0xF208090B)  // Bottom deep obsidian
                         )
                     )
                 )
@@ -212,9 +212,9 @@ fun MovieVortexBottomBar(
                     width = 1.dp,
                     brush = Brush.verticalGradient(
                         listOf(
-                            Color(0x594A5C6A), // Crisp subtle top edge
-                            Color(0x2E253745), // Soft mid edge
-                            Color(0x1406141B)  // Subtle bottom edge
+                            Color(0x66959CE3), // Crisp subtle top edge
+                            Color(0x26959CE3), // Soft mid edge
+                            Color(0x1008090B)  // Subtle bottom edge
                         )
                     ),
                     shape = CircleShape
@@ -227,8 +227,8 @@ fun MovieVortexBottomBar(
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                val activeColor = Color(0xFFFFFFFF) // Pure White
-                val inactiveColor = Color(0xFF9BA8AB) // Soft Muted Gray
+                val activeColor = Color(0xFFF8F8F8) // Pure Off-White
+                val inactiveColor = Color(0xFF959CE3) // Muted Periwinkle
 
                 // 1. Home
                 val isHome = currentDestination == MainDestination.Home
@@ -353,8 +353,8 @@ private fun VideoPillNavItem(
                     .size(34.dp)
                     .graphicsLayer { alpha = glowAlpha }
                     .clip(CircleShape)
-                    .background(Color(0x2EFFFFFF))
-                    .border(0.8.dp, Color(0x38FFFFFF), CircleShape)
+                    .background(Color(0x33959CE3))
+                    .border(0.8.dp, Color(0x4D959CE3), CircleShape)
             )
         }
 

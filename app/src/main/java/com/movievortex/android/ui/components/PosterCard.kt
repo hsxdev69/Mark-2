@@ -94,7 +94,7 @@ fun PosterCard(
     )
 
     val borderColor by animateColorAsState(
-        targetValue = if (isPressed) Color(0x66FFFFFF) else Color(0x22FFFFFF),
+        targetValue = if (isPressed) Color(0x66959CE3) else Color(0x22959CE3),
         animationSpec = tween(durationMillis = 150),
         label = "posterBorder"
     )

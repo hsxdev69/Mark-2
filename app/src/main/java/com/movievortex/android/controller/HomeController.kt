@@ -120,9 +120,10 @@ class HomeController : ViewModel() {
                     rows[0] = rows[0].copy(title = "Peacock Picks")
                 }
 
-                // Populate Hero from first rows if available
-                rows.firstOrNull()?.items?.take(5)?.let {
-                    heroList.addAll(it)
+                // Populate Hero with at least 10 real movies
+                val allUniqueMedia = rows.flatMap { it.items }.distinctBy { it.rawUrl.ifBlank { it.title.trim().lowercase() } }
+                if (allUniqueMedia.isNotEmpty()) {
+                    heroList.addAll(allUniqueMedia.take(10))
                 }
 
                 // Seed explore grid
