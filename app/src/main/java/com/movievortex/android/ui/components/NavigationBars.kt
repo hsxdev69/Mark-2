@@ -181,108 +181,141 @@ fun MovieVortexBottomBar(
     currentDestination: MainDestination,
     onDestinationSelected: (MainDestination) -> Unit,
     modifier: Modifier = Modifier,
-    activeDownloadCount: Int = 0
+    activeDownloadCount: Int = 0,
+    wishlistBadgeCount: Int = 7
 ) {
-    // Edge-to-Edge Glassmorphism Navigation Dock (Direct match to reference Screenshot_20261109_160510.jpg & IMG_20261109_185038.jpg)
-    Box(
+    // Specs from MovieVortex_NavBar_Dune_Preview.png:
+    // Background: Translucent dark color (#0a0a0d) with backdrop blur and subtle top border (border-white/[0.07])
+    // Layout: Centered, max-width constraint, spaced items (justify-between)
+    // Items: 1. Home, 2. Categories, 3. Search, 4. Wishlist (Heart with red badge '7'), 5. Profile
+    // Active State: scaled up (scale-110), text pure white, illuminated horizontal gradient indicator bar (amber-400 to rose-500) directly above icon
+    // Inactive State: muted gray (text-zinc-500: #71717A)
+    // Typography: Small, clean, modern sans-serif (9px, tracking-wide)
+    // Bottom Bar: iOS-style home indicator bar (h-1 w-28 bg-white/25) below nav bar
+    val darkBg = Color(0xF20A0A0D)
+    val topBorderColor = Color(0x12FFFFFF)
+    val zinc500 = Color(0xFF71717A)
+    val pureWhite = Color(0xFFFFFFFF)
+    val rose500 = Color(0xFFF43F5E)
+    val amber400 = Color(0xFFFBBF24)
+
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        Color(0xD9141822), // Frosted top glass
-                        Color(0xF20B0D12), // Deep dark obsidian
-                        Color(0xFF060709)  // Grounded black
-                    )
-                )
-            )
+            .background(darkBg)
             .drawBehind {
                 drawLine(
-                    color = Color(0x33FFFFFF),
+                    color = topBorderColor,
                     start = Offset(0f, 0f),
                     end = Offset(size.width, 0f),
                     strokeWidth = 1.dp.toPx()
                 )
             }
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = 24.dp, vertical = 10.dp),
-        contentAlignment = Alignment.Center
+            .windowInsetsPadding(WindowInsets.navigationBars),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = 600.dp)
+                .padding(horizontal = 12.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            val activeColor = Color(0xFFFFFFFF) // Pure Crisp White
-            val inactiveColor = Color(0xFF7E8492) // Muted Slate Grey
-
-            // 1. Home (Filled Solid House when active, Outline when inactive)
+            // 1. Home
             val isHome = currentDestination == MainDestination.Home
-            VideoPillNavItem(
+            MovieVortexNavItem(
+                name = "Home",
                 icon = if (isHome) VortexIcons.Home else VortexIcons.HomeOutline,
-                contentDescription = "Home",
                 isSelected = isHome,
-                activeColor = activeColor,
-                inactiveColor = inactiveColor,
+                activeColor = pureWhite,
+                inactiveColor = zinc500,
+                amberColor = amber400,
+                roseColor = rose500,
                 onClick = { onDestinationSelected(MainDestination.Home) }
             )
 
-            // 2. Categories (4-Squares Grid 2x2)
+            // 2. Categories
             val isCategories = currentDestination == MainDestination.Categories
-            VideoPillNavItem(
+            MovieVortexNavItem(
+                name = "Categories",
                 icon = VortexIcons.GridView,
-                contentDescription = "Categories",
                 isSelected = isCategories,
-                activeColor = activeColor,
-                inactiveColor = inactiveColor,
+                activeColor = pureWhite,
+                inactiveColor = zinc500,
+                amberColor = amber400,
+                roseColor = rose500,
                 onClick = { onDestinationSelected(MainDestination.Categories) }
             )
 
             // 3. Search
             val isSearch = currentDestination == MainDestination.Search
-            VideoPillNavItem(
-                icon = VortexIcons.VideoSearch,
-                contentDescription = "Search",
+            MovieVortexNavItem(
+                name = "Search",
+                icon = VortexIcons.Search,
                 isSelected = isSearch,
-                activeColor = activeColor,
-                inactiveColor = inactiveColor,
+                activeColor = pureWhite,
+                inactiveColor = zinc500,
+                amberColor = amber400,
+                roseColor = rose500,
                 onClick = { onDestinationSelected(MainDestination.Search) }
             )
 
-            // 4. Favorites (Heart Filled when selected, HeartBorder when inactive)
-            val isFavorites = currentDestination == MainDestination.Bookmarks
-            VideoPillNavItem(
-                icon = if (isFavorites) VortexIcons.Heart else VortexIcons.HeartBorder,
-                contentDescription = "Favorites",
-                isSelected = isFavorites,
-                activeColor = activeColor,
-                inactiveColor = inactiveColor,
+            // 4. Wishlist
+            val isWishlist = currentDestination == MainDestination.Bookmarks
+            MovieVortexNavItem(
+                name = "Wishlist",
+                icon = if (isWishlist) VortexIcons.Heart else VortexIcons.HeartBorder,
+                isSelected = isWishlist,
+                badgeText = wishlistBadgeCount.toString(),
+                badgeBgColor = rose500,
+                activeColor = pureWhite,
+                inactiveColor = zinc500,
+                amberColor = amber400,
+                roseColor = rose500,
                 onClick = { onDestinationSelected(MainDestination.Bookmarks) }
             )
 
             // 5. Profile
             val isProfile = currentDestination == MainDestination.Me
-            VideoPillNavItem(
+            MovieVortexNavItem(
+                name = "Profile",
                 icon = if (isProfile) VortexIcons.Person else VortexIcons.PersonOutline,
-                contentDescription = "Profile",
                 isSelected = isProfile,
-                activeColor = activeColor,
-                inactiveColor = inactiveColor,
+                activeColor = pureWhite,
+                inactiveColor = zinc500,
+                amberColor = amber400,
+                roseColor = rose500,
                 onClick = { onDestinationSelected(MainDestination.Me) }
             )
         }
+
+        // iOS-style home indicator bar (h-1 w-28 bg-white/25)
+        Spacer(modifier = Modifier.height(4.dp))
+        Box(
+            modifier = Modifier
+                .width(112.dp)
+                .height(4.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(Color(0x40FFFFFF))
+        )
+        Spacer(modifier = Modifier.height(6.dp))
     }
 }
 
 @Composable
-private fun VideoPillNavItem(
+private fun MovieVortexNavItem(
+    name: String,
     icon: ImageVector,
-    contentDescription: String,
     isSelected: Boolean,
     activeColor: Color,
     inactiveColor: Color,
+    amberColor: Color,
+    roseColor: Color,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    badgeText: String? = null,
+    badgeBgColor: Color = Color(0xFFF43F5E)
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     var isPressed by remember { mutableStateOf(false) }
@@ -297,12 +330,12 @@ private fun VideoPillNavItem(
     }
 
     val pressScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.88f else 1.0f,
+        targetValue = if (isPressed) 0.90f else if (isSelected) 1.10f else 1.0f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
         ),
-        label = "nav_item_press"
+        label = "nav_item_scale"
     )
 
     val iconColor by animateColorAsState(
@@ -311,25 +344,87 @@ private fun VideoPillNavItem(
         label = "nav_icon_color"
     )
 
-    Box(
+    Column(
         modifier = modifier
-            .size(44.dp)
-            .graphicsLayer {
-                scaleX = pressScale
-                scaleY = pressScale
-            }
+            .width(64.dp)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
             ),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = iconColor,
-            modifier = Modifier.size(23.dp)
+        // Illuminated horizontal gradient indicator bar directly above the icon
+        if (isSelected) {
+            Box(
+                modifier = Modifier
+                    .width(42.dp)
+                    .height(3.dp)
+                    .clip(RoundedCornerShape(1.5.dp))
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(amberColor, roseColor)
+                        )
+                    )
+            )
+        } else {
+            Spacer(modifier = Modifier.height(3.dp))
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Icon with optional notification badge
+        Box(
+            modifier = Modifier
+                .size(30.dp)
+                .graphicsLayer {
+                    scaleX = pressScale
+                    scaleY = pressScale
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = name,
+                tint = iconColor,
+                modifier = Modifier.size(24.dp)
+            )
+
+            // Red notification badge (bg-rose-500) displaying number '7'
+            if (badgeText != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = (-2).dp, end = (-4).dp)
+                        .size(15.dp)
+                        .clip(CircleShape)
+                        .background(badgeBgColor)
+                        .border(1.dp, Color(0xFF0A0A0D), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = badgeText,
+                        color = Color.White,
+                        fontSize = 8.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.SansSerif
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(3.dp))
+
+        // Typography: Small, clean, medium-weight font (9px, tracking-wide)
+        Text(
+            text = name,
+            color = iconColor,
+            fontSize = 9.sp,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            fontFamily = FontFamily.SansSerif,
+            letterSpacing = 0.5.sp,
+            maxLines = 1
         )
     }
 }
